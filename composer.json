@@ -1,7 +1,7 @@
 {
     "name": "matesofmate/example-extension",
     "description": "Example extension for Symfony AI Mate - replace with your description",
-    "type": "library",
+    "type": "symfony-ai-mate",
     "license": "MIT",
     "keywords": ["symfony", "ai", "mate", "mcp", "ai-assistant"],
     "authors": [

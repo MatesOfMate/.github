@@ -12,7 +12,7 @@ Symfony AI Mate creates a local MCP (Model Context Protocol) server that enhance
 |------------------------------------|---------------------------------------|--------|
 | Currently no extensions available. | *Check back soon for new extensions!* | 🚧     |
 
-*Want to add your extension? Open a PR!*
+*Want to add your extension? [Create an issue to request repository](https://github.com/matesofmate/.github/issues)!*
 
 ## Creating Your Own Extension
 

@@ -39,10 +39,10 @@ composer install
 # Run tests
 composer test
 
-# Check code style
+# Check code style and static analysis
 composer lint
 
-# Fix code style
+# Auto-fix code style and apply refactorings
 composer fix
 ```
 
@@ -62,7 +62,7 @@ your-extension/
 ├── README.md              # Installation & usage
 ├── LICENSE                # MIT recommended
 ├── src/
-│   └── Capabilities/             # Your MCP tools
+│   └── Capability/        # Your MCP tools
 ├── config/
 │   └── services.php       # Service definitions
 └── tests/
@@ -81,12 +81,12 @@ your-extension/
     },
     "autoload": {
         "psr-4": {
-            "MatesOfMate\\Example\\": "src/"
+            "MatesOfMate\\ExampleExtension\\": "src/"
         }
     },
     "extra": {
         "ai-mate": {
-            "scan-dirs": ["src/Capabilities"],
+            "scan-dirs": ["src/Capability"],
             "includes": ["config/services.php"]
         }
     }
@@ -103,11 +103,11 @@ your-extension/
 ```php
 <?php
 
-namespace MatesOfMate\Example\Capabilities;
+namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpTool;
 
-final class ListThingsTool
+class ListThingsTool
 {
     #[McpTool(
         name: 'example-list-things',
@@ -121,17 +121,71 @@ final class ListThingsTool
 }
 ```
 
-## Code Style
+### Resource Best Practices
 
-We follow PSR-12 and Symfony coding standards:
+Resources provide static context or configuration data to the AI. They're useful for:
+- Framework configuration
+- Available routes, entities, or components
+- System status and metadata
+
+1. **Clear URIs**: Use descriptive custom URI schemes (e.g., `myframework://routes`)
+2. **Structured data**: Return well-structured JSON or plain text
+3. **Static content**: Resources should provide relatively stable information
+4. **Helpful context**: Include data that helps the AI understand your system
+
+```php
+<?php
+
+namespace MatesOfMate\ExampleExtension\Capability;
+
+use Mcp\Capability\Attribute\McpResource;
+
+class ConfigurationResource
+{
+    #[McpResource(
+        uri: 'example://config',
+        name: 'example_config',
+        mimeType: 'application/json'
+    )]
+    public function getConfiguration(): array
+    {
+        return [
+            'uri' => 'example://config',
+            'mimeType' => 'application/json',
+            'text' => json_encode([
+                'version' => '1.0.0',
+                'features' => ['feature_a' => true, 'feature_b' => false],
+            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
+        ];
+    }
+}
+```
+
+## Code Quality & Style
+
+We use multiple tools to ensure code quality:
+
+- **PHP CS Fixer**: PSR-12 and Symfony coding standards
+- **PHPStan**: Static analysis at level 8
+- **Rector**: Automated refactoring and modernization
 
 ```bash
-# Check style
+# Check everything (code style + static analysis)
 composer lint
 
-# Fix style
+# Auto-fix everything (refactoring + code style)
 composer fix
 ```
+
+The `lint` command runs:
+1. Composer JSON validation
+2. Rector in dry-run mode
+3. PHP CS Fixer in dry-run mode
+4. PHPStan static analysis (level 8)
+
+The `fix` command runs:
+1. Rector for automated refactorings
+2. PHP CS Fixer to fix code style
 
 ## Pull Request Process
 
@@ -144,8 +198,10 @@ composer fix
 
 ### PR Checklist
 
-- [ ] Tests pass
-- [ ] Code style passes
+- [ ] Tests pass (`composer test`)
+- [ ] Code quality checks pass (`composer lint`)
+  - [ ] PHP CS Fixer passes
+  - [ ] PHPStan level 8 passes
 - [ ] README updated (if needed)
 - [ ] CHANGELOG updated
 

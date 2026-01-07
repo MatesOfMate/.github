@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🛟 Community Support
+    url: https://github.com/orgs/matesofmate/discussions
+    about: Ask questions and discuss with the MatesOfMate community
+  - name: 📖 Symfony AI Mate Documentation
+    url: https://symfony.com/doc/current/ai/components/mate.html
+    about: Official Symfony AI Mate documentation
+  - name: 🔧 Extension Template
+    url: https://github.com/matesofmate/extension-template
+    about: Start building your own extension

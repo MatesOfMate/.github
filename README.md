@@ -10,7 +10,7 @@ Symfony AI Mate creates a local MCP (Model Context Protocol) server that enhance
 
 | Extension                          | Description                           | Status |
 |------------------------------------|---------------------------------------|--------|
-| Currently no extensions available. | *Check back soon for new extensions!* | 🚧     |
+| [phpunit-extension](https://packagist.org/packages/matesofmate/phpunit-extension) | PHPUnit testing tools and test introspection | ✅     |
 
 *Want to add your extension? [Create an issue to request repository](https://github.com/matesofmate/.github/issues)!*
 

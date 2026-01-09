@@ -10,6 +10,7 @@ Symfony AI Mate creates a local MCP (Model Context Protocol) server that enhance
 
 | Extension                          | Description                           | Status |
 |------------------------------------|---------------------------------------|--------|
+| [phpstan-extension](https://packagist.org/packages/matesofmate/phpstan-extension) | PHPStan static analysis tools with token-optimized output | ✅     |
 | [phpunit-extension](https://packagist.org/packages/matesofmate/phpunit-extension) | PHPUnit testing tools and test introspection | ✅     |
 
 *Want to add your extension? [Create an issue to request repository](https://github.com/matesofmate/.github/issues)!*

@@ -1,153 +1,89 @@
-# CLAUDE.md - MatesOfMate Common Package
+# CLAUDE.md
 
-This file provides guidance to Claude Code when working with the MatesOfMate common package.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Package Overview
+## Project Overview
 
-The **common** package provides shared functionality for all MatesOfMate extensions. It follows **composition over inheritance** principles with minimal interfaces and concrete implementations.
+Shared functionality library for MatesOfMate extensions providing reusable components for CLI tool execution, configuration detection, and token-efficient output formatting. This package follows **composition over inheritance** principles with minimal interfaces and concrete implementations designed for extension integration.
 
-**Location**: Separate package at monorepo root (`/Users/johannes/Development/matesofmate/common/`)
+## Common Commands
 
-**Usage Pattern**: Extensions use the common package via Composer path repositories and composition.
+### Development Workflow
 
-## Architecture Principles
+```bash
+# Install dependencies
+composer install
 
-### Composition Over Inheritance
-All common classes are designed for composition, not inheritance:
-- Extensions create internal instances of common classes
-- Configuration passed via constructor parameters
-- No abstract base classes - only concrete implementations
+# Run all tests
+composer test
 
-### Minimal Interfaces
-Interfaces expose only essential public methods:
-- `ProcessExecutorInterface`: `execute()` only
-- `ConfigurationDetectorInterface`: `detect()` only
-- `MessageTruncatorInterface`: `truncate()` only
+# Run specific test
+vendor/bin/phpunit tests/Process/ProcessExecutorTest.php
+vendor/bin/phpunit --filter testExecute
 
-Helper methods (`findBinary()`, `buildCommand()`, `removeCommonPrefixes()`, etc.) are private implementation details.
+# Check code quality (validates composer.json, runs Rector, PHP CS Fixer, PHPStan)
+composer lint
 
-### PHP Binary Reuse
-The `ProcessExecutor` ensures PHP scripts run with the same PHP version as the current process:
-- Uses `\PHP_BINARY` constant for PHP scripts
+# Auto-fix code style and apply automated refactorings
+composer fix
+```
+
+### Individual Quality Tools
+
+```bash
+# PHP CS Fixer (code style)
+vendor/bin/php-cs-fixer fix --dry-run --diff  # Check only
+vendor/bin/php-cs-fixer fix                   # Apply fixes
+
+# PHPStan (static analysis at level 8)
+vendor/bin/phpstan analyse
+
+# Rector (automated refactoring to PHP 8.2)
+vendor/bin/rector process --dry-run           # Preview changes
+vendor/bin/rector process                     # Apply changes
+```
+
+## Architecture
+
+### Component Structure
+
+**Process Execution** (`src/Process/`):
+- `ProcessExecutorInterface` - CLI tool execution contract
+- `ProcessExecutor` - Concrete implementation with PHP binary reuse and vendor path detection
+- `ProcessResult` - DTO for command execution results (exit code, output, error output)
+
+**Configuration Detection** (`src/Config/`):
+- `ConfigurationDetectorInterface` - Config file detection contract
+- `ConfigurationDetector` - Auto-detects configuration files in project directories
+
+**Message Truncation** (`src/Truncator/`):
+- `MessageTruncatorInterface` - Token-efficient output contract
+- `MessageTruncator` - Smart message shortening with common prefix removal and class name shortening
+
+### Design Principles
+
+**Composition Over Inheritance**:
+- All classes designed for composition, not inheritance
+- Extensions create internal instances with constructor configuration
+- No abstract base classes or protected properties
+
+**Minimal Interfaces**:
+- Interfaces expose only essential public methods
+- Helper methods (`findBinary()`, `buildCommand()`, `removeCommonPrefixes()`) are private implementation details
+- Clear separation between public API and internal logic
+
+**PHP Binary Reuse**:
+- `ProcessExecutor` ensures PHP scripts run with same PHP version as current process
+- Uses `\PHP_BINARY` constant for PHP tools (phpunit, phpstan, etc.)
 - `usePhpBinary` parameter distinguishes PHP scripts from system binaries
-- Default `true` for PHP tools (phpunit, phpstan)
-- Explicit `false` for system tools (git, composer)
+- Default `true` for PHP tools, explicit `false` for system binaries (git, composer)
 
-## Directory Structure
+### Usage Patterns
 
-```
-common/
-├── src/
-│   ├── Config/              # Configuration file detection
-│   │   ├── ConfigurationDetectorInterface.php
-│   │   └── ConfigurationDetector.php
-│   ├── Process/             # CLI process execution
-│   │   ├── ProcessExecutorInterface.php
-│   │   ├── ProcessExecutor.php
-│   │   └── ProcessResult.php
-│   └── Truncator/           # Token-efficient output
-│       ├── MessageTruncatorInterface.php
-│       └── MessageTruncator.php
-├── tests/                   # PHPUnit tests mirroring src/
-├── composer.json
-├── phpunit.xml.dist
-├── phpstan.dist.neon
-├── rector.php
-└── .php-cs-fixer.php
-```
-
-## Components
-
-### Process Execution (`src/Process/`)
-
-**ProcessExecutorInterface**
-```php
-interface ProcessExecutorInterface
-{
-    /**
-     * @param array<int, string> $args
-     */
-    public function execute(
-        string $binaryName,
-        array $args = [],
-        int $timeout = 300,
-        bool $usePhpBinary = true
-    ): ProcessResult;
-}
-```
-
-**ProcessExecutor** - Concrete implementation
-- Accepts `$vendorPaths` array in constructor for project-specific binary locations
-- `findBinary()` is **private** - searches vendor paths, then system PATH
-- `buildCommand()` is **private** - prepends PHP_BINARY when `$usePhpBinary` is true
-- `execute()` is **public** - accepts binary name, automatically finds and executes
-
-**ProcessResult** - Simple DTO
-```php
-class ProcessResult
-{
-    public function __construct(
-        public readonly int $exitCode,
-        public readonly string $output,
-        public readonly string $errorOutput,
-    ) {}
-
-    public function isSuccessful(): bool
-    {
-        return 0 === $this->exitCode;
-    }
-}
-```
-
-**Critical: usePhpBinary Parameter**
-```php
-// PHP scripts - use PHP_BINARY (default)
-$result = $executor->execute('phpunit', ['--version']);
-
-// System binaries - skip PHP_BINARY (explicit false)
-$result = $executor->execute('git', ['status'], usePhpBinary: false);
-```
-
-### Configuration Detection (`src/Config/`)
-
-**ConfigurationDetectorInterface**
-```php
-interface ConfigurationDetectorInterface
-{
-    public function detect(?string $projectRoot = null): ?string;
-}
-```
-
-**ConfigurationDetector** - Concrete implementation
-- Accepts `$configFiles` array in constructor (e.g., `['phpunit.xml', 'phpunit.xml.dist']`)
-- Searches for files in order specified
-- Uses `getcwd()` fallback when `$projectRoot` is null
-- Returns full path to first found file, or null
-
-### Message Truncation (`src/Truncator/`)
-
-**MessageTruncatorInterface**
-```php
-interface MessageTruncatorInterface
-{
-    public function truncate(string $message, int $maxLength = 200): string;
-}
-```
-
-**MessageTruncator** - Concrete implementation
-- Accepts `$prefixes` array in constructor for common prefixes to remove
-- Shortens fully-qualified class names (e.g., `App\Very\Long\Namespace\ClassName` → `App\ClassName`)
-- Truncates to max length with ellipsis if needed
-- `removeCommonPrefixes()` and `shortenClassName()` are **private** implementation details
-
-## Usage Patterns
-
-### Process Executor Implementation
-
+**Process Executor Implementation**:
 ```php
 use MatesOfMate\Common\Process\ProcessExecutor as CommonProcessExecutor;
 use MatesOfMate\Common\Process\ProcessExecutorInterface;
-use MatesOfMate\Common\Process\ProcessResult;
 
 class PhpunitProcessExecutor implements ProcessExecutorInterface
 {
@@ -156,11 +92,7 @@ class PhpunitProcessExecutor implements ProcessExecutorInterface
     public function __construct()
     {
         $cwd = getcwd();
-        $vendorPaths = false !== $cwd ? [
-            $cwd.'/vendor/bin/phpunit',
-            $cwd.'/vendor/phpunit/phpunit/phpunit',
-        ] : [];
-
+        $vendorPaths = false !== $cwd ? [$cwd.'/vendor/bin/phpunit'] : [];
         $this->executor = new CommonProcessExecutor($vendorPaths);
     }
 
@@ -175,17 +107,7 @@ class PhpunitProcessExecutor implements ProcessExecutorInterface
 }
 ```
 
-**Runner usage:**
-```php
-// PHPUnit (PHP script)
-$result = $this->executor->execute('phpunit', ['--version']);
-
-// Git (system binary)
-$result = $this->executor->execute('git', ['status'], usePhpBinary: false);
-```
-
-### Configuration Detector Implementation
-
+**Configuration Detector Implementation**:
 ```php
 use MatesOfMate\Common\Config\ConfigurationDetector as CommonConfigDetector;
 use MatesOfMate\Common\Config\ConfigurationDetectorInterface;
@@ -194,32 +116,19 @@ class ConfigurationDetector implements ConfigurationDetectorInterface
 {
     private readonly CommonConfigDetector $detector;
 
-    public function __construct(private readonly string $projectRoot)
+    public function __construct()
     {
-        $this->detector = new CommonConfigDetector([
-            'phpunit.xml',
-            'phpunit.xml.dist',
-            'phpunit.dist.xml',
-        ]);
+        $this->detector = new CommonConfigDetector(['phpunit.xml', 'phpunit.xml.dist']);
     }
 
     public function detect(?string $projectRoot = null): ?string
     {
-        return $this->detector->detect($this->projectRoot);
-    }
-
-    // Extension-specific methods can be added
-    public function getTestDirectories(): array
-    {
-        $configPath = $this->detect();
-        // Parse XML and extract test directories
-        return $directories ?: ['tests'];
+        return $this->detector->detect($projectRoot);
     }
 }
 ```
 
-### Message Truncator Implementation
-
+**Message Truncator Implementation**:
 ```php
 use MatesOfMate\Common\Truncator\MessageTruncator as CommonMessageTruncator;
 use MatesOfMate\Common\Truncator\MessageTruncatorInterface;
@@ -231,126 +140,39 @@ class MessageTruncator implements MessageTruncatorInterface
     public function __construct()
     {
         $this->truncator = new CommonMessageTruncator([
-            'Parameter ', 'Method ', 'Property ',
-            'Call to ', 'Access to ',
+            'Parameter ', 'Method ', 'Property ', 'Call to ',
         ]);
     }
 
-    public function truncate(string $message, int $maxLength = 80): string
+    public function truncate(string $message, int $maxLength = 200): string
     {
-        // Can add extension-specific logic before or after
-        $message = $this->truncator->truncate($message, $maxLength);
-
-        // Example: PHPStan-specific shortening
-        $message = preg_replace('/of method [A-Za-z0-9\\\\]+::/', 'of ', $message);
-
-        return $message;
+        return $this->truncator->truncate($message, $maxLength);
     }
 }
 ```
 
-## Development Workflow
+### Extension Integration
 
-### Installing Dependencies
-```bash
-cd /Users/johannes/Development/matesofmate/common/
-composer install
-```
+Extensions include common package via Composer path repositories:
 
-### Running Tests
-```bash
-composer test                          # Run all tests
-composer test -- --coverage-html coverage/  # With coverage
-vendor/bin/phpunit tests/Process/      # Specific directory
-```
-
-### Code Quality Checks
-```bash
-composer lint    # Runs all quality tools (validate, rector, php-cs-fixer, phpstan)
-composer fix     # Auto-fixes code style and applies Rector refactorings
-```
-
-### Individual Tools
-```bash
-vendor/bin/php-cs-fixer fix --dry-run --diff  # Check style
-vendor/bin/php-cs-fixer fix                   # Apply fixes
-vendor/bin/phpstan analyse                    # Static analysis (Level 8)
-vendor/bin/rector process --dry-run           # Preview refactorings
-vendor/bin/rector process                     # Apply refactorings
-```
-
-## Code Quality Standards
-
-**PHP Version**: 8.2+ minimum (readonly properties, constructor property promotion)
-
-**PHPStan Level**: 8 (maximum strictness)
-- No `@phpstan-ignore` comments without justification
-- All types explicit (parameters, return types, properties)
-
-**PHP CS Fixer**: `@Symfony` ruleset with risky rules
-- File header with MatesOfMate copyright
-- Specific class element ordering (traits → constants → properties → methods)
-- Parallel processing enabled
-
-**Rector**: PHP 8.2 target
-- UP_TO_PHP_82 rule set
-- CODE_QUALITY, DEAD_CODE, EARLY_RETURN, TYPE_DECLARATION sets
-
-**Testing**: PHPUnit 10.0+
-- Tests mirror `src/` structure in `tests/`
-- Descriptive test method names
-- Test both success and failure paths
-
-## Common Patterns to Follow
-
-### Constructor Dependency Injection
-```php
-// ✅ Good - accepts configuration via constructor
-public function __construct(
-    private readonly array $vendorPaths = [],
-) {}
-
-// ❌ Bad - hardcoded or protected properties
-protected array $vendorPaths = [];
-```
-
-### Private Implementation Details
-```php
-// ✅ Good - helper methods are private
-private function findBinary(string $name): ?string {}
-private function buildCommand(string $binaryPath): array {}
-
-// ❌ Bad - exposing implementation details
-public function findBinary(string $name): ?string {}
-```
-
-### Named Parameters for Booleans
-```php
-// ✅ Good - clear intent with named parameter
-$result = $executor->execute('git', ['status'], usePhpBinary: false);
-
-// ❌ Bad - unclear what false means
-$result = $executor->execute('git', ['status'], 300, false);
-```
-
-### Empty Array Checks
-```php
-// ✅ Good - explicit empty array comparison
-if ([] === $this->configFiles) {
-    return null;
-}
-
-// ❌ Bad - empty() function
-if (empty($this->configFiles)) {
-    return null;
+```json
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../common",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "require": {
+        "matesofmate/common": "^0.1"
+    }
 }
 ```
 
-## Integration with Extensions
-
-Extensions include the common package as a dependency in their `composer.json`.
-
-**Service Registration:**
+Service registration in extensions:
 ```php
 // config/services.php
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
@@ -362,47 +184,25 @@ return static function (ContainerConfigurator $container): void {
         ->autoconfigure();
 
     $services->set(PhpunitProcessExecutor::class);
-    $services->set(ConfigurationDetector::class)
-        ->arg('$projectRoot', '%kernel.project_dir%');
+    $services->set(ConfigurationDetector::class);
 };
 ```
 
-## Troubleshooting
+## Code Quality Standards
 
-### Autoloader Not Finding Classes
-**Problem**: PHPStan reports "Class not found" after namespace changes
+### PHP Requirements
+- PHP 8.2+ minimum
+- No `declare(strict_types=1)` by convention
+- No final classes (extensibility)
+- JSON encoding: Always use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
 
-**Solution**:
-1. Run `composer install` in extensions to update dependencies
-2. Run `composer dump-autoload` in common package
+### Quality Tools Configuration
+- **PHPStan**: Level 8, maximum strictness with explicit types
+- **PHP CS Fixer**: `@Symfony` + `@Symfony:risky` rulesets with ordered class elements
+- **Rector**: PHP 8.2, code quality, dead code removal, early return, type declarations
+- **PHPUnit**: Version 10.0+
 
-### Git Commands Failing
-**Problem**: Git commands prefixed with PHP_BINARY
-
-**Solution**: Always use `usePhpBinary: false` for system binaries
-```php
-$result = $executor->execute('git', ['status'], usePhpBinary: false);
-```
-
-## Key Decisions and Rationale
-
-### Why Composition Over Inheritance?
-- **Flexibility**: Extensions can customize without modifying base classes
-- **Testability**: Can mock interfaces in tests
-- **Single Responsibility**: Common classes focus on core logic only
-- **Explicit Dependencies**: Configuration visible in constructors
-
-### Why Minimal Interfaces?
-- **Clearer Contracts**: Only essential methods exposed
-- **Easier Implementation**: Fewer requirements for implementers
-- **Better Encapsulation**: Internal methods hidden from consumers
-
-### Why usePhpBinary Parameter?
-- **Correctness**: Git is not a PHP script, shouldn't use PHP_BINARY
-- **Flexibility**: Single executor handles both PHP scripts and system binaries
-- **Explicitness**: Named parameter makes intent clear at call site
-
-## File Header Template
+### File Header Template
 
 All PHP files must include:
 ```php
@@ -418,63 +218,115 @@ All PHP files must include:
  */
 ```
 
-## DocBlock Annotations
+### DocBlock Annotations
 
-**@author annotation**: All class-level DocBlocks should include an @author annotation with the current user:
+**@author annotation**: Required on all class-level DocBlocks:
 ```php
 /**
  * Executes CLI tools with consistent PHP version.
  *
- * @author Your Name <your@email.com>
+ * @author Johannes Wachter <johannes@sulu.io>
  */
-class ProcessExecutor
-{
-}
+class ProcessExecutor implements ProcessExecutorInterface
 ```
 
-**@internal annotation**: DO NOT use @internal in the common package classes or interfaces.
+**@internal annotation**: DO NOT use in common package classes or interfaces.
 
-The common package provides a **public API for extension authors**:
-```php
-/**
- * Detects configuration files in project directories.
- *
- * @author Your Name <your@email.com>
- */
-class ConfigurationDetector implements ConfigurationDetectorInterface
-{
-}
-```
-
-**Why NOT @internal:**
-- These ARE public APIs for extension composition
+Common package provides **public API for extension authors**:
 - Extensions are expected to use these classes directly
-- Interfaces define contracts between common and extensions
+- Interfaces define contracts for composition
 - Similar to Symfony Components - library APIs for developers
 
-**Version Management:**
+Use semantic versioning for breaking changes instead of @internal markers.
+
+## Testing Philosophy
+
+### Test Structure
+- Tests mirror `src/` structure in `tests/`
+- Extend `PHPUnit\Framework\TestCase`
+- Test method names: `testExecute`, `testDetect`, `testTruncate`, etc.
+
+### Key Testing Areas
+- Process execution success and failure paths
+- PHP binary detection and command building
+- Configuration file detection with multiple candidates
+- Message truncation with prefix preservation
+- Edge cases (empty arrays, null values, missing binaries)
+
+### Integration Testing
+- ProcessExecutor with real vendor paths
+- ConfigurationDetector with actual project structures
+- Composition patterns in extension contexts
+
+## Common Development Patterns
+
+### Adding New Components
+
+1. Create interface in appropriate namespace (Process, Config, Truncator)
+2. Define minimal public API (1-3 methods maximum)
+3. Implement concrete class with constructor configuration
+4. Keep helper methods private
+5. Add corresponding test in `tests/`
+6. Update this CLAUDE.md with usage patterns
+
+### Composition Best Practices
+
+**Constructor Dependency Injection**:
+```php
+// ✅ Good - accepts configuration via constructor
+public function __construct(
+    private readonly array $vendorPaths = [],
+) {}
+
+// ❌ Bad - hardcoded or protected properties
+protected array $vendorPaths = [];
+```
+
+**Private Implementation Details**:
+```php
+// ✅ Good - helper methods are private
+private function findBinary(string $name): ?string {}
+private function buildCommand(string $binaryPath): array {}
+
+// ❌ Bad - exposing implementation details
+public function findBinary(string $name): ?string {}
+```
+
+**Named Parameters for Clarity**:
+```php
+// ✅ Good - clear intent with named parameter
+$result = $executor->execute('git', ['status'], usePhpBinary: false);
+
+// ❌ Bad - unclear what false means
+$result = $executor->execute('git', ['status'], 300, false);
+```
+
+### Backward Compatibility
+
+- Treat all public methods as API contracts
 - Use semantic versioning for breaking changes
-- Clear DocBlocks explain purpose and usage
-- Treat breaking changes as major version bumps
+- Add new optional parameters to maintain compatibility
+- Document deprecations clearly in DocBlocks
 
 ## Commit Message Convention
 
-**Format**:
+Keep commit messages clean without AI attribution.
+
+**Format:**
 ```
 Short summary (50 chars or less)
 
 - Conceptual change description
 - Another concept or improvement
-- More changes as needed
 ```
 
-**Rules**:
+**Rules:**
 - ❌ NO AI attribution (no "Co-Authored-By: Claude", etc.)
 - ✅ Short, descriptive summary line
-- ✅ Bullet list describing concepts, not file names
-- ✅ Focus on WHY and WHAT, not technical details
+- ✅ Bullet list describing concepts/improvements
+- ✅ Focus on the WHY and WHAT
 
-**Good Example**:
+**Good Example:**
 ```
 Simplify ProcessExecutor interface
 
@@ -483,9 +335,9 @@ Simplify ProcessExecutor interface
 - Add usePhpBinary parameter for system binaries
 ```
 
-## Related Documentation
+**Bad Example:**
+```
+Update ProcessExecutor.php and tests
 
-- **Monorepo CLAUDE.md**: `/Users/johannes/Development/matesofmate/CLAUDE.md`
-- **Extension Template**: `/Users/johannes/Development/matesofmate/extension-template/`
-- **PHPUnit Extension**: `/Users/johannes/Development/matesofmate/phpunit-extension/`
-- **PHPStan Extension**: `/Users/johannes/Development/matesofmate/phpstan-extension/`
+Co-Authored-By: Claude Code <noreply@anthropic.com>
+```

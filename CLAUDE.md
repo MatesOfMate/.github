@@ -4,11 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a template repository for creating **Symfony AI Mate extensions**. The MatesOfMate ecosystem allows developers to create MCP (Model Context Protocol) extensions that provide tools and resources to AI assistants.
+Template repository for creating Symfony AI Mate extensions providing MCP (Model Context Protocol) tools and resources to AI assistants. This template serves as the foundation for all MatesOfMate extensions, demonstrating the standard structure, patterns, and quality standards.
 
-## Essential Commands
+## Common Commands
 
 ### Development Workflow
+
 ```bash
 # Install dependencies
 composer install
@@ -16,8 +17,9 @@ composer install
 # Run all tests
 composer test
 
-# Run tests with coverage report
-composer test -- --coverage-html coverage/
+# Run specific test
+vendor/bin/phpunit tests/Capability/ExampleToolTest.php
+vendor/bin/phpunit --filter testMethodName
 
 # Check code quality (validates composer.json, runs Rector, PHP CS Fixer, PHPStan)
 composer lint
@@ -27,6 +29,7 @@ composer fix
 ```
 
 ### Individual Quality Tools
+
 ```bash
 # PHP CS Fixer (code style)
 vendor/bin/php-cs-fixer fix --dry-run --diff  # Check only
@@ -36,38 +39,34 @@ vendor/bin/php-cs-fixer fix                   # Apply fixes
 vendor/bin/phpstan analyse
 
 # Rector (automated refactoring to PHP 8.2)
-vendor/bin/rector process --dry-run             # Preview changes
-vendor/bin/rector process                       # Apply changes
-
-# PHPUnit (run specific test)
-vendor/bin/phpunit tests/Capability/ExampleToolTest.php
-vendor/bin/phpunit --filter testMethodName
+vendor/bin/rector process --dry-run           # Preview changes
+vendor/bin/rector process                     # Apply changes
 ```
 
 ## Architecture
 
-### Core Concepts
+### Component Structure
 
-**Tools vs Resources:**
+**MCP Tools** (`src/Capability/`):
+- `ExampleTool` - Example tool demonstrating MCP tool pattern with JSON output
+
+**MCP Resources** (`src/Capability/`):
+- `ExampleResource` - Example resource demonstrating MCP resource pattern with structured data
+
+**Core Services**:
+- Extensions will add domain-specific services (runners, parsers, formatters, etc.)
+
+**Key Concepts**:
 - **Tools** (`#[McpTool]`): Executable actions invoked by AI (e.g., list entities, analyze code)
 - **Resources** (`#[McpResource]`): Static/semi-static data provided to AI (e.g., configuration, routes)
 
-**Discovery Mechanism:**
-The `extra.ai-mate` section in `composer.json` defines:
-- `scan-dirs`: Directories to scan for `#[McpTool]` and `#[McpResource]` attributes
-- `includes`: Service configuration files to load
+### Service Registration
 
-### Directory Structure
+All services registered in `config/services.php` with:
+- Autowiring enabled
+- Autoconfiguration enabled (discovers #[McpTool] and #[McpResource] attributes)
 
-```
-src/Capability/          # All tools and resources go here
-config/services.php      # Symfony DI configuration for registering capabilities
-tests/Capability/        # Tests mirror src/Capability/ structure
-```
-
-### Service Registration Pattern
-
-In `config/services.php`:
+Example registration:
 ```php
 $services = $container->services()
     ->defaults()
@@ -79,8 +78,109 @@ $services->set(YourTool::class);
 
 All classes in `src/Capability/` with `#[McpTool]` or `#[McpResource]` attributes are automatically discovered if registered as services.
 
-### Tool Implementation Pattern
+## Code Quality Standards
 
+### PHP Requirements
+- PHP 8.2+ minimum
+- No `declare(strict_types=1)` by convention (template convention - allows user customization)
+- No final classes (extensibility)
+- JSON encoding: Always use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
+
+### Quality Tools Configuration
+- **PHPStan**: Level 8, includes phpstan-phpunit extension
+- **PHP CS Fixer**: `@Symfony` + `@Symfony:risky` rulesets with ordered class elements
+- **Rector**: PHP 8.2, code quality, dead code removal, early return, type declarations
+- **PHPUnit**: Version 10.0+
+
+### File Header Template
+
+All PHP files must include:
+```php
+<?php
+
+/*
+ * This file is part of the MatesOfMate Organisation.
+ *
+ * (c) Johannes Wachter <johannes@sulu.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+```
+
+### DocBlock Annotations
+
+**@author annotation**: Required on all class-level DocBlocks:
+```php
+/**
+ * Description of the class.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class YourClass
+```
+
+**@internal annotation**: Mark implementation details not for external use:
+```php
+/**
+ * Internal helper class for processing output.
+ *
+ * @internal
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class InternalHelper
+```
+
+Use @internal for:
+- Parser, formatter, runner classes
+- Helper traits
+- Internal DTOs
+- Classes not intended for extension consumers
+
+## Discovery Mechanism
+
+Symfony AI Mate auto-discovers tools and resources via `composer.json`:
+
+```json
+{
+    "extra": {
+        "ai-mate": {
+            "scan-dirs": ["src/Capability"],
+            "includes": ["config/services.php"]
+        }
+    }
+}
+```
+
+## Testing Philosophy
+
+### Test Structure
+- Tests mirror `src/` structure in `tests/`
+- Extend `PHPUnit\Framework\TestCase`
+- Test method names: `testReturnsValidJson`, `testContainsExpectedKeys`, etc.
+
+### Key Testing Areas
+- Tool parameter validation and JSON output structure
+- Resource return array structure (uri, mimeType, text)
+- Service integration and dependency injection
+- Error handling and edge cases
+
+### Integration Testing
+- Service registration and dependency injection
+- Attribute-based discovery (#[McpTool], #[McpResource])
+- Framework integration with Symfony AI Mate
+
+## Common Development Patterns
+
+### Adding New Tools
+
+1. Create tool class in `src/Capability/` with `#[McpTool]` attribute
+2. Use naming convention: `{framework}-{action}` (lowercase with hyphens)
+3. Inject required services via constructor
+4. Register service in `config/services.php`
+5. Add corresponding test in `tests/Capability/`
+
+**Tool Implementation Pattern**:
 ```php
 use Mcp\Capability\Attribute\McpTool;
 
@@ -103,14 +203,21 @@ class YourTool
 }
 ```
 
-**Key points:**
+**Key points**:
 - Tool names use lowercase with hyphens: `example-list-entities`
 - Descriptions are critical - AI uses them to decide when to invoke tools
 - Return JSON strings for structured data
 - Use constructor injection for dependencies
 
-### Resource Implementation Pattern
+### Adding New Resources
 
+1. Create resource class in `src/Capability/` with `#[McpResource]` attribute
+2. Use custom URI scheme (e.g., `example://`, `symfony://`)
+3. Return array with `uri`, `mimeType`, and `text` keys
+4. Register service in `config/services.php`
+5. Add corresponding test in `tests/Capability/`
+
+**Resource Implementation Pattern**:
 ```php
 use Mcp\Capability\Attribute\McpResource;
 
@@ -132,127 +239,37 @@ class YourResource
 }
 ```
 
-**Key points:**
+**Key points**:
 - Must return array with `uri`, `mimeType`, and `text` keys
-- URI uses custom scheme (e.g., `example://`, `symfony://`)
+- URI uses custom scheme matching your framework
 - Typically return `application/json` or `text/plain`
 
-## Code Quality Standards
-
-### Important Design Decisions
-
-⚠️ **Template-specific conventions** (users can customize when creating their extensions):
-
-- **No strict types declarations** - All PHP files omit `declare(strict_types=1)` by design
-- **No final classes** - All classes are non-final to allow extensibility
-- **JSON error handling** - Always use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT` with `json_encode()`
-
-### PHP CS Fixer Configuration
-- Follows `@Symfony` ruleset with risky rules enabled
-- Enforces specific class element ordering (traits → constants → properties → methods)
-- Requires MatesOfMate organisation header comment
-- Uses parallel processing for performance
-- Excludes only `var/` and `vendor/` directories
-
-### PHPStan Configuration
-- **Level 8** (maximum strictness)
-- Analyzes both `src/` and `tests/`
-- PHPDoc types are not treated as certain (forces proper type declarations)
-- PHPUnit extension enabled
-- Empty `ignoreErrors` section available for adding exceptions
-
-### Rector Configuration
-- Targets **PHP 8.2+**
-- Applies: UP_TO_PHP_82, code quality, dead code removal, early return, type declarations
-- PHPUnit 10.0 rules enabled
-
-## Testing Conventions
-
-- Tests live in `tests/` mirroring `src/` structure
-- Extend `PHPUnit\Framework\TestCase`
-- Use descriptive test method names: `testReturnsValidJson`, `testContainsExpectedKeys`
-- Test JSON output validity and structure for tools
-- Test return array structure for resources
-
-## CI/CD
-
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs automatically:
-- **Lint job**: Validates composer.json, runs Rector, PHP CS Fixer, PHPStan
-- **Test job**: Runs PHPUnit on PHP 8.2 and 8.3
-
-## When Creating New Extensions
+### When Creating New Extensions
 
 1. Replace all `example`/`Example`/`ExampleExtension` references with your framework name
-2. Update `composer.json` package name to `matesofmate/{framework}-extension` and description
+2. Update `composer.json` package name to `matesofmate/{framework}-extension`
 3. Update `.github/CODEOWNERS` - replace `@your-username` with your GitHub handle (keep `@wachterjohannes`)
-4. Create tools in `src/Capability/` with clear, descriptive tool names and descriptions
-5. Register services in `config/services.php`
-6. Write tests in `tests/Capability/` covering tool/resource behavior
-7. Update README.md with framework-specific installation and usage instructions
+4. Create tools and resources in `src/Capability/` with clear, descriptive names
+5. Register all services in `config/services.php`
+6. Write comprehensive tests in `tests/Capability/`
+7. Update README.md with framework-specific documentation
 8. Ensure all quality checks pass: `composer lint && composer test`
 9. Tag release (e.g., `v0.1.0`) and submit to Packagist
 
-## File Header Template
-
-All PHP files must include this copyright header:
-
-```php
-<?php
-
-/*
- * This file is part of the MatesOfMate Organisation.
- *
- * (c) Johannes Wachter <johannes@sulu.io>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
-```
-
 ## Commit Message Convention
 
-**Important**: Keep commit messages clean without AI attribution.
+Keep commit messages clean without AI attribution.
 
-**Format**:
+**Format:**
 ```
 Short summary (50 chars or less)
 
 - Conceptual change description
 - Another concept or improvement
-- More changes as needed
 ```
 
-**✅ Good Examples**:
-```
-Add Doctrine entity discovery tool
-
-- Enable AI to discover entity metadata
-- Support association mapping queries
-- Include field type information
-```
-
-```
-Improve error handling for API tools
-
-- Add graceful degradation for missing services
-- Provide helpful error messages
-- Include recovery suggestions
-```
-
-**❌ Bad Examples**:
-```
-Update tool files
-
-Co-Authored-By: Claude Code <noreply@anthropic.com>
-```
-
-```
-Implement features - coded by claude-code
-```
-
-**Rules**:
-- ❌ NO AI attribution (no "Co-Authored-By: Claude", "coded by claude-code", etc.)
+**Rules:**
+- ❌ NO AI attribution (no "Co-Authored-By: Claude", etc.)
 - ✅ Short, descriptive summary line
-- ✅ Bullet list describing concepts/improvements, not file names
-- ✅ Natural language explaining what changed
-- ✅ Focus on the WHY and WHAT, not technical details
+- ✅ Bullet list describing concepts/improvements
+- ✅ Focus on the WHY and WHAT

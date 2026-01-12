@@ -223,4 +223,4 @@ Remember to update CODEOWNERS with your actual GitHub username or team names.
 
 ---
 
-*Built with 🤝 by the MatesOfMate community*
+*"Because every Mate needs Mates"*

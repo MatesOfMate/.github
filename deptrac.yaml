@@ -1,0 +1,44 @@
+deptrac:
+  paths:
+    - ./src
+
+  exclude_files:
+    - .*Test\.php
+    - .*/Tests/.*
+
+  layers:
+    # Package-level boundaries - simpler and more reliable
+    - name: Common
+      collectors:
+        - type: directory
+          value: src/common/.*
+
+    - name: PHPUnit Extension
+      collectors:
+        - type: directory
+          value: src/phpunit-extension/.*
+
+    - name: PHPStan Extension
+      collectors:
+        - type: directory
+          value: src/phpstan-extension/.*
+
+    - name: Extension Template
+      collectors:
+        - type: directory
+          value: src/extension-template/.*
+
+  ruleset:
+    # Package dependency rules - enforce package isolation
+    # Common should not depend on any extensions
+    Common: []
+
+    # Extensions can only depend on Common, not on each other
+    PHPUnit Extension:
+      - Common
+
+    PHPStan Extension:
+      - Common
+
+    Extension Template:
+      - Common

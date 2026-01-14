@@ -1,0 +1,76 @@
+name: Split Packages
+
+on:
+    push:
+        tags:
+            - 'v*.*.*'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+jobs:
+    split:
+        name: Split ${{ matrix.package }}
+        runs-on: ubuntu-latest
+
+        strategy:
+            fail-fast: false
+            matrix:
+                package:
+                    - awesome-mate
+                    - common
+                    - extension-template
+                    - phpunit-extension
+                    - phpstan-extension
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0  # Full history for split
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Get repository info
+              id: repo
+              run: |
+                  case "${{ matrix.package }}" in
+                      awesome-mate)
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=awesome-mate" >> $GITHUB_OUTPUT
+                          echo "path=awesome-mate" >> $GITHUB_OUTPUT
+                          ;;
+                      common)
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=common" >> $GITHUB_OUTPUT
+                          echo "path=src/common" >> $GITHUB_OUTPUT
+                          ;;
+                      extension-template)
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=extension-template" >> $GITHUB_OUTPUT
+                          echo "path=src/extension-template" >> $GITHUB_OUTPUT
+                          ;;
+                      phpunit-extension)
+                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "name=phpunit-extension" >> $GITHUB_OUTPUT
+                          echo "path=src/phpunit-extension" >> $GITHUB_OUTPUT
+                          ;;
+                      phpstan-extension)
+                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "name=phpstan-extension" >> $GITHUB_OUTPUT
+                          echo "path=src/phpstan-extension" >> $GITHUB_OUTPUT
+                          ;;
+                  esac
+
+            - name: Split and push to target repository
+              uses: symplify/monorepo-split-github-action@2.3
+              with:
+                  package_directory: ${{ steps.repo.outputs.path }}
+                  repository_organization: ${{ steps.repo.outputs.org }}
+                  repository_name: ${{ steps.repo.outputs.name }}
+                  user_name: "github-actions[bot]"
+                  user_email: "github-actions[bot]@users.noreply.github.com"
+                  branch: main
+                  tag: ${{ github.ref_name }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

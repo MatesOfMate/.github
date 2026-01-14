@@ -1,0 +1,29 @@
+name: Build Test Matrix
+
+on:
+    workflow_call:
+        outputs:
+            packages:
+                value: ${{ jobs.build-matrix.outputs.packages }}
+
+jobs:
+    build-matrix:
+        name: Build Package Matrix
+        runs-on: ubuntu-latest
+        outputs:
+            packages: ${{ steps.discover.outputs.packages }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Discover packages
+              id: discover
+              run: |
+                  # Find all packages in src/
+                  PACKAGES=$(find src -maxdepth 2 -name composer.json -type f | \
+                      sed 's|/composer.json||' | \
+                      jq -R -s -c 'split("\n")[:-1] | map(select(length > 0))')
+                  echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+                  echo "Discovered packages:"
+                  echo "$PACKAGES" | jq -r '.[]'

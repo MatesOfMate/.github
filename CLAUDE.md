@@ -2,133 +2,321 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository Purpose
+## Repository Overview
 
-This is the **`.github` repository** for the MatesOfMate organization - a special GitHub repository that contains organization-wide configuration, documentation, and templates.
+This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem - a collection of community-driven extensions for Symfony AI Mate that provide MCP (Model Context Protocol) tools and resources to AI assistants.
 
-When placed at `github.com/matesofmate/.github`, this repository automatically provides:
-- Default community health files (CONTRIBUTING.md, CODE_OF_CONDUCT.md)
-- Shared issue templates and PR templates for all organization repositories
-- Organization profile content (profile/README.md)
-- Default CODEOWNERS file
+**Key Projects:**
+- `src/common/` - Shared functionality for all extensions
+- `src/extension-template/` - Starter template for creating new extensions
+- `src/phpunit-extension/` - PHPUnit testing tools with token-optimized output
+- `src/phpstan-extension/` - PHPStan static analysis tools
+- `awesome-mate/` - Curated resource list following Awesome List standards
+- `demo/` - Demo Symfony application showcasing extensions
+- `.github/` - Organization-wide configuration, workflows, and templates
 
-## Repository Structure
+## Monorepo Architecture
+
+Following the **Symfony AI pattern**, this monorepo uses:
+
+- **Centralized source**: All packages in `src/` directory
+- **Local development**: `build-packages.php` script adds path repositories dynamically
+- **External testing**: `link` script symlinks packages to other projects
+- **Subtree splitting**: Automated publishing to individual repos via GitHub Actions
+- **Matrix CI/CD**: Dynamic package discovery and parallel testing
+
+## Project Structure
 
 ```
-.github/
-├── CODEOWNERS                    # Default code ownership for organization repos
-├── ISSUE_TEMPLATE/
-│   ├── 1-bug_report.md          # Bug report template
-│   ├── 2-feature_request.md     # Feature request template
-│   ├── 3-new_extension.md       # New extension submission template
-│   └── config.yml               # Issue template configuration
-└── PULL_REQUEST_TEMPLATE.md     # Default PR template
-
-CONTRIBUTING.md                   # Organization-wide contributing guidelines
-README.md                         # Organization overview and documentation
-LICENSE                          # MIT license
-profile/
-└── README.md                    # Organization profile page content
+matesofmate-monorepo/
+├── .github/
+│   ├── workflows/
+│   │   ├── build-matrix.yml       # Dynamic package discovery
+│   │   ├── tests.yml              # Matrix testing (PHP 8.2, 8.3)
+│   │   ├── code-quality.yml       # PHPStan, CS-Fixer, Rector
+│   │   └── split.yml              # Subtree splitting automation
+│   ├── build-packages.php         # Local dev script (from Symfony AI)
+│   └── scripts/
+├── awesome-mate/                   # Curated resource list
+│   └── README.md
+├── demo/                           # Demo Symfony application
+│   ├── config/
+│   ├── src/
+│   ├── tests/
+│   └── composer.json              # Uses path repositories to src/
+├── src/                            # All packages here (like Symfony AI)
+│   ├── common/
+│   │   ├── src/
+│   │   ├── tests/
+│   │   └── composer.json
+│   ├── extension-template/
+│   ├── phpunit-extension/
+│   └── phpstan-extension/
+├── link                            # Symlink helper (from Symfony AI)
+├── splitsh.json                    # Subtree split config
+├── composer.json                   # Root (minimal, dev-only)
+├── CONTRIBUTING.md
+└── README.md
 ```
 
-## MatesOfMate Ecosystem Overview
+## Common Package Architecture
 
-**MatesOfMate** is a community-driven ecosystem for Symfony AI Mate extensions:
+The `common/` package provides shared functionality for all MatesOfMate extensions:
 
-- **Core Concept**: Extensions provide MCP (Model Context Protocol) tools and resources to AI assistants
-- **Naming Convention**: `matesofmate/{framework}-extension` packages
-- **Base Namespace**: `MatesOfMate\{Framework}\`
-- **Tool Naming**: `{framework}-{action}` format (e.g., `sulu-content-types`)
+**Location**: `src/common/` in monorepo
 
-## Key Documentation Files
+**Components**:
+- **Process**: ProcessExecutorInterface, ProcessExecutor, ProcessResult for CLI tool execution
+- **Config**: ConfigurationDetectorInterface, ConfigurationDetector for auto-detecting config files
+- **Truncator**: MessageTruncatorInterface, MessageTruncator for token-efficient output
+- **DTO**: ProcessResult for command execution results
 
-### README.md (Organization Overview)
-- Explains what MatesOfMate is
-- Lists available extensions
-- Provides quick start guide
-- Links to extension-template and awesome-mate
+**Usage in Extensions**:
+Extensions use composition with common classes:
 
-### CONTRIBUTING.md (Contribution Guidelines)
-Contains guidelines for:
-1. **Submitting new extensions** - Using extension-template, naming conventions, required documentation
-2. **Extension structure requirements** - File layout, composer.json configuration, namespace patterns
-3. **Tool best practices** - Single responsibility, clear descriptions, structured output
-4. **Resource best practices** - URI schemes, static content patterns, helpful context
-5. **Code quality standards** - PHP CS Fixer, PHPStan level 8, Rector
-6. **PR process** - Fork, branch, test, lint, commit, PR checklist
-
-### Issue Templates
-
-**1-bug_report.md**: Standard bug report for extensions
-**2-feature_request.md**: Feature request for new tools/capabilities
-**3-new_extension.md**: Submission form for listing new extensions in awesome-mate collection
-
-**Quality checklist items**:
-- Follows contributing guidelines
-- Comprehensive README
-- Tests with passing CI
-- Published on Packagist
-- Semantic versioning
-- MIT or compatible license
-
-## Making Changes to Organization Files
-
-### When to Update README.md
-- Adding new extension to the "Available Extensions" table
-- Updating ecosystem description or quick start guide
-- Changing community links or related projects
-
-### When to Update CONTRIBUTING.md
-- Changing extension naming conventions
-- Updating required files or structure
-- Modifying code quality standards
-- Adding new tool/resource best practices
-
-### When to Update Issue Templates
-- Adding new issue categories
-- Modifying submission requirements
-- Updating quality checklist items
-
-### When to Update profile/README.md
-- Changing organization profile display
-- Updating organization description or goals
-- Modifying featured repositories or highlights
-
-## Important Standards
-
-### Extension Naming
-- **Package**: `matesofmate/{framework}-extension`
-- **Namespace**: `MatesOfMate\{Framework}\` or `MatesOfMate\{Framework}Extension\`
-- **Tool names**: `{framework}-{action}` (lowercase with hyphens)
-
-### JSON Encoding Standard
-All JSON encoding in examples must use:
 ```php
-json_encode($data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT)
+use MatesOfMate\Common\Process\ProcessExecutor as CommonProcessExecutor;
+use MatesOfMate\Common\Process\ProcessExecutorInterface;
+
+class PhpunitProcessExecutor implements ProcessExecutorInterface
+{
+    private readonly CommonProcessExecutor $executor;
+
+    public function __construct()
+    {
+        $cwd = getcwd();
+        $vendorPaths = false !== $cwd ? [$cwd.'/vendor/bin/phpunit'] : [];
+        $this->executor = new CommonProcessExecutor($vendorPaths);
+    }
+
+    public function execute(
+        string $binaryName,
+        array $args = [],
+        int $timeout = 300,
+        bool $usePhpBinary = true
+    ): ProcessResult {
+        return $this->executor->execute($binaryName, $args, $timeout, $usePhpBinary);
+    }
+}
 ```
 
-### Code Quality Requirements
-Extensions must support:
-- **PHP 8.2+** minimum
-- **PHPStan level 8** static analysis
-- **PHP CS Fixer** with PSR-12 and Symfony standards
-- **Rector** for automated refactoring
-- **PHPUnit** for testing
+## Essential Commands
 
-### Required Composer Scripts
-Extensions must provide:
-- `composer test` - Run PHPUnit tests
-- `composer lint` - Run all quality checks (validate, rector, php-cs-fixer, phpstan)
-- `composer fix` - Auto-fix code style and apply refactorings
+### Monorepo Development
 
-## Git Workflow
+```bash
+# Install root dependencies
+composer install
 
-### Main Branch
-- Default branch: `main`
-- Protected branch requiring PR reviews
-- All changes via pull requests
+# Prepare packages for local development (adds path repositories)
+php .github/build-packages.php
 
-### Commit Message Convention
+# Link monorepo packages to external project
+./link /path/to/your-project
+
+# Rollback symlinks
+./link --rollback /path/to/your-project
+```
+
+### Working on Individual Packages
+
+```bash
+# Navigate to package
+cd src/phpunit-extension
+
+# Install dependencies (after running build-packages.php)
+composer install
+
+# Run all tests
+composer test
+
+# Check code quality
+composer lint
+
+# Auto-fix code style
+composer fix
+```
+
+### Running Quality Tools
+
+```bash
+# PHP CS Fixer
+vendor/bin/php-cs-fixer fix --dry-run --diff
+vendor/bin/php-cs-fixer fix
+
+# PHPStan (level 8)
+vendor/bin/phpstan analyse
+
+# Rector (PHP 8.2)
+vendor/bin/rector process --dry-run
+vendor/bin/rector process
+
+# PHPUnit
+vendor/bin/phpunit
+vendor/bin/phpunit tests/Capability/SpecificTest.php
+
+# Deptrac (architecture validation at monorepo root)
+composer deptrac
+composer deptrac:clear  # Clear cache
+```
+
+## Development Workflow
+
+### Working on Multiple Packages
+
+```bash
+# From monorepo root
+php .github/build-packages.php
+
+cd src/phpunit-extension/
+composer install
+composer test && composer lint
+
+cd ../src/phpstan-extension/
+composer install
+composer test && composer lint
+
+# Update documentation
+cd ../../awesome-mate/
+# Edit README.md
+```
+
+### Testing Changes in Demo App
+
+```bash
+cd demo/
+composer install  # Uses path repositories automatically
+vendor/bin/mate discover
+vendor/bin/phpunit
+```
+
+### Creating a New Extension
+
+1. **Copy template**:
+```bash
+cp -r src/extension-template/ src/new-framework-extension/
+cd src/new-framework-extension/
+```
+
+2. **Replace references**:
+- Update `composer.json` name to `matesofmate/new-framework-extension`
+- Replace all `example`/`Example`/`ExampleExtension` with your framework name
+- Update `.github/CODEOWNERS`
+
+3. **Implement capabilities**:
+- Create tools in `src/Capability/`
+- Register services in `config/services.php`
+- Write tests in `tests/Capability/`
+
+4. **Ensure quality**:
+```bash
+composer install
+composer lint && composer test
+```
+
+## Code Quality Standards
+
+### Organization-Wide Standards
+
+All extensions must follow:
+
+**PHP Requirements:**
+- PHP 8.2+ minimum
+- No `declare(strict_types=1)` by convention
+- No final classes (extensibility)
+- JSON encoding: `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
+
+**Code Quality Tools:**
+- **PHPStan**: Level 8 (maximum strictness)
+- **PHP CS Fixer**: `@Symfony` ruleset with risky rules
+- **Rector**: UP_TO_PHP_82, code quality, dead code removal
+- **PHPUnit**: Version 10.0+
+- **Deptrac**: Architecture validation (monorepo-level)
+
+**Required Composer Scripts:**
+```json
+{
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": [
+            "@composer validate --strict",
+            "vendor/bin/rector process --dry-run",
+            "vendor/bin/php-cs-fixer fix --dry-run --diff",
+            "vendor/bin/phpstan analyse"
+        ],
+        "fix": [
+            "vendor/bin/rector process",
+            "vendor/bin/php-cs-fixer fix"
+        ]
+    }
+}
+```
+
+### File Header Template
+
+All PHP files must include:
+```php
+<?php
+
+/*
+ * This file is part of the MatesOfMate Organisation.
+ *
+ * (c) Johannes Wachter <johannes@sulu.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+```
+
+### DocBlock Annotations
+
+**@author annotation**: Required on all class-level DocBlocks
+**@internal annotation**: Mark implementation details not for external use
+
+## CI/CD Architecture
+
+### Workflow Structure
+
+**build-matrix.yml**: Discovers all packages in `src/` dynamically
+**tests.yml**: Tests each package × PHP version (8.2, 8.3) independently
+**code-quality.yml**: Runs lint on all packages in parallel
+**split.yml**: Publishes packages to individual repos on tag push
+
+### Workflow Pattern (from Symfony AI)
+
+1. Install root dependencies
+2. Run `build-packages.php` to add path repos
+3. **Clean vendor folders** (prevents circular symlinks)
+4. Install package dependencies
+5. Run package tests
+
+### Testing Locally
+
+```bash
+# Simulate build-matrix discovery
+find src -maxdepth 2 -name composer.json -type f | sed 's|/composer.json||'
+
+# Test package builds
+for pkg in src/*/; do
+    cd "$pkg" && composer install && composer test && cd -
+done
+```
+
+## Subtree Splitting
+
+Packages are automatically split to individual repos on tag push:
+
+**Configuration**: `splitsh.json`
+**Workflow**: `.github/workflows/split.yml`
+
+**Split mapping**:
+- `awesome-mate/` → `MatesOfMate/awesome-mate`
+- `src/common/` → `MatesOfMate/common`
+- `src/extension-template/` → `MatesOfMate/extension-template`
+- `src/phpunit-extension/` → `matesofmate/phpunit-extension`
+- `src/phpstan-extension/` → `matesofmate/phpstan-extension`
+
+## Commit Message Convention
 
 **Important**: Keep commit messages clean without AI attribution.
 
@@ -138,24 +326,15 @@ Short summary (50 chars or less)
 
 - Conceptual change description
 - Another concept or improvement
-- More changes as needed
 ```
 
 **✅ Good Examples**:
 ```
-Strengthen extension quality requirements
+Add TOON formatter for token optimization
 
-- Raise minimum test coverage expectations
-- Clarify documentation standards
-- Add Packagist publication as requirement
-```
-
-```
-Improve contributor onboarding experience
-
-- Simplify initial setup instructions
-- Add troubleshooting guidance
-- Clarify code quality expectations
+- Integrate helgesverre/toon library
+- Reduce output tokens by 40-50%
+- Preserve test result structure
 ```
 
 **❌ Bad Examples**:
@@ -165,68 +344,84 @@ Update files
 Co-Authored-By: Claude Code <noreply@anthropic.com>
 ```
 
-```
-Fix documentation - coded by claude-code
-```
-
 **Rules**:
-- ❌ NO AI attribution (no "Co-Authored-By: Claude", "coded by claude-code", etc.)
+- ❌ NO AI attribution
 - ✅ Short, descriptive summary line
-- ✅ Bullet list describing concepts/improvements, not file names
-- ✅ Natural language explaining what changed
-- ✅ Focus on the WHY and WHAT, not technical details
+- ✅ Bullet list describing concepts/improvements
+- ✅ Focus on the WHY and WHAT
 
-### Making Changes
+## Repository Relationships
+
+### Monorepo Coordination
+
+**src/extension-template/** → serves as base for all new extensions
+**awesome-mate/** → catalogs and documents all published extensions
+**demo/** → demonstrates extension usage with real Symfony app
+**.github/** → provides organization-wide CI/CD and templates
+
+When updating standards:
+1. Update this `CLAUDE.md` for monorepo-wide changes
+2. Update `src/extension-template/CLAUDE.md` for template changes
+3. Update individual package `CLAUDE.md` files as needed
+4. Document changes in `awesome-mate/` if user-facing
+
+## Publishing Workflow
+
+1. Ensure all quality checks pass: `composer lint && composer test`
+2. Update CHANGELOG.md with version changes
+3. Tag release: `git tag -a v0.1.0 -m "Release version 0.1.0"`
+4. Push tag: `git push origin v0.1.0`
+5. Split workflow automatically publishes to individual repos
+6. Submit to Packagist (first time requires manual submission)
+7. Update `awesome-mate/README.md` with new extension
+
+## Local Development Tips
+
+### Using build-packages.php
+
+This script dynamically adds path repositories to all `src/*/composer.json` files:
+
 ```bash
-# Clone repository
-git clone git@github.com:matesofmate/.github.git
-cd .github
+# Run after pulling new packages or changing dependencies
+php .github/build-packages.php
 
-# Create feature branch
-git checkout -b update/description
+# Updates packages that depend on common
+✓ Updated matesofmate/phpunit-extension
+✓ Updated matesofmate/phpstan-extension
 
-# Make changes to documentation or templates
-# Commit with proper format
-git add .
-git commit -m "Strengthen extension quality requirements
-
-- Raise minimum test coverage expectations
-- Clarify documentation standards"
-
-git push origin update/description
-
-# Create PR on GitHub
+# Now install in each package
+cd src/phpunit-extension && composer install
 ```
 
-## Common Operations
+### Using link Script
 
-### Adding a New Extension to README
-1. Edit README.md "Available Extensions" table
-2. Add row with extension name, description, and status
-3. Keep alphabetical order by extension name
-4. Update count if needed
+Test monorepo packages in external projects:
 
-### Updating Code Examples
-When updating code examples in CONTRIBUTING.md:
-- Use current namespace patterns (`MatesOfMate\ExampleExtension\`)
-- Include proper JSON encoding flags
-- Follow current coding standards (no strict types, no final classes)
-- Match extension-template conventions
+```bash
+# Link packages to external project
+./link /path/to/external-project
 
-### Modifying Issue Templates
-- Keep YAML frontmatter intact (name, about, title, labels)
-- Maintain consistent checkbox format
-- Update quality checklist to match current standards
-- Test templates by creating test issues
+# Work on monorepo, changes reflect immediately
+cd src/phpunit-extension
+# Make changes, test reflects in linked project
 
-## Cross-Repository Coordination
+# Rollback when done
+./link --rollback /path/to/external-project
+```
 
-This repository coordinates with:
-- **extension-template**: Ensure CONTRIBUTING.md matches template conventions
-- **awesome-mate**: New extension submissions go through issue template
-- All **extension repositories**: Inherit issue templates and PR templates
+## Extension Discovery Mechanism
 
-When updating standards here, also update:
-- extension-template/README.md
-- extension-template/CLAUDE.md
-- Individual extension documentation as needed
+All extensions use the `extra.ai-mate` section in `composer.json`:
+
+```json
+{
+    "extra": {
+        "ai-mate": {
+            "scan-dirs": ["src/Capability"],
+            "includes": ["config/services.php"]
+        }
+    }
+}
+```
+
+Symfony AI Mate auto-discovers tools and resources via this configuration.

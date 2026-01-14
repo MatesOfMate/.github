@@ -1,0 +1,74 @@
+name: Tests
+
+on:
+    push:
+        branches: [ main ]
+    pull_request:
+        branches: [ main ]
+
+jobs:
+    build-matrix:
+        uses: ./.github/workflows/build-matrix.yml
+
+    test-packages:
+        name: Test ${{ matrix.package }} (PHP ${{ matrix.php }})
+        runs-on: ubuntu-latest
+        needs: build-matrix
+
+        strategy:
+            fail-fast: false
+            matrix:
+                php: ['8.2', '8.3']
+                package: ${{ fromJson(needs.build-matrix.outputs.packages) }}
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: ${{ matrix.php }}
+                  extensions: json, simplexml
+                  coverage: none
+
+            - name: Install root dependencies
+              uses: ramsey/composer-install@v3
+
+            - name: Build packages (add path repositories)
+              run: php .github/build-packages.php
+
+            - name: Clean vendor folders
+              run: rm -rf vendor ${{ matrix.package }}/vendor
+
+            - name: Install package dependencies
+              uses: ramsey/composer-install@v3
+              with:
+                  working-directory: ${{ matrix.package }}
+
+            - name: Run tests
+              working-directory: ${{ matrix.package }}
+              run: vendor/bin/phpunit
+
+    test-demo:
+        name: Test Demo App (PHP 8.4)
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.4'
+                  extensions: json, simplexml, ctype, iconv
+
+            - name: Install dependencies
+              uses: ramsey/composer-install@v3
+              with:
+                  working-directory: demo
+
+            - name: Run tests
+              working-directory: demo
+              run: vendor/bin/phpunit

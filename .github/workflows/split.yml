@@ -63,7 +63,7 @@ jobs:
                   esac
 
             - name: Split and push to target repository
-              uses: symplify/monorepo-split-github-action@2.3
+              uses: symplify/monorepo-split-github-action@2.2
               with:
                   package_directory: ${{ steps.repo.outputs.path }}
                   repository_organization: ${{ steps.repo.outputs.org }}

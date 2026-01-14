@@ -29,6 +29,10 @@ jobs:
               with:
                   php-version: '8.2'
 
+            - name: Validate composer.json
+              working-directory: ${{ matrix.package }}
+              run: composer validate --strict
+
             - name: Install root dependencies
               uses: ramsey/composer-install@v3
 
@@ -43,9 +47,12 @@ jobs:
               with:
                   working-directory: ${{ matrix.package }}
 
-            - name: Run linters
+            - name: Run code quality tools
               working-directory: ${{ matrix.package }}
-              run: composer lint
+              run: |
+                  vendor/bin/rector process --dry-run
+                  vendor/bin/php-cs-fixer fix --dry-run --diff
+                  vendor/bin/phpstan analyse
 
     deptrac:
         name: Deptrac Architecture Validation

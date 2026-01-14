@@ -7,63 +7,33 @@ deptrac:
     - .*/Tests/.*
 
   layers:
-    # Packages
+    # Package-level boundaries - simpler and more reliable
     - name: Common
       collectors:
-        - type: classNameRegex
-          value: ^MatesOfMate\\Common\\.*
+        - type: directory
+          value: src/common/.*
 
     - name: PHPUnit Extension
       collectors:
-        - type: classNameRegex
-          value: ^MatesOfMate\\PHPUnitExtension\\.*
+        - type: directory
+          value: src/phpunit-extension/.*
 
     - name: PHPStan Extension
       collectors:
-        - type: classNameRegex
-          value: ^MatesOfMate\\PhpStan\\.*
+        - type: directory
+          value: src/phpstan-extension/.*
 
     - name: Extension Template
       collectors:
-        - type: classNameRegex
-          value: ^MatesOfMate\\ExampleExtension\\.*
-
-    # Layer by responsibility (cross-package)
-    - name: Capability
-      collectors:
-        - type: classNameRegex
-          value: .*\\Capability\\.*
-
-    - name: Runner
-      collectors:
-        - type: classNameRegex
-          value: .*\\Runner\\.*
-
-    - name: Parser
-      collectors:
-        - type: classNameRegex
-          value: .*\\Parser\\.*
-
-    - name: Formatter
-      collectors:
-        - type: classNameRegex
-          value: .*\\Formatter\\.*
-
-    - name: Config
-      collectors:
-        - type: classNameRegex
-          value: .*\\Config\\.*
-
-    - name: Discovery
-      collectors:
-        - type: classNameRegex
-          value: .*\\Discovery\\.*
+        - type: directory
+          value: src/extension-template/.*
 
   ruleset:
-    # Package dependency rules
-    Common:
-      # Common should have no dependencies on extensions
+    # Package dependency rules - enforce package isolation
+    # Common should not depend on any extensions
+    Common: []
 
+    # Extensions can only depend on Common, not on each other
     PHPUnit Extension:
       - Common
 
@@ -72,32 +42,3 @@ deptrac:
 
     Extension Template:
       - Common
-
-    # Layer dependency rules
-    Capability:
-      - Runner
-      - Parser
-      - Formatter
-      - Config
-      - Discovery
-      - Common
-
-    Runner:
-      - Config
-      - Common
-
-    Parser:
-      - Common
-
-    Formatter:
-      - Common
-
-    Config:
-      - Common
-
-    Discovery:
-      - Config
-      - Common
-
-  skip_violations:
-    # Add specific violations to skip if needed

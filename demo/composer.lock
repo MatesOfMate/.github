@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0a29376c5d10df316154d7cdacee64f1",
+    "content-hash": "b8cae5ff1629a88786304920e366d74f",
     "packages": [
         {
             "name": "psr/cache",
@@ -2585,8 +2585,8 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../common",
-                "reference": "2ee991a07081e80f499f8823f5b871b63b4a0fdc"
+                "url": "../src/common",
+                "reference": "8141d9eb36fe5a71d82078de5fcbac4e44eed823"
             },
             "require": {
                 "ext-simplexml": "*",
@@ -2649,7 +2649,6 @@
                 "utilities"
             ],
             "transport-options": {
-                "symlink": true,
                 "relative": true
             }
         },
@@ -2658,15 +2657,15 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../phpstan-extension",
-                "reference": "e1e2ef6bbe22774e776fff36122477a7157fc07b"
+                "url": "../src/phpstan-extension",
+                "reference": "bfe9c734041a9e13da309769a1fe17d152da96c5"
             },
             "require": {
                 "helgesverre/toon": "^1.0",
-                "matesofmate/common": "*@dev",
+                "matesofmate/common": "@dev",
                 "php": ">=8.2",
                 "phpstan/phpstan": "^2.0",
-                "symfony/ai-mate": "^0.1",
+                "symfony/ai-mate": "^0.1 || ^0.2@dev",
                 "symfony/process": "^6.4|^7.0|^8.0"
             },
             "require-dev": {
@@ -2734,7 +2733,6 @@
                 "symfony"
             ],
             "transport-options": {
-                "symlink": true,
                 "relative": true
             }
         },
@@ -2743,12 +2741,12 @@
             "version": "dev-main",
             "dist": {
                 "type": "path",
-                "url": "../phpunit-extension",
-                "reference": "0eb72f5c750bd96f4f580cd104ca533e66f95402"
+                "url": "../src/phpunit-extension",
+                "reference": "b556e1d4d7cd659dd2073481c8f28444814f166d"
             },
             "require": {
                 "helgesverre/toon": "^1.0",
-                "matesofmate/common": "^0.1@dev",
+                "matesofmate/common": "@dev",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.1 || ^0.2@dev",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2821,7 +2819,6 @@
                 "toon"
             ],
             "transport-options": {
-                "symlink": true,
                 "relative": true
             }
         },
@@ -3579,16 +3576,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.3.0",
+            "version": "2.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "1e0cd5370df5dd2e556a36b9c62f62e555870495"
+                "reference": "16dbf9937da8d4528ceb2145c9c7c0bd29e26374"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/1e0cd5370df5dd2e556a36b9c62f62e555870495",
-                "reference": "1e0cd5370df5dd2e556a36b9c62f62e555870495",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/16dbf9937da8d4528ceb2145c9c7c0bd29e26374",
+                "reference": "16dbf9937da8d4528ceb2145c9c7c0bd29e26374",
                 "shasum": ""
             },
             "require": {
@@ -3620,9 +3617,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.1"
             },
-            "time": "2025-08-30T15:50:23+00:00"
+            "time": "2026-01-12T11:33:04+00:00"
         },
         {
             "name": "phpstan/phpstan",
@@ -5227,12 +5224,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ai-mate.git",
-                "reference": "da2c0b0519674b926c87ae64c72ac4cf4e51823a"
+                "reference": "e52a30f968263494e4a0e7651a6dc4b1f05315f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ai-mate/zipball/da2c0b0519674b926c87ae64c72ac4cf4e51823a",
-                "reference": "da2c0b0519674b926c87ae64c72ac4cf4e51823a",
+                "url": "https://api.github.com/repos/symfony/ai-mate/zipball/e52a30f968263494e4a0e7651a6dc4b1f05315f7",
+                "reference": "e52a30f968263494e4a0e7651a6dc4b1f05315f7",
                 "shasum": ""
             },
             "require": {
@@ -5325,7 +5322,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-09T16:20:45+00:00"
+            "time": "2026-01-13T17:44:51+00:00"
         },
         {
             "name": "symfony/polyfill-uuid",
@@ -5605,16 +5602,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "bdbabc199a7ba9965484e4725d66170e5711323b"
+                "reference": "ce6a2f100c404b2d32a1dd1270f9b59ad4f57649"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/bdbabc199a7ba9965484e4725d66170e5711323b",
-                "reference": "bdbabc199a7ba9965484e4725d66170e5711323b",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/ce6a2f100c404b2d32a1dd1270f9b59ad4f57649",
+                "reference": "ce6a2f100c404b2d32a1dd1270f9b59ad4f57649",
                 "shasum": ""
             },
             "require": {
@@ -5661,9 +5658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/2.1.1"
+                "source": "https://github.com/webmozarts/assert/tree/2.1.2"
             },
-            "time": "2026-01-08T11:28:40+00:00"
+            "time": "2026-01-13T14:02:24+00:00"
         }
     ],
     "aliases": [

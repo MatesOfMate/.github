@@ -36,23 +36,28 @@ jobs:
               run: |
                   case "${{ matrix.package }}" in
                       awesome-mate)
-                          echo "repo=MatesOfMate/awesome-mate" >> $GITHUB_OUTPUT
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=awesome-mate" >> $GITHUB_OUTPUT
                           echo "path=awesome-mate" >> $GITHUB_OUTPUT
                           ;;
                       common)
-                          echo "repo=MatesOfMate/common" >> $GITHUB_OUTPUT
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=common" >> $GITHUB_OUTPUT
                           echo "path=src/common" >> $GITHUB_OUTPUT
                           ;;
                       extension-template)
-                          echo "repo=MatesOfMate/extension-template" >> $GITHUB_OUTPUT
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
+                          echo "name=extension-template" >> $GITHUB_OUTPUT
                           echo "path=src/extension-template" >> $GITHUB_OUTPUT
                           ;;
                       phpunit-extension)
-                          echo "repo=matesofmate/phpunit-extension" >> $GITHUB_OUTPUT
+                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "name=phpunit-extension" >> $GITHUB_OUTPUT
                           echo "path=src/phpunit-extension" >> $GITHUB_OUTPUT
                           ;;
                       phpstan-extension)
-                          echo "repo=matesofmate/phpstan-extension" >> $GITHUB_OUTPUT
+                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "name=phpstan-extension" >> $GITHUB_OUTPUT
                           echo "path=src/phpstan-extension" >> $GITHUB_OUTPUT
                           ;;
                   esac
@@ -61,8 +66,8 @@ jobs:
               uses: symplify/monorepo-split-github-action@2.3
               with:
                   package_directory: ${{ steps.repo.outputs.path }}
-                  repository_organization: ${{ github.repository_owner }}
-                  repository_name: ${{ steps.repo.outputs.repo }}
+                  repository_organization: ${{ steps.repo.outputs.org }}
+                  repository_name: ${{ steps.repo.outputs.name }}
                   user_name: "github-actions[bot]"
                   user_email: "github-actions[bot]@users.noreply.github.com"
                   branch: main

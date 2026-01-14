@@ -1,78 +1,39 @@
-name: Split Packages
+name: Publish Sub-Splits
 
 on:
     push:
         branches:
             - main
         tags:
-            - 'v*.*.*'
+            - '*'
     workflow_dispatch:
 
-permissions:
-    contents: write
-
 jobs:
-    split:
-        name: Split ${{ matrix.package }}
+    publish_subsplits:
         runs-on: ubuntu-latest
-
-        strategy:
-            fail-fast: false
-            matrix:
-                package:
-                    - awesome-mate
-                    - common
-                    - extension-template
-                    - phpunit-extension
-                    - phpstan-extension
-
+        name: Publish package sub-splits
         steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+            - uses: actions/checkout@v4
               with:
-                  fetch-depth: 0  # Full history for split
-                  token: ${{ secrets.GITHUB_TOKEN }}
+                  fetch-depth: 0
+                  persist-credentials: false
 
-            - name: Get repository info
-              id: repo
-              run: |
-                  case "${{ matrix.package }}" in
-                      awesome-mate)
-                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
-                          echo "name=awesome-mate" >> $GITHUB_OUTPUT
-                          echo "path=awesome-mate" >> $GITHUB_OUTPUT
-                          ;;
-                      common)
-                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
-                          echo "name=common" >> $GITHUB_OUTPUT
-                          echo "path=src/common" >> $GITHUB_OUTPUT
-                          ;;
-                      extension-template)
-                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
-                          echo "name=extension-template" >> $GITHUB_OUTPUT
-                          echo "path=src/extension-template" >> $GITHUB_OUTPUT
-                          ;;
-                      phpunit-extension)
-                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
-                          echo "name=phpunit-extension" >> $GITHUB_OUTPUT
-                          echo "path=src/phpunit-extension" >> $GITHUB_OUTPUT
-                          ;;
-                      phpstan-extension)
-                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
-                          echo "name=phpstan-extension" >> $GITHUB_OUTPUT
-                          echo "path=src/phpstan-extension" >> $GITHUB_OUTPUT
-                          ;;
-                  esac
-
-            - name: Split and push to target repository
-              uses: symplify/monorepo-split-github-action@2.2
+            - uses: frankdejonge/use-github-token@1.0.1
               with:
-                  package_directory: ${{ steps.repo.outputs.path }}
-                  repository_organization: ${{ steps.repo.outputs.org }}
-                  repository_name: ${{ steps.repo.outputs.name }}
-                  user_name: "github-actions[bot]"
-                  user_email: "github-actions[bot]@users.noreply.github.com"
-                  branch: main
-                  tag: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  authentication: 'wachterjohannes:${{ secrets.PERSONAL_ACCESS_TOKEN }}'
+                  user_name: 'Johannes Wachter'
+                  user_email: 'johannes@sulu.io'
+
+            - name: Cache splitsh-lite
+              id: splitsh-cache
+              uses: actions/cache@v3
+              with:
+                  path: './.splitsh'
+                  key: ${{ runner.os }}-splitsh
+
+            - uses: frankdejonge/use-subsplit-publish@1.0.0-beta.7
+              with:
+                  source-branch: ${{ github.ref_name }}
+                  config-path: './config.subsplit-publish.json'
+                  splitsh-path: './.splitsh/splitsh-lite'
+                  splitsh-version: 'v1.0.1'

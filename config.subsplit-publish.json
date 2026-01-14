@@ -1,0 +1,29 @@
+{
+    "sub-splits": [
+        {
+            "name": "awesome-mate",
+            "directory": "awesome-mate",
+            "target": "git@github.com:MatesOfMate/awesome-mate.git"
+        },
+        {
+            "name": "common",
+            "directory": "src/common",
+            "target": "git@github.com:MatesOfMate/common.git"
+        },
+        {
+            "name": "extension-template",
+            "directory": "src/extension-template",
+            "target": "git@github.com:MatesOfMate/extension-template.git"
+        },
+        {
+            "name": "phpunit-extension",
+            "directory": "src/phpunit-extension",
+            "target": "git@github.com:MatesOfMate/phpunit-extension.git"
+        },
+        {
+            "name": "phpstan-extension",
+            "directory": "src/phpstan-extension",
+            "target": "git@github.com:MatesOfMate/phpstan-extension.git"
+        }
+    ]
+}

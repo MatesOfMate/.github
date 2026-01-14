@@ -82,19 +82,5 @@
                 "mate/config.php"
             ]
         }
-    },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../src/common"
-        },
-        {
-            "type": "path",
-            "url": "../src/phpunit-extension"
-        },
-        {
-            "type": "path",
-            "url": "../src/phpstan-extension"
-        }
-    ]
+    }
 }

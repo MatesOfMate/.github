@@ -53,12 +53,12 @@ jobs:
                           echo "path=src/extension-template" >> $GITHUB_OUTPUT
                           ;;
                       phpunit-extension)
-                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
                           echo "name=phpunit-extension" >> $GITHUB_OUTPUT
                           echo "path=src/phpunit-extension" >> $GITHUB_OUTPUT
                           ;;
                       phpstan-extension)
-                          echo "org=matesofmate" >> $GITHUB_OUTPUT
+                          echo "org=MatesOfMate" >> $GITHUB_OUTPUT
                           echo "name=phpstan-extension" >> $GITHUB_OUTPUT
                           echo "path=src/phpstan-extension" >> $GITHUB_OUTPUT
                           ;;

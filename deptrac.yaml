@@ -1,0 +1,103 @@
+deptrac:
+  paths:
+    - ./src
+
+  exclude_files:
+    - .*Test\.php
+    - .*/Tests/.*
+
+  layers:
+    # Packages
+    - name: Common
+      collectors:
+        - type: className
+          value: MatesOfMate\\Common\\.*
+
+    - name: PHPUnit Extension
+      collectors:
+        - type: className
+          value: MatesOfMate\\PHPUnitExtension\\.*
+
+    - name: PHPStan Extension
+      collectors:
+        - type: className
+          value: MatesOfMate\\PhpStan\\.*
+
+    - name: Extension Template
+      collectors:
+        - type: className
+          value: MatesOfMate\\ExampleExtension\\.*
+
+    # Layer by responsibility (cross-package)
+    - name: Capability
+      collectors:
+        - type: className
+          value: .*\\Capability\\.*
+
+    - name: Runner
+      collectors:
+        - type: className
+          value: .*\\Runner\\.*
+
+    - name: Parser
+      collectors:
+        - type: className
+          value: .*\\Parser\\.*
+
+    - name: Formatter
+      collectors:
+        - type: className
+          value: .*\\Formatter\\.*
+
+    - name: Config
+      collectors:
+        - type: className
+          value: .*\\Config\\.*
+
+    - name: Discovery
+      collectors:
+        - type: className
+          value: .*\\Discovery\\.*
+
+  ruleset:
+    # Package dependency rules
+    Common:
+      # Common should have no dependencies on extensions
+
+    PHPUnit Extension:
+      - Common
+
+    PHPStan Extension:
+      - Common
+
+    Extension Template:
+      - Common
+
+    # Layer dependency rules
+    Capability:
+      - Runner
+      - Parser
+      - Formatter
+      - Config
+      - Discovery
+      - Common
+
+    Runner:
+      - Config
+      - Common
+
+    Parser:
+      - Common
+
+    Formatter:
+      - Common
+
+    Config:
+      - Common
+
+    Discovery:
+      - Config
+      - Common
+
+  skip_violations:
+    # Add specific violations to skip if needed

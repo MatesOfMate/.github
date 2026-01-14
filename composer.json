@@ -11,14 +11,19 @@
     ],
     "require-dev": {
         "php": ">=8.2",
-        "symfony/console": "^5.4|^6.4|^7.3|^8.0",
-        "symfony/filesystem": "^5.4|^6.4|^7.3|^8.0",
-        "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
         "php-cs-fixer/shim": "^3.91",
         "phpstan/phpstan": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
+        "phpunit/phpunit": "^10.0",
+        "qossmic/deptrac": "^2.0",
         "rector/rector": "^2.0",
-        "phpunit/phpunit": "^10.0"
+        "symfony/console": "^5.4|^6.4|^7.3|^8.0",
+        "symfony/filesystem": "^5.4|^6.4|^7.3|^8.0",
+        "symfony/finder": "^5.4|^6.4|^7.3|^8.0"
+    },
+    "scripts": {
+        "deptrac": "vendor/bin/deptrac analyse --cache-file=var/cache/deptrac.cache",
+        "deptrac:clear": "rm -f var/cache/deptrac.cache"
     },
     "config": {
         "sort-packages": true

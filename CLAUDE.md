@@ -154,6 +154,10 @@ vendor/bin/rector process
 # PHPUnit
 vendor/bin/phpunit
 vendor/bin/phpunit tests/Capability/SpecificTest.php
+
+# Deptrac (architecture validation at monorepo root)
+composer deptrac
+composer deptrac:clear  # Clear cache
 ```
 
 ## Development Workflow
@@ -227,6 +231,7 @@ All extensions must follow:
 - **PHP CS Fixer**: `@Symfony` ruleset with risky rules
 - **Rector**: UP_TO_PHP_82, code quality, dead code removal
 - **PHPUnit**: Version 10.0+
+- **Deptrac**: Architecture validation (monorepo-level)
 
 **Required Composer Scripts:**
 ```json

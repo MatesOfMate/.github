@@ -10,53 +10,53 @@ deptrac:
     # Packages
     - name: Common
       collectors:
-        - type: className
-          value: MatesOfMate\\Common\\.*
+        - type: classNameRegex
+          value: ^MatesOfMate\\Common\\.*
 
     - name: PHPUnit Extension
       collectors:
-        - type: className
-          value: MatesOfMate\\PHPUnitExtension\\.*
+        - type: classNameRegex
+          value: ^MatesOfMate\\PHPUnitExtension\\.*
 
     - name: PHPStan Extension
       collectors:
-        - type: className
-          value: MatesOfMate\\PhpStan\\.*
+        - type: classNameRegex
+          value: ^MatesOfMate\\PhpStan\\.*
 
     - name: Extension Template
       collectors:
-        - type: className
-          value: MatesOfMate\\ExampleExtension\\.*
+        - type: classNameRegex
+          value: ^MatesOfMate\\ExampleExtension\\.*
 
     # Layer by responsibility (cross-package)
     - name: Capability
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Capability\\.*
 
     - name: Runner
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Runner\\.*
 
     - name: Parser
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Parser\\.*
 
     - name: Formatter
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Formatter\\.*
 
     - name: Config
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Config\\.*
 
     - name: Discovery
       collectors:
-        - type: className
+        - type: classNameRegex
           value: .*\\Discovery\\.*
 
   ruleset:

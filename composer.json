@@ -1,0 +1,26 @@
+{
+    "name": "matesofmate/monorepo",
+    "description": "MatesOfMate Monorepo - Community extensions for Symfony AI Mate",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Johannes Wachter",
+            "email": "johannes@sulu.io"
+        }
+    ],
+    "require-dev": {
+        "php": ">=8.2",
+        "symfony/console": "^5.4|^6.4|^7.3|^8.0",
+        "symfony/filesystem": "^5.4|^6.4|^7.3|^8.0",
+        "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
+        "php-cs-fixer/shim": "^3.91",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "rector/rector": "^2.0",
+        "phpunit/phpunit": "^10.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

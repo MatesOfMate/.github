@@ -1,0 +1,28 @@
+# IDE
+.idea/
+.vscode/
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+.phpunit.cache/
+/coverage/
+
+# Cache
+var/cache/
+var/log/
+
+# Demo app
+/demo/vendor/
+/demo/composer.lock
+/demo/var/
+
+# Build artifacts
+*.phar

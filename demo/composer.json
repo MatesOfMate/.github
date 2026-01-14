@@ -86,24 +86,15 @@
     "repositories": [
         {
             "type": "path",
-            "url": "../phpunit-extension",
-            "options": {
-                "symlink": true
-            }
+            "url": "../src/common"
         },
         {
             "type": "path",
-            "url": "../phpstan-extension",
-            "options": {
-                "symlink": true
-            }
+            "url": "../src/phpunit-extension"
         },
         {
             "type": "path",
-            "url": "../common",
-            "options": {
-                "symlink": true
-            }
+            "url": "../src/phpstan-extension"
         }
     ]
 }

@@ -1,0 +1,76 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * Symlinks monorepo packages into an external project for testing.
+ * Based on Symfony AI link script by Kévin Dunglas.
+ */
+
+$targetProject = $argv[1] ?? getcwd();
+$copy = in_array('--copy', $argv, true);
+$rollback = in_array('--rollback', $argv, true);
+
+if (!is_dir($targetProject)) {
+    echo "Error: Project directory not found: $targetProject\n";
+    exit(1);
+}
+
+if (!is_dir($targetProject.'/vendor')) {
+    echo "Error: Composer dependencies not installed. Run 'composer install' first.\n";
+    exit(1);
+}
+
+$monorepoRoot = __DIR__;
+$packages = [
+    'matesofmate/common' => 'src/common',
+    'matesofmate/phpunit-extension' => 'src/phpunit-extension',
+    'matesofmate/phpstan-extension' => 'src/phpstan-extension',
+];
+
+if ($rollback) {
+    echo "Rolling back symlinks (run 'composer install' to restore)...\n";
+    foreach ($packages as $packageName => $_) {
+        $vendorPath = $targetProject.'/vendor/'.$packageName;
+        if (is_link($vendorPath)) {
+            unlink($vendorPath);
+            echo "✓ Removed symlink for $packageName\n";
+        }
+    }
+    exec('cd '.escapeshellarg($targetProject).' && composer install');
+    exit(0);
+}
+
+foreach ($packages as $packageName => $packagePath) {
+    $vendorPackagePath = $targetProject.'/vendor/'.$packageName;
+
+    if (!is_dir($vendorPackagePath)) {
+        continue; // Package not installed in target project
+    }
+
+    // Remove existing vendor directory
+    if (is_link($vendorPackagePath)) {
+        unlink($vendorPackagePath);
+    } else {
+        exec('rm -rf '.escapeshellarg($vendorPackagePath));
+    }
+
+    // Create symlink or copy
+    $monorepoPackagePath = $monorepoRoot.'/'.$packagePath;
+
+    if ($copy) {
+        exec('cp -r '.escapeshellarg($monorepoPackagePath).' '.escapeshellarg($vendorPackagePath));
+        echo "✓ Copied $packageName\n";
+    } else {
+        symlink($monorepoPackagePath, $vendorPackagePath);
+        echo "✓ Linked $packageName\n";
+    }
+}
+
+// Clear cache
+if (is_dir($targetProject.'/var/cache')) {
+    exec('rm -rf '.escapeshellarg($targetProject.'/var/cache/*'));
+    echo "✓ Cleared cache\n";
+}
+
+echo "\nDone! Monorepo packages are now linked to $targetProject\n";
+echo "To rollback: ./link --rollback $targetProject\n";

@@ -9,6 +9,7 @@ This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem
 **Key Projects:**
 - `src/common/` - Shared functionality for all extensions
 - `src/extension-template/` - Starter template for creating new extensions
+- `src/composer-extension/` - Composer dependency management tools
 - `src/phpunit-extension/` - PHPUnit testing tools with token-optimized output
 - `src/phpstan-extension/` - PHPStan static analysis tools
 - `awesome-mate/` - Curated resource list following Awesome List standards
@@ -47,11 +48,12 @@ matesofmate-monorepo/
 │   │   ├── src/
 │   │   ├── tests/
 │   │   └── composer.json
+│   ├── composer-extension/
 │   ├── extension-template/
 │   ├── phpunit-extension/
 │   └── phpstan-extension/
 ├── link                            # Symlink helper (from Symfony AI)
-├── splitsh.json                    # Subtree split config
+├── config.subsplit-publish.json    # Subtree split config
 ├── composer.json                   # Root (minimal, dev-only)
 ├── CONTRIBUTING.md
 └── README.md
@@ -295,15 +297,16 @@ done
 
 Packages are automatically split to individual repos on tag push:
 
-**Configuration**: `splitsh.json`
+**Configuration**: `config.subsplit-publish.json`
 **Workflow**: `.github/workflows/split.yml`
 
 **Split mapping**:
 - `awesome-mate/` → `MatesOfMate/awesome-mate`
 - `src/common/` → `MatesOfMate/common`
 - `src/extension-template/` → `MatesOfMate/extension-template`
-- `src/phpunit-extension/` → `matesofmate/phpunit-extension`
-- `src/phpstan-extension/` → `matesofmate/phpstan-extension`
+- `src/composer-extension/` → `MatesOfMate/composer-extension`
+- `src/phpunit-extension/` → `MatesOfMate/phpunit-extension`
+- `src/phpstan-extension/` → `MatesOfMate/phpstan-extension`
 
 ## Commit Message Convention
 

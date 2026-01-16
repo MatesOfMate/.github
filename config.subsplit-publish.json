@@ -24,6 +24,11 @@
             "name": "phpstan-extension",
             "directory": "src/phpstan-extension",
             "target": "git@github.com:MatesOfMate/phpstan-extension.git"
+        },
+        {
+            "name": "composer-extension",
+            "directory": "src/composer-extension",
+            "target": "git@github.com:MatesOfMate/composer-extension.git"
         }
     ]
 }

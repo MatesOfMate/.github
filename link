@@ -23,8 +23,9 @@ if (!is_dir($targetProject.'/vendor')) {
 $monorepoRoot = __DIR__;
 $packages = [
     'matesofmate/common' => 'src/common',
-    'matesofmate/phpunit-extension' => 'src/phpunit-extension',
+    'matesofmate/composer-extension' => 'src/composer-extension',
     'matesofmate/phpstan-extension' => 'src/phpstan-extension',
+    'matesofmate/phpunit-extension' => 'src/phpunit-extension',
 ];
 
 if ($rollback) {

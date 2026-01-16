@@ -20,7 +20,6 @@ This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem
 Following the **Symfony AI pattern**, this monorepo uses:
 
 - **Centralized source**: All packages in `src/` directory
-- **Local development**: `build-packages.php` script adds path repositories dynamically
 - **External testing**: `link` script symlinks packages to other projects
 - **Subtree splitting**: Automated publishing to individual repos via GitHub Actions
 - **Matrix CI/CD**: Dynamic package discovery and parallel testing
@@ -35,7 +34,6 @@ matesofmate-monorepo/
 │   │   ├── tests.yml              # Matrix testing (PHP 8.2, 8.3)
 │   │   ├── code-quality.yml       # PHPStan, CS-Fixer, Rector
 │   │   └── split.yml              # Subtree splitting automation
-│   ├── build-packages.php         # Local dev script (from Symfony AI)
 │   └── scripts/
 ├── awesome-mate/                   # Curated resource list
 │   └── README.md
@@ -108,9 +106,6 @@ class PhpunitProcessExecutor implements ProcessExecutorInterface
 # Install root dependencies
 composer install
 
-# Prepare packages for local development (adds path repositories)
-php .github/build-packages.php
-
 # Link monorepo packages to external project
 ./link /path/to/your-project
 
@@ -124,7 +119,7 @@ php .github/build-packages.php
 # Navigate to package
 cd src/phpunit-extension
 
-# Install dependencies (after running build-packages.php)
+# Install dependencies
 composer install
 
 # Run all tests
@@ -165,14 +160,11 @@ composer deptrac:clear  # Clear cache
 ### Working on Multiple Packages
 
 ```bash
-# From monorepo root
-php .github/build-packages.php
-
 cd src/phpunit-extension/
 composer install
 composer test && composer lint
 
-cd ../src/phpstan-extension/
+cd ../phpstan-extension/
 composer install
 composer test && composer lint
 
@@ -282,13 +274,10 @@ All PHP files must include:
 **code-quality.yml**: Runs lint on all packages in parallel
 **split.yml**: Publishes packages to individual repos on tag push
 
-### Workflow Pattern (from Symfony AI)
+### Workflow Pattern
 
-1. Install root dependencies
-2. Run `build-packages.php` to add path repos
-3. **Clean vendor folders** (prevents circular symlinks)
-4. Install package dependencies
-5. Run package tests
+1. Install package dependencies
+2. Run package tests
 
 ### Testing Locally
 
@@ -376,22 +365,6 @@ When updating standards:
 7. Update `awesome-mate/README.md` with new extension
 
 ## Local Development Tips
-
-### Using build-packages.php
-
-This script dynamically adds path repositories to all `src/*/composer.json` files:
-
-```bash
-# Run after pulling new packages or changing dependencies
-php .github/build-packages.php
-
-# Updates packages that depend on common
-✓ Updated matesofmate/phpunit-extension
-✓ Updated matesofmate/phpstan-extension
-
-# Now install in each package
-cd src/phpunit-extension && composer install
-```
 
 ### Using link Script
 

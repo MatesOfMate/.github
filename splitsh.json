@@ -24,6 +24,11 @@
             "prefixes": [
                 {"from": "src/phpstan-extension", "to": ""}
             ]
+        },
+        "matesofmate-composer-extension": {
+            "prefixes": [
+                {"from": "src/composer-extension", "to": ""}
+            ]
         }
     },
     "targets": {
@@ -31,6 +36,7 @@
         "matesofmate-common": "git@github.com:MatesOfMate/common.git",
         "matesofmate-extension-template": "git@github.com:MatesOfMate/extension-template.git",
         "matesofmate-phpunit-extension": "git@github.com:matesofmate/phpunit-extension.git",
-        "matesofmate-phpstan-extension": "git@github.com:matesofmate/phpstan-extension.git"
+        "matesofmate-phpstan-extension": "git@github.com:matesofmate/phpstan-extension.git",
+        "matesofmate-composer-extension": "git@github.com:matesofmate/composer-extension.git"
     }
 }

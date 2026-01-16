@@ -1,14 +1,13 @@
 {
-    "name": "matesofmate/phpunit-extension",
-    "description": "PHPUnit extension for symfony/ai-mate providing token-optimized test execution tools",
+    "name": "matesofmate/composer-extension",
+    "description": "MCP extension providing Composer dependency management tools for AI assistants",
     "type": "symfony-ai-mate",
     "license": "MIT",
     "keywords": [
-        "phpunit",
-        "testing",
+        "composer",
+        "dependency-management",
         "ai-mate",
         "mcp",
-        "test-automation",
         "toon",
         "symfony",
         "ai"
@@ -23,7 +22,7 @@
         "php": ">=8.2",
         "helgesverre/toon": "^1.0",
         "matesofmate/common": "^0.1@dev",
-        "symfony/ai-mate": "^0.2 || ^0.3@dev",
+        "symfony/ai-mate": "^0.1 || ^0.2@dev",
         "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
         "symfony/process": "^5.4|^6.4|^7.3|^8.0"
     },
@@ -36,12 +35,12 @@
     },
     "autoload": {
         "psr-4": {
-            "MatesOfMate\\PHPUnitExtension\\": "src/"
+            "MatesOfMate\\ComposerExtension\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MatesOfMate\\PHPUnitExtension\\Tests\\": "tests/"
+            "MatesOfMate\\ComposerExtension\\Tests\\": "tests/"
         }
     },
     "extra": {
@@ -50,7 +49,7 @@
                 "src/Capability"
             ],
             "includes": [
-                "config/config.php"
+                "config/services.php"
             ]
         },
         "branch-alias": {

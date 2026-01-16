@@ -33,15 +33,6 @@ jobs:
               working-directory: ${{ matrix.package }}
               run: composer validate --strict
 
-            - name: Install root dependencies
-              uses: ramsey/composer-install@v3
-
-            - name: Build packages
-              run: php .github/build-packages.php
-
-            - name: Clean vendor
-              run: rm -rf vendor ${{ matrix.package }}/vendor
-
             - name: Install package dependencies
               uses: ramsey/composer-install@v3
               with:

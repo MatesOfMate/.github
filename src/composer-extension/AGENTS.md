@@ -1,10 +1,10 @@
 # AGENTS.md - Multi-Agent Guidelines
 
-Guidelines for AI agents working on the PHPStan extension for Symfony AI Mate.
+Guidelines for AI agents working on the Composer extension for Symfony AI Mate.
 
 ## Agent Role
 
-When assisting with this repository, you are helping maintain and extend an **MCP extension** that provides PHPStan static analysis tools for AI assistants.
+When assisting with this repository, you are helping maintain and extend an **MCP extension** that provides Composer dependency management tools for AI assistants.
 
 ## Key Responsibilities
 
@@ -12,8 +12,8 @@ When assisting with this repository, you are helping maintain and extend an **MC
 Assist with creating and maintaining MCP capabilities:
 - Tools: Executable actions marked with `#[McpTool]`
 - Resources: Static context data marked with `#[McpResource]`
-- Service registration in `config/config.php`
-- Comprehensive tests in `tests/`
+- Service registration in `config/services.php`
+- Comprehensive tests in `tests/Unit/`
 
 ### 2. Quality Assurance
 Ensure code meets standards:
@@ -39,9 +39,9 @@ When multiple agents work on this project simultaneously:
 
 ### Communication Pattern
 ```
-Agent A: "Claiming src/Capability/AnalyseTool.php for modification"
+Agent A: "Claiming src/Capability/InstallTool.php for modification"
 Agent B: "Acknowledged, will avoid that file"
-Agent A: "Releasing src/Capability/AnalyseTool.php - changes complete"
+Agent A: "Releasing src/Capability/InstallTool.php - changes complete"
 ```
 
 ## Code Standards
@@ -54,22 +54,21 @@ Agent A: "Releasing src/Capability/AnalyseTool.php - changes complete"
 
 ### Tool Implementation Checklist
 When creating new tools:
-- [ ] Clear, descriptive `#[McpTool]` name: `phpstan-{action}`
+- [ ] Clear, descriptive `#[McpTool]` name: `composer-{action}`
 - [ ] Helpful description explaining when AI should use it
 - [ ] Returns TOON-formatted string via ToonFormatter
 - [ ] Supports `mode` parameter for output modes
-- [ ] Use `BuildsPhpstanArguments` trait if needed
-- [ ] Registered in `config/config.php`
-- [ ] Has corresponding test in `tests/Capability/`
+- [ ] Registered in `config/services.php`
+- [ ] Has corresponding test in `tests/Unit/Capability/`
 - [ ] Test validates output structure
 
 ### Resource Implementation Checklist
 When creating new resources:
-- [ ] Custom URI scheme: `phpstan://path`
-- [ ] Descriptive name: `phpstan_{name}`
+- [ ] Custom URI scheme: `composer://path`
+- [ ] Descriptive name: `composer_{name}`
 - [ ] Returns array with `uri`, `mimeType`, `text` keys
 - [ ] `text` value is JSON string
-- [ ] Registered in `config/config.php`
+- [ ] Registered in `config/services.php`
 - [ ] Has corresponding test validating structure
 
 ## Workflow Guidelines
@@ -78,28 +77,22 @@ When creating new resources:
 1. Discuss tool purpose and when AI should use it
 2. Create class in `src/Capability/`
 3. Add `#[McpTool]` attribute with clear description
-4. Inject PhpStanRunner, parsers, and ToonFormatter
+4. Inject ComposerRunner, OutputParser, ToonFormatter
 5. Implement method returning TOON format
-6. Register in `config/config.php`
+6. Register in `config/services.php`
 7. Create test validating behavior
 8. Run quality checks
 
 ### When Modifying Parser
-1. Add method to `JsonOutputParser`
-2. Update `AnalysisResult` if new fields needed
-3. Add test to parser tests
+1. Add method to `OutputParser`
+2. Update `ParsedResult` if new fields needed
+3. Add test to `OutputParserTest`
 4. Update formatter if needed
 
 ### When Modifying Output Format
 1. Update `ToonFormatter` methods
 2. Update `ToonFormatterTest`
 3. Document changes in README
-
-### When Adding Output Modes
-1. Add mode to enum in `#[Schema]` attribute on tool parameters
-2. Implement format method in `ToonFormatter` (e.g., `formatCustomMode()`)
-3. Add match arm in `ToonFormatter::format()` method
-4. Add test case in `ToonFormatterTest`
 
 ## Development Commands Reference
 
@@ -120,7 +113,7 @@ composer fix
 vendor/bin/phpstan analyse
 vendor/bin/php-cs-fixer fix --dry-run --diff
 vendor/bin/rector process --dry-run
-vendor/bin/phpunit tests/Capability/AnalyseToolTest.php
+vendor/bin/phpunit tests/Unit/Capability/InstallToolTest.php
 ```
 
 ## Common Mistakes to Prevent
@@ -129,7 +122,7 @@ vendor/bin/phpunit tests/Capability/AnalyseToolTest.php
 - Don't add `declare(strict_types=1)` to PHP files
 - Don't make classes `final`
 - Don't use `json_encode()` without error flags
-- Don't forget to register new capabilities in `config/config.php`
+- Don't forget to register new capabilities in `config/services.php`
 - Don't skip tests
 - Don't use generic tool descriptions
 

@@ -32,15 +32,6 @@ jobs:
                   extensions: json, simplexml
                   coverage: none
 
-            - name: Install root dependencies
-              uses: ramsey/composer-install@v3
-
-            - name: Build packages (add path repositories)
-              run: php .github/build-packages.php
-
-            - name: Clean vendor folders
-              run: rm -rf vendor ${{ matrix.package }}/vendor
-
             - name: Install package dependencies
               uses: ramsey/composer-install@v3
               with:

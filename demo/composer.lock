@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b8cae5ff1629a88786304920e366d74f",
+    "content-hash": "6dce68caa22aeacbaa28b9bf1fdc42c8",
     "packages": [
         {
             "name": "psr/cache",
@@ -2583,10 +2583,16 @@
         {
             "name": "matesofmate/common",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MatesOfMate/common.git",
+                "reference": "614e5275fa3988eb3fea1b0d58fe3c62e4e9090c"
+            },
             "dist": {
-                "type": "path",
-                "url": "../src/common",
-                "reference": "8141d9eb36fe5a71d82078de5fcbac4e44eed823"
+                "type": "zip",
+                "url": "https://api.github.com/repos/MatesOfMate/common/zipball/614e5275fa3988eb3fea1b0d58fe3c62e4e9090c",
+                "reference": "614e5275fa3988eb3fea1b0d58fe3c62e4e9090c",
+                "shasum": ""
             },
             "require": {
                 "ext-simplexml": "*",
@@ -2601,6 +2607,7 @@
                 "phpunit/phpunit": "^10.0",
                 "rector/rector": "^2.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -2612,26 +2619,7 @@
                     "MatesOfMate\\Common\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "MatesOfMate\\Common\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "@composer validate --strict",
-                    "vendor/bin/rector process --dry-run",
-                    "vendor/bin/php-cs-fixer fix --dry-run --diff",
-                    "vendor/bin/phpstan analyse"
-                ],
-                "fix": [
-                    "vendor/bin/rector process",
-                    "vendor/bin/php-cs-fixer fix"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2648,105 +2636,29 @@
                 "shared",
                 "utilities"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/MatesOfMate/common/issues",
+                "source": "https://github.com/MatesOfMate/common/tree/main"
+            },
+            "time": "2026-01-14T21:05:50+00:00"
         },
         {
-            "name": "matesofmate/phpstan-extension",
+            "name": "matesofmate/composer-extension",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MatesOfMate/composer-extension.git",
+                "reference": "1f91897815c205e1ca787032b84bab0bca015fe1"
+            },
             "dist": {
-                "type": "path",
-                "url": "../src/phpstan-extension",
-                "reference": "bfe9c734041a9e13da309769a1fe17d152da96c5"
+                "type": "zip",
+                "url": "https://api.github.com/repos/MatesOfMate/composer-extension/zipball/1f91897815c205e1ca787032b84bab0bca015fe1",
+                "reference": "1f91897815c205e1ca787032b84bab0bca015fe1",
+                "shasum": ""
             },
             "require": {
                 "helgesverre/toon": "^1.0",
-                "matesofmate/common": "@dev",
-                "php": ">=8.2",
-                "phpstan/phpstan": "^2.0",
-                "symfony/ai-mate": "^0.1 || ^0.2@dev",
-                "symfony/process": "^6.4|^7.0|^8.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.0",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpunit/phpunit": "^10.0",
-                "rector/rector": "^2.0"
-            },
-            "type": "symfony-ai-mate",
-            "extra": {
-                "ai-mate": {
-                    "scan-dirs": [
-                        "src/Capability"
-                    ],
-                    "includes": [
-                        "config/config.php"
-                    ]
-                },
-                "branch-alias": {
-                    "dev-main": "0.1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "MatesOfMate\\PhpStan\\": "src/"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "MatesOfMate\\PhpStan\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "@composer validate --strict",
-                    "vendor/bin/rector process --dry-run",
-                    "vendor/bin/php-cs-fixer fix --dry-run --diff",
-                    "vendor/bin/phpstan analyse"
-                ],
-                "fix": [
-                    "vendor/bin/rector process",
-                    "vendor/bin/php-cs-fixer fix"
-                ]
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Johannes Wachter",
-                    "email": "johannes@sulu.io"
-                }
-            ],
-            "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
-            "keywords": [
-                "ai",
-                "ai-assistant",
-                "mate",
-                "mcp",
-                "phpstan",
-                "static-analysis",
-                "symfony"
-            ],
-            "transport-options": {
-                "relative": true
-            }
-        },
-        {
-            "name": "matesofmate/phpunit-extension",
-            "version": "dev-main",
-            "dist": {
-                "type": "path",
-                "url": "../src/phpunit-extension",
-                "reference": "b556e1d4d7cd659dd2073481c8f28444814f166d"
-            },
-            "require": {
-                "helgesverre/toon": "^1.0",
-                "matesofmate/common": "@dev",
+                "matesofmate/common": "^0.1@dev",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.1 || ^0.2@dev",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2759,14 +2671,164 @@
                 "phpunit/phpunit": "^10.0",
                 "rector/rector": "^2.0"
             },
+            "default-branch": true,
             "type": "symfony-ai-mate",
             "extra": {
                 "ai-mate": {
+                    "includes": [
+                        "config/services.php"
+                    ],
                     "scan-dirs": [
                         "src/Capability"
-                    ],
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "0.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MatesOfMate\\ComposerExtension\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johannes Wachter",
+                    "email": "johannes@sulu.io"
+                }
+            ],
+            "description": "MCP extension providing Composer dependency management tools for AI assistants",
+            "keywords": [
+                "ai",
+                "ai-mate",
+                "composer",
+                "dependency-management",
+                "mcp",
+                "symfony",
+                "toon"
+            ],
+            "support": {
+                "issues": "https://github.com/MatesOfMate/composer-extension/issues",
+                "source": "https://github.com/MatesOfMate/composer-extension/tree/main"
+            },
+            "time": "2026-01-16T20:09:32+00:00"
+        },
+        {
+            "name": "matesofmate/phpstan-extension",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MatesOfMate/phpstan-extension.git",
+                "reference": "e5da1cc2c2322db4d0e6f58fe0bbe5474eb6f6d4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/MatesOfMate/phpstan-extension/zipball/e5da1cc2c2322db4d0e6f58fe0bbe5474eb6f6d4",
+                "reference": "e5da1cc2c2322db4d0e6f58fe0bbe5474eb6f6d4",
+                "shasum": ""
+            },
+            "require": {
+                "helgesverre/toon": "^1.0",
+                "matesofmate/common": "^0.1@dev",
+                "php": ">=8.2",
+                "phpstan/phpstan": "^2.0",
+                "symfony/ai-mate": "^0.2 || ^0.3@dev",
+                "symfony/process": "^6.4|^7.0|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^10.0",
+                "rector/rector": "^2.0"
+            },
+            "default-branch": true,
+            "type": "symfony-ai-mate",
+            "extra": {
+                "ai-mate": {
                     "includes": [
                         "config/config.php"
+                    ],
+                    "scan-dirs": [
+                        "src/Capability"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "0.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MatesOfMate\\PhpStan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johannes Wachter",
+                    "email": "johannes@sulu.io"
+                }
+            ],
+            "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
+            "keywords": [
+                "PHPStan",
+                "ai",
+                "ai-assistant",
+                "mate",
+                "mcp",
+                "static-analysis",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/MatesOfMate/phpstan-extension/issues",
+                "source": "https://github.com/MatesOfMate/phpstan-extension/tree/main"
+            },
+            "time": "2026-01-16T20:09:32+00:00"
+        },
+        {
+            "name": "matesofmate/phpunit-extension",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/MatesOfMate/phpunit-extension.git",
+                "reference": "1539da94f57ac0d881337565664e7abd64ea4bb0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/MatesOfMate/phpunit-extension/zipball/1539da94f57ac0d881337565664e7abd64ea4bb0",
+                "reference": "1539da94f57ac0d881337565664e7abd64ea4bb0",
+                "shasum": ""
+            },
+            "require": {
+                "helgesverre/toon": "^1.0",
+                "matesofmate/common": "^0.1@dev",
+                "php": ">=8.2",
+                "symfony/ai-mate": "^0.2 || ^0.3@dev",
+                "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
+                "symfony/process": "^5.4|^6.4|^7.3|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^10.0",
+                "rector/rector": "^2.0"
+            },
+            "default-branch": true,
+            "type": "symfony-ai-mate",
+            "extra": {
+                "ai-mate": {
+                    "includes": [
+                        "config/config.php"
+                    ],
+                    "scan-dirs": [
+                        "src/Capability"
                     ]
                 },
                 "branch-alias": {
@@ -2778,26 +2840,7 @@
                     "MatesOfMate\\PHPUnitExtension\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "MatesOfMate\\PHPUnitExtension\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "vendor/bin/phpunit"
-                ],
-                "lint": [
-                    "@composer validate --strict",
-                    "vendor/bin/rector process --dry-run",
-                    "vendor/bin/php-cs-fixer fix --dry-run --diff",
-                    "vendor/bin/phpstan analyse"
-                ],
-                "fix": [
-                    "vendor/bin/rector process",
-                    "vendor/bin/php-cs-fixer fix"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -2818,22 +2861,24 @@
                 "testing",
                 "toon"
             ],
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/MatesOfMate/phpunit-extension/issues",
+                "source": "https://github.com/MatesOfMate/phpunit-extension/tree/main"
+            },
+            "time": "2026-01-16T20:09:32+00:00"
         },
         {
             "name": "mcp/sdk",
-            "version": "v0.2.2",
+            "version": "v0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/modelcontextprotocol/php-sdk.git",
-                "reference": "2f29b1dbe5e540162cde4d09e4fea48e83d4c01f"
+                "reference": "42fe1430ce2ceee17be9e119a1f245f5d8dda3bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/2f29b1dbe5e540162cde4d09e4fea48e83d4c01f",
-                "reference": "2f29b1dbe5e540162cde4d09e4fea48e83d4c01f",
+                "url": "https://api.github.com/repos/modelcontextprotocol/php-sdk/zipball/42fe1430ce2ceee17be9e119a1f245f5d8dda3bb",
+                "reference": "42fe1430ce2ceee17be9e119a1f245f5d8dda3bb",
                 "shasum": ""
             },
             "require": {
@@ -2890,9 +2935,112 @@
             "description": "Model Context Protocol SDK for Client and Server applications in PHP",
             "support": {
                 "issues": "https://github.com/modelcontextprotocol/php-sdk/issues",
-                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.2.2"
+                "source": "https://github.com/modelcontextprotocol/php-sdk/tree/v0.3.0"
             },
-            "time": "2025-12-28T06:32:37+00:00"
+            "time": "2026-01-11T21:16:27+00:00"
+        },
+        {
+            "name": "monolog/monolog",
+            "version": "3.10.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Seldaek/monolog.git",
+                "reference": "b321dd6749f0bf7189444158a3ce785cc16d69b0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/b321dd6749f0bf7189444158a3ce785cc16d69b0",
+                "reference": "b321dd6749f0bf7189444158a3ce785cc16d69b0",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1",
+                "psr/log": "^2.0 || ^3.0"
+            },
+            "provide": {
+                "psr/log-implementation": "3.0.0"
+            },
+            "require-dev": {
+                "aws/aws-sdk-php": "^3.0",
+                "doctrine/couchdb": "~1.0@dev",
+                "elasticsearch/elasticsearch": "^7 || ^8",
+                "ext-json": "*",
+                "graylog2/gelf-php": "^1.4.2 || ^2.0",
+                "guzzlehttp/guzzle": "^7.4.5",
+                "guzzlehttp/psr7": "^2.2",
+                "mongodb/mongodb": "^1.8 || ^2.0",
+                "php-amqplib/php-amqplib": "~2.4 || ^3",
+                "php-console/php-console": "^3.1.8",
+                "phpstan/phpstan": "^2",
+                "phpstan/phpstan-deprecation-rules": "^2",
+                "phpstan/phpstan-strict-rules": "^2",
+                "phpunit/phpunit": "^10.5.17 || ^11.0.7",
+                "predis/predis": "^1.1 || ^2",
+                "rollbar/rollbar": "^4.0",
+                "ruflin/elastica": "^7 || ^8",
+                "symfony/mailer": "^5.4 || ^6",
+                "symfony/mime": "^5.4 || ^6"
+            },
+            "suggest": {
+                "aws/aws-sdk-php": "Allow sending log messages to AWS services like DynamoDB",
+                "doctrine/couchdb": "Allow sending log messages to a CouchDB server",
+                "elasticsearch/elasticsearch": "Allow sending log messages to an Elasticsearch server via official client",
+                "ext-amqp": "Allow sending log messages to an AMQP server (1.0+ required)",
+                "ext-curl": "Required to send log messages using the IFTTTHandler, the LogglyHandler, the SendGridHandler, the SlackWebhookHandler or the TelegramBotHandler",
+                "ext-mbstring": "Allow to work properly with unicode symbols",
+                "ext-mongodb": "Allow sending log messages to a MongoDB server (via driver)",
+                "ext-openssl": "Required to send log messages using SSL",
+                "ext-sockets": "Allow sending log messages to a Syslog server (via UDP driver)",
+                "graylog2/gelf-php": "Allow sending log messages to a GrayLog2 server",
+                "mongodb/mongodb": "Allow sending log messages to a MongoDB server (via library)",
+                "php-amqplib/php-amqplib": "Allow sending log messages to an AMQP server using php-amqplib",
+                "rollbar/rollbar": "Allow sending log messages to Rollbar",
+                "ruflin/elastica": "Allow sending log messages to an Elastic Search server"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Monolog\\": "src/Monolog"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be",
+                    "homepage": "https://seld.be"
+                }
+            ],
+            "description": "Sends your logs to files, sockets, inboxes, databases and various web services",
+            "homepage": "https://github.com/Seldaek/monolog",
+            "keywords": [
+                "log",
+                "logging",
+                "psr-3"
+            ],
+            "support": {
+                "issues": "https://github.com/Seldaek/monolog/issues",
+                "source": "https://github.com/Seldaek/monolog/tree/3.10.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Seldaek",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/monolog/monolog",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-02T08:56:05+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -4010,16 +4158,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "12.5.4",
+            "version": "12.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "4ba0e923f9d3fc655de22f9547c01d15a41fc93a"
+                "reference": "ab8e4374264bc65523d1458d14bf80261577e01f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/4ba0e923f9d3fc655de22f9547c01d15a41fc93a",
-                "reference": "4ba0e923f9d3fc655de22f9547c01d15a41fc93a",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/ab8e4374264bc65523d1458d14bf80261577e01f",
+                "reference": "ab8e4374264bc65523d1458d14bf80261577e01f",
                 "shasum": ""
             },
             "require": {
@@ -4033,7 +4181,7 @@
                 "phar-io/manifest": "^2.0.4",
                 "phar-io/version": "^3.2.1",
                 "php": ">=8.3",
-                "phpunit/php-code-coverage": "^12.5.1",
+                "phpunit/php-code-coverage": "^12.5.2",
                 "phpunit/php-file-iterator": "^6.0.0",
                 "phpunit/php-invoker": "^6.0.0",
                 "phpunit/php-text-template": "^5.0.0",
@@ -4087,7 +4235,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.4"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/12.5.6"
             },
             "funding": [
                 {
@@ -4111,7 +4259,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-12-15T06:05:34+00:00"
+            "time": "2026-01-16T16:28:10+00:00"
         },
         {
             "name": "psr/clock",
@@ -5224,16 +5372,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ai-mate.git",
-                "reference": "e52a30f968263494e4a0e7651a6dc4b1f05315f7"
+                "reference": "fe8241f4d34057700fef4fe344c570bc1b0a956d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ai-mate/zipball/e52a30f968263494e4a0e7651a6dc4b1f05315f7",
-                "reference": "e52a30f968263494e4a0e7651a6dc4b1f05315f7",
+                "url": "https://api.github.com/repos/symfony/ai-mate/zipball/fe8241f4d34057700fef4fe344c570bc1b0a956d",
+                "reference": "fe8241f4d34057700fef4fe344c570bc1b0a956d",
                 "shasum": ""
             },
             "require": {
-                "mcp/sdk": "^0.2",
+                "mcp/sdk": "^0.3",
                 "php": ">=8.2",
                 "psr/log": "^2.0|^3.0",
                 "symfony/config": "^5.4|^6.4|^7.3|^8.0",
@@ -5322,7 +5470,205 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-01-13T17:44:51+00:00"
+            "time": "2026-01-14T23:03:58+00:00"
+        },
+        {
+            "name": "symfony/ai-monolog-mate-extension",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/ai-monolog-mate-extension.git",
+                "reference": "25a002037f02ffdfff7fee264d5cda6236dd8a02"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/ai-monolog-mate-extension/zipball/25a002037f02ffdfff7fee264d5cda6236dd8a02",
+                "reference": "25a002037f02ffdfff7fee264d5cda6236dd8a02",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "^2.0|^3.0",
+                "php": ">=8.2",
+                "symfony/ai-mate": "^0.2"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^11.5.46"
+            },
+            "default-branch": true,
+            "type": "symfony-ai-mate",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/ai",
+                    "name": "symfony/ai"
+                },
+                "ai-mate": {
+                    "includes": [
+                        "config/config.php"
+                    ],
+                    "scan-dirs": [
+                        "Capability"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "0.3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\AI\\Mate\\Bridge\\Monolog\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johannes Wachter",
+                    "email": "johannes@sulu.io"
+                },
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Monolog bridge for AI Mate - provides log search and analysis tools",
+            "keywords": [
+                "Bridge",
+                "ai",
+                "dev",
+                "logs",
+                "mcp",
+                "monolog"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/ai-monolog-mate-extension/tree/main"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-12T21:08:10+00:00"
+        },
+        {
+            "name": "symfony/ai-symfony-mate-extension",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/ai-symfony-mate-extension.git",
+                "reference": "39ff22c4f2335ed13279bec0f2c8892e32373f51"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/ai-symfony-mate-extension/zipball/39ff22c4f2335ed13279bec0f2c8892e32373f51",
+                "reference": "39ff22c4f2335ed13279bec0f2c8892e32373f51",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.2",
+                "symfony/ai-mate": "^0.2",
+                "symfony/dependency-injection": "^7.3|^8.0"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^11.5.46"
+            },
+            "default-branch": true,
+            "type": "symfony-ai-mate",
+            "extra": {
+                "thanks": {
+                    "url": "https://github.com/symfony/ai",
+                    "name": "symfony/ai"
+                },
+                "ai-mate": {
+                    "includes": [
+                        "config/config.php"
+                    ],
+                    "scan-dirs": [
+                        "Capability"
+                    ]
+                },
+                "branch-alias": {
+                    "dev-main": "0.3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\AI\\Mate\\Bridge\\Symfony\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com"
+                },
+                {
+                    "name": "Johannes Wachter",
+                    "email": "johannes@sulu.io"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony bridge for AI Mate - provides Symfony container introspection tools",
+            "keywords": [
+                "Bridge",
+                "ai",
+                "debug",
+                "dev",
+                "mcp",
+                "symfony"
+            ],
+            "support": {
+                "source": "https://github.com/symfony/ai-symfony-mate-extension/tree/main"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2026-01-12T21:08:10+00:00"
         },
         {
             "name": "symfony/polyfill-uuid",
@@ -5667,16 +6013,19 @@
         {
             "package": "symfony/ai-mate",
             "version": "0.3.9999999.9999999-dev",
-            "alias": "0.1.1",
-            "alias_normalized": "0.1.1.0"
+            "alias": "0.2.1",
+            "alias_normalized": "0.2.1.0"
         }
     ],
     "minimum-stability": "stable",
     "stability-flags": {
         "matesofmate/common": 20,
+        "matesofmate/composer-extension": 20,
         "matesofmate/phpstan-extension": 20,
         "matesofmate/phpunit-extension": 20,
-        "symfony/ai-mate": 20
+        "symfony/ai-mate": 20,
+        "symfony/ai-monolog-mate-extension": 20,
+        "symfony/ai-symfony-mate-extension": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

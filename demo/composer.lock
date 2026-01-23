@@ -2736,7 +2736,7 @@
                 "matesofmate/common": "^0.1@dev",
                 "php": ">=8.2",
                 "phpstan/phpstan": "^2.0",
-                "symfony/ai-mate": "^0.2 || ^0.3@dev",
+                "symfony/ai-mate": "^0.3@dev",
                 "symfony/process": "^6.4|^7.0|^8.0"
             },
             "require-dev": {
@@ -2809,7 +2809,7 @@
                 "helgesverre/toon": "^1.0",
                 "matesofmate/common": "^0.1@dev",
                 "php": ">=8.2",
-                "symfony/ai-mate": "^0.2 || ^0.3@dev",
+                "symfony/ai-mate": "^0.3@dev",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
                 "symfony/process": "^5.4|^6.4|^7.3|^8.0"
             },

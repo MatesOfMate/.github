@@ -2,142 +2,88 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Overview
 
-This is the **Demo Application** for the MatesOfMate ecosystem - a Symfony 8.0 application that showcases MCP (Model Context Protocol) extensions for AI assistants. The project contains intentional errors (failing tests, PHPStan errors) to demonstrate extension functionality.
+This is a **Symfony 8.0 demo application** that showcases integration with the MatesOfMate ecosystem of MCP extensions. It serves as both a testing ground and reference implementation for MatesOfMate extensions.
 
-## IMPORTANT: Use MCP Tools First
+**Purpose**: Demonstrate and test MCP tools from composer-extension, phpunit-extension, phpstan-extension, and Symfony AI Mate.
 
-**ALWAYS use the MCP tools instead of running CLI commands directly.** The MCP server provides token-optimized output specifically designed for AI assistants.
+## Commands
 
-Instead of:
-- `bin/phpunit` → Use `phpunit-run-suite` MCP tool
-- `bin/phpstan` → Use `phpstan-analyse` MCP tool
-- `composer install` → Use `composer-install` MCP tool
-- `composer update` → Use `composer-update` MCP tool
-- `composer require` → Use `composer-require` MCP tool
-
-The MCP tools return TOON (Token-Optimized Object Notation) format which reduces token usage by 40-50% while preserving all essential information.
-
-## MCP Server Commands
+### Testing
 
 ```bash
-vendor/bin/mate discover                 # Discover extensions
-vendor/bin/mate serve                    # Start MCP server
-vendor/bin/mate mcp:tools:list           # List available tools
-vendor/bin/mate mcp:tools:inspect <name> # Inspect specific tool
-vendor/bin/mate debug:capabilities       # Show all capabilities by extension
+vendor/bin/phpunit                              # Run all tests
+vendor/bin/phpunit tests/CalculatorTest.php     # Run specific test file
+vendor/bin/phpunit --filter testAdd             # Run tests matching pattern
 ```
 
-## MCP Tools Reference
+### Static Analysis
 
-### PHPUnit Extension (`matesofmate/phpunit-extension`)
+```bash
+vendor/bin/phpstan analyse                      # Run PHPStan at level max
+vendor/bin/phpstan analyse src/                 # Analyze specific directory
+```
 
-| Tool | Description | Required Params |
-|------|-------------|-----------------|
-| `phpunit-run-suite` | Run full test suite with TOON output | `mode`: default\|summary\|detailed\|by-file\|by-class |
-| `phpunit-run-file` | Run tests from specific file | `file` (path), `mode` |
-| `phpunit-run-method` | Run single test method | `class`, `method`, `mode` |
-| `phpunit-list-tests` | List available tests | `directory` (optional) |
+### MCP Extensions
 
-### PHPStan Extension (`matesofmate/phpstan-extension`)
+```bash
+vendor/bin/mate discover                        # Discover/register extensions
+vendor/bin/mate serve                           # Start MCP server manually
+```
 
-| Tool | Description | Required Params |
-|------|-------------|-----------------|
-| `phpstan-analyse` | Run static analysis | `mode`: toon\|summary\|detailed\|by-file\|by-type, `level` (0-9) |
-| `phpstan-analyse-file` | Analyze specific file | `file` (path), `mode`, `level` |
-| `phpstan-clear-cache` | Clear result cache | `configuration` (optional) |
+### Dependencies
 
-**Resource**: `phpstan://config` - Returns project configuration details
+```bash
+composer install                                # Install all dependencies
+```
 
-### Composer Extension (`matesofmate/composer-extension`)
+## MCP Integration
 
-| Tool | Description | Required Params |
-|------|-------------|-----------------|
-| `composer-install` | Install dependencies | `preferDist`, `noDev`, `optimizeAutoloader` |
-| `composer-update` | Update dependencies | `packages` (optional), `withDependencies` |
-| `composer-require` | Add package | `package`, `version` (optional), `dev` |
-| `composer-remove` | Remove package | `package`, `dev` |
-| `composer-why` | Show dependents | `package` |
-| `composer-why-not` | Diagnose version conflicts | `package`, `version` (optional) |
+This project has MCP tools available via `mcp.json`. When working in this project, prefer using the MCP tools over direct CLI commands:
 
-### Symfony AI Mate (`symfony/ai-mate`)
+| Instead of...                    | Use MCP tool              |
+|----------------------------------|---------------------------|
+| `vendor/bin/phpunit`             | `phpunit-run-suite`       |
+| `vendor/bin/phpunit tests/X.php` | `phpunit-run-file`        |
+| `vendor/bin/phpstan analyse`     | `phpstan-analyse`         |
+| `composer show`                  | `composer-show-packages`  |
 
-| Tool | Description |
-|------|-------------|
-| `php-version` | Get PHP version |
-| `operating-system` | Get current OS |
-| `operating-system-family` | Get OS family |
-| `php-extensions` | List PHP extensions |
-
-### Monolog Extension (`symfony/ai-monolog-mate-extension`)
-
-| Tool | Description | Required Params |
-|------|-------------|-----------------|
-| `monolog-search` | Search logs by term | `term`, `level`, `channel`, `limit` |
-| `monolog-search-regex` | Search with regex | `pattern` |
-| `monolog-context-search` | Search by context field | `field`, `value` |
-| `monolog-tail` | Get last N entries | `count` |
-| `monolog-list-files` | List log files | `environment` (optional) |
-| `monolog-list-channels` | List log channels | - |
-| `monolog-by-level` | Filter by level | `level` |
-
-### Symfony Extension (`symfony/ai-symfony-mate-extension`)
-
-| Tool | Description |
-|------|-------------|
-| `symfony-services` | List all Symfony services |
+MCP tools provide token-optimized output designed for AI consumption.
 
 ## Architecture
 
-### Extension Configuration
+**Minimal Microkernel**: Uses Symfony's microkernel pattern without full-stack bloat.
 
-Extensions are enabled via `mate/extensions.php`:
-```php
-return [
-    'matesofmate/composer-extension' => ['enabled' => true],
-    'matesofmate/phpstan-extension' => ['enabled' => true],
-    'matesofmate/phpunit-extension' => ['enabled' => true],
-    'symfony/ai-mate' => ['enabled' => true],
-    'symfony/ai-monolog-mate-extension' => ['enabled' => true],
-    'symfony/ai-symfony-mate-extension' => ['enabled' => true],
-];
-```
+**Extension Discovery Flow**:
+1. `composer.json` defines path repositories pointing to monorepo extensions
+2. `mate/extensions.php` lists enabled extensions (managed by `mate discover`)
+3. `mate/config.php` provides custom service configuration
+4. `mcp.json` configures the MCP server endpoint
 
-### MCP Server Configuration
+**Custom MCP Tools**: Place custom tools in `mate/src/` (PSR-4: `App\Mate\`)
 
-The `mcp.json` (symlinked as `.mcp.json`) configures the MCP server:
-```json
-{
-    "mcpServers": {
-        "symfony-ai-mate": {
-            "command": "./vendor/bin/mate",
-            "args": ["serve", "--force-keep-alive"]
-        }
-    }
-}
-```
+## Intentional Quality Issues
 
-### Custom MCP Tools
+The demo contains **deliberate bugs and quality issues** for testing analysis tools:
 
-Custom tools go in `mate/src/` and register via `mate/config.php`. The `extra.ai-mate.scan-dirs` in `composer.json` points to `mate/src` for discovery.
-
-## Test Fixtures
-
-The demo includes intentional test scenarios:
+**Calculator.php**:
+- `problematicMethod()` - Undefined variable, unreachable code
+- `typeIssueMethod()` - Wrong return type (returns string as int)
+- `unusedParamMethod()` - Unused parameter
 
 **CalculatorTest.php**:
-- Passing: `testAdd`, `testSubtract`, `testMultiply`, `testDivide`, `testPower`, `testDivideByZero`
-- Failing: `testAddFailing` (wrong expected value)
-- Erroring: `testDivideErroring` (unhandled exception), `testPhpstanErrors` (undefined methods)
+- `testAddFailing()` - Intentionally wrong assertion (expects 10, result is 5)
+- `testDivideErroring()` - Unhandled exception
+- `testPhpstanErrors()` - Calls non-existent method, wrong parameter types
 
-**NonExistentClassTest.php**: Errors due to missing `App\NonExistentClass`
+These are test subjects for PHPStan and PHPUnit analysis - do not "fix" them unless specifically asked.
 
-**SkippedTest.php**: `testSkippedDueToPHPVersion` skipped via `@requires PHP >= 9.0`
+## Configuration
 
-## PHPStan Fixtures
-
-`src/Calculator.php` contains intentional errors:
-- `problematicMethod()`: Undefined variable, unreachable code, missing return type
-- `typeIssueMethod()`: Returns string instead of int
-- `unusedParamMethod()`: Unused parameter
+| File | Purpose |
+|------|---------|
+| `phpstan.neon` | PHPStan at level `max` analyzing `src/` and `tests/` |
+| `phpunit.dist.xml` | PHPUnit with strict mode (fails on deprecation/notice/warning) |
+| `mcp.json` | MCP server config with debug logging to `var/log/mate_debug.log` |
+| `mate/extensions.php` | Extension registry (auto-generated by `mate discover`) |

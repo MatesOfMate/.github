@@ -37,7 +37,8 @@
             "scan-dirs": [
                 "src/Capability"
             ],
-            "includes": ["config/config.php"]
+            "includes": ["config/config.php"],
+            "instructions": "INSTRUCTIONS.md"
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"

@@ -31,13 +31,18 @@ Extensions can provide:
 # Install an extension
 composer require --dev matesofmate/example-extension
 
-# Discover new tools
+# Initialize Mate in the project
+vendor/bin/mate init
+
+# Refresh discovery artifacts if needed
 vendor/bin/mate discover
 
 # Verify it's loaded
 vendor/bin/mate debug:extensions
 vendor/bin/mate debug:capabilities
 ```
+
+In current AI Mate setups, extension discovery is handled automatically after Composer install and update. For Codex, use the generated `./bin/codex` wrapper.
 
 ## Join the Community
 

@@ -17,6 +17,8 @@ use Mcp\Capability\Attribute\McpTool;
  * Example tool demonstrating the basic structure of an AI Mate tool.
  *
  * Replace this with your actual implementation.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
  */
 class ExampleTool
 {

@@ -64,7 +64,7 @@ your-extension/
 ├── src/
 │   └── Capability/        # Your MCP tools
 ├── config/
-│   └── services.php       # Service definitions
+│   └── config.php         # Service definitions
 └── tests/
     └── ...
 ```
@@ -74,10 +74,10 @@ your-extension/
 ```json
 {
     "name": "matesofmate/example-extension",
-    "type": "library",
+    "type": "symfony-ai-mate",
     "require": {
         "php": ">=8.2",
-        "symfony/ai-mate": "^0.1"
+        "symfony/ai-mate": "^0.6"
     },
     "autoload": {
         "psr-4": {
@@ -87,7 +87,7 @@ your-extension/
     "extra": {
         "ai-mate": {
             "scan-dirs": ["src/Capability"],
-            "includes": ["config/services.php"]
+            "includes": ["config/config.php"]
         }
     }
 }

@@ -110,7 +110,7 @@ class PhpunitRunnerTest extends TestCase
         $result->cleanup();
     }
 
-    public function testCustomCommandCreatesJunitFileInProjectVarDir(): void
+    public function testCustomCommandUsesProjectVarDirForJunitPath(): void
     {
         $projectRoot = sys_get_temp_dir().'/phpunit_runner_test_'.bin2hex(random_bytes(4));
         mkdir($projectRoot, 0777, true);
@@ -122,7 +122,7 @@ class PhpunitRunnerTest extends TestCase
             $runner = new PhpunitRunner(
                 $executor,
                 $projectRoot,
-                ['docker', 'compose', 'exec', 'php-test', 'vendor/bin/phpunit'],
+                [PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
             );
 
             $result = $runner->run(['--filter', 'SomeTest']);
@@ -136,6 +136,32 @@ class PhpunitRunnerTest extends TestCase
                 $result->cleanup();
             }
             @rmdir($projectRoot.'/var');
+            @rmdir($projectRoot);
+        }
+    }
+
+    public function testCustomCommandThrowsWhenVarDirectoryCannotBeCreated(): void
+    {
+        $projectRoot = sys_get_temp_dir().'/phpunit_runner_test_'.bin2hex(random_bytes(4));
+        mkdir($projectRoot, 0777, true);
+        file_put_contents($projectRoot.'/var', 'blocking file');
+
+        try {
+            $executor = $this->createMock(ProcessExecutor::class);
+            $executor->expects($this->never())->method('execute');
+
+            $runner = new PhpunitRunner(
+                $executor,
+                $projectRoot,
+                [PHP_BINARY, '-r', 'exit(1);'],
+            );
+
+            $this->expectException(\RuntimeException::class);
+            $this->expectExceptionMessage('Failed to create PHPUnit JUnit directory');
+
+            $runner->run([]);
+        } finally {
+            @unlink($projectRoot.'/var');
             @rmdir($projectRoot);
         }
     }

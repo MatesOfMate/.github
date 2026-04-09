@@ -96,13 +96,12 @@ class ComposerRunnerTest extends TestCase
         $runner = new ComposerRunner(
             $executor,
             '/tmp',
-            ['docker', 'compose', 'exec', 'php', 'composer'],
+            [PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
         );
 
-        // This will fail because docker isn't available, but we verify ProcessExecutor is not called
         $result = $runner->run(['install']);
 
-        $this->assertNotSame(0, $result->exitCode);
+        $this->assertSame(1, $result->exitCode);
     }
 
     public function testDefaultBehaviorUnchangedWithEmptyCustomCommand(): void

@@ -244,6 +244,43 @@ class RunSuiteToolTest extends TestCase
         @unlink($tempFile);
     }
 
+    public function testExecuteFallsBackToRawOutputWhenParserThrowsUnexpectedException(): void
+    {
+        $runner = $this->createMock(PhpunitRunner::class);
+        $parser = $this->createMock(JunitXmlParser::class);
+        $formatter = $this->createMock(ToonFormatter::class);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+
+        $tempFile = tempnam(sys_get_temp_dir(), 'phpunit_test_');
+        if (false === $tempFile) {
+            $this->fail('Could not create temporary file');
+        }
+
+        $runResult = new RunResult(
+            exitCode: 1,
+            output: 'PHPUnit raw output',
+            errorOutput: 'Malformed XML',
+            junitXmlPath: $tempFile
+        );
+
+        $configDetector->method('detect')->willReturn(null);
+        $runner->expects($this->once())
+            ->method('run')
+            ->willReturn($runResult);
+
+        $parser->expects($this->once())
+            ->method('parse')
+            ->willThrowException(new \RuntimeException('XML parsing failed'));
+
+        $formatter->expects($this->never())->method('format');
+
+        $tool = new RunSuiteTool($runner, $parser, $formatter, $configDetector);
+        $output = $tool->execute();
+
+        $this->assertSame("PHPUnit raw output\n\nMalformed XML", $output);
+        $this->assertFileDoesNotExist($tempFile);
+    }
+
     public function testExecuteFallsBackWithoutErrorOutput(): void
     {
         $runner = $this->createMock(PhpunitRunner::class);

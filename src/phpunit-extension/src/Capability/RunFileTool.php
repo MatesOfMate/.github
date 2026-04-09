@@ -57,17 +57,19 @@ class RunFileTool
         $runResult = $this->runner->run($args);
 
         try {
-            $testResult = $this->parser->parse($runResult->getJunitXml());
-            $output = $this->formatter->format($testResult, $mode);
-        } catch (\InvalidArgumentException) {
-            $output = $runResult->output;
-            if ('' !== $runResult->errorOutput) {
-                $output .= "\n\n".$runResult->errorOutput;
+            try {
+                $testResult = $this->parser->parse($runResult->getJunitXml());
+                return $this->formatter->format($testResult, $mode);
+            } catch (\Throwable) {
+                $output = $runResult->output;
+                if ('' !== $runResult->errorOutput) {
+                    $output .= "\n\n".$runResult->errorOutput;
+                }
+
+                return $output;
             }
+        } finally {
+            $runResult->cleanup();
         }
-
-        $runResult->cleanup();
-
-        return $output;
     }
 }

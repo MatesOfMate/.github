@@ -66,14 +66,12 @@ class PhpStanRunnerTest extends TestCase
         $runner = new PhpStanRunner(
             $executor,
             '/tmp',
-            ['docker', 'compose', 'exec', 'php', 'vendor/bin/phpstan'],
+            [PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
         );
 
-        // This will fail because docker isn't available, but we verify ProcessExecutor is not called
         $result = $runner->run('analyse', []);
 
-        // The process will fail but should return a RunResult
-        $this->assertNotSame(0, $result->exitCode);
+        $this->assertSame(1, $result->exitCode);
     }
 
     public function testDefaultBehaviorUnchangedWithEmptyCustomCommand(): void

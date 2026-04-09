@@ -73,8 +73,12 @@ class PhpunitRunner
         $projectRoot = $this->projectRoot ?? (getcwd() ?: '.');
 
         $varDir = $projectRoot.'/var';
-        if (!is_dir($varDir)) {
-            mkdir($varDir, 0777, true);
+        if (file_exists($varDir) && !is_dir($varDir)) {
+            throw new \RuntimeException(\sprintf('Failed to create PHPUnit JUnit directory: %s', $varDir));
+        }
+
+        if (!is_dir($varDir) && !mkdir($varDir, 0777, true) && !is_dir($varDir)) {
+            throw new \RuntimeException(\sprintf('Failed to create PHPUnit JUnit directory: %s', $varDir));
         }
 
         $filename = 'phpunit_junit_'.bin2hex(random_bytes(8)).'.xml';

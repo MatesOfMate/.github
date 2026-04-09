@@ -13,6 +13,7 @@ use Rector\Config\RectorConfig;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
 return RectorConfig::configure()
     ->withPaths([
@@ -21,6 +22,7 @@ return RectorConfig::configure()
     ])
     ->withSkip([
         __DIR__.'/vendor',
+        DeclareStrictTypesRector::class,
     ])
     ->withPhpSets(php82: true)
     ->withSets([

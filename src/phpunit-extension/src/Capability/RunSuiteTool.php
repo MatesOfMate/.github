@@ -55,6 +55,7 @@ class RunSuiteTool
         try {
             try {
                 $testResult = $this->parser->parse($runResult->getJunitXml());
+
                 return $this->formatter->format($testResult, $mode);
             } catch (\Throwable) {
                 $output = $runResult->output;

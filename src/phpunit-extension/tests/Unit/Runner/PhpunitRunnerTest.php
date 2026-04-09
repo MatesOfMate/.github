@@ -122,7 +122,7 @@ class PhpunitRunnerTest extends TestCase
             $runner = new PhpunitRunner(
                 $executor,
                 $projectRoot,
-                [PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
+                [\PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
             );
 
             $result = $runner->run(['--filter', 'SomeTest']);
@@ -153,7 +153,7 @@ class PhpunitRunnerTest extends TestCase
             $runner = new PhpunitRunner(
                 $executor,
                 $projectRoot,
-                [PHP_BINARY, '-r', 'exit(1);'],
+                [\PHP_BINARY, '-r', 'exit(1);'],
             );
 
             $this->expectException(\RuntimeException::class);

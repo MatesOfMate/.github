@@ -66,7 +66,7 @@ class PhpStanRunnerTest extends TestCase
         $runner = new PhpStanRunner(
             $executor,
             '/tmp',
-            [PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
+            [\PHP_BINARY, '-r', 'fwrite(STDERR, "custom command failure"); exit(1);'],
         );
 
         $result = $runner->run('analyse', []);

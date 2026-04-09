@@ -1,60 +1,77 @@
 # Extension Template for Symfony AI Mate
 
-A starter template for creating [MatesOfMate](https://github.com/matesofmate) extensions.
+A starter template for building [MatesOfMate](https://github.com/matesofmate) extensions that follow the current Symfony AI Mate workflow.
 
 ## Quick Start
 
-1. **Use this template**: Click "Use this template" on GitHub
-2. **Rename everything**: Replace `example` with your framework name
-3. **Add your tools**: Create tools in `src/Capability/`
-4. **Test it**: Run `composer test`
-5. **Publish**: Submit to Packagist
+1. Use this template on GitHub.
+2. Replace all `example` and `ExampleExtension` placeholders with your framework name.
+3. Run `composer install`.
+4. Add your tools and resources in `src/Capability/`.
+5. Run `composer test` and `composer lint`.
+
+## Current AI Mate Flow
+
+This template is aligned with the current `symfony/ai-mate` `0.6.x` workflow and the latest `symfony/ai` `main` branch guidance:
+
+- initialize projects with `vendor/bin/mate init`
+- extension discovery is handled automatically on Composer install and update in current Mate setups
+- `mate/extensions.php` controls which discovered extensions are enabled
+- `vendor/bin/mate discover` still refreshes discovery state and regenerates agent instruction artifacts
+- Codex should be started via `./bin/codex` or `bin/codex.bat`
+
+Useful Mate commands while developing:
+
+```bash
+vendor/bin/mate debug:capabilities
+vendor/bin/mate debug:extensions
+vendor/bin/mate mcp:tools:list
+vendor/bin/mate mcp:tools:inspect example-hello
+```
 
 ## Structure
 
-```
+```text
 extension-template/
 ├── .github/
-│   ├── workflows/
-│   │   └── ci.yml             # GitHub Actions workflow
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── 1-bug_report.md    # Bug report template
-│   │   ├── 2-feature_request.md # Feature request template
-│   │   └── config.yml         # Issue template configuration
-│   ├── CODEOWNERS             # Code ownership configuration
-│   └── PULL_REQUEST_TEMPLATE.md # PR template
-├── composer.json              # Package configuration
-├── README.md                  # This file (replace with your docs)
-├── LICENSE                    # MIT license
-├── .gitignore                 # Git ignore rules
-├── phpunit.xml.dist           # Test configuration
-├── phpstan.dist.neon          # PHPStan configuration
-├── rector.php                 # Rector configuration
-├── .php-cs-fixer.php          # PHP CS Fixer configuration
+├── composer.json
+├── README.md
+├── LICENSE
+├── .gitignore
+├── phpunit.xml.dist
+├── phpstan.dist.neon
+├── rector.php
+├── .php-cs-fixer.php
 ├── src/
 │   └── Capability/
-│       ├── ExampleTool.php    # Sample tool implementation
-│       └── ExampleResource.php # Sample resource implementation
+│       ├── ExampleTool.php
+│       └── ExampleResource.php
 ├── config/
-│   └── services.php           # Service registration
+│   └── config.php
 └── tests/
     └── Capability/
         ├── ExampleToolTest.php
         └── ExampleResourceTest.php
 ```
 
-## Installation (for users of your extension)
+## Installation in a Project
 
 ```bash
 composer require --dev matesofmate/your-extension
+vendor/bin/mate init
+```
 
-# Discover the new tools
-vendor/bin/mate discover
+In current AI Mate setups, extension discovery is handled automatically after install and update. Run `vendor/bin/mate discover` when you want to refresh generated instruction artifacts or re-scan the project manually.
+
+For Codex, use the generated wrapper instead of relying on `mcp.json` alone:
+
+```bash
+./bin/codex
 ```
 
 ## Creating Tools
 
-Tools are PHP classes with methods marked with the `#[McpTool]` attribute:
+Tools are PHP classes with methods marked with `#[McpTool]`.
 
 ```php
 <?php
@@ -63,7 +80,12 @@ namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpTool;
 
-final class ListEntitiesTool
+/**
+ * Example tool showing the default MatesOfMate style.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class ListEntitiesTool
 {
     public function __construct(
         private readonly SomeService $service,
@@ -72,7 +94,7 @@ final class ListEntitiesTool
 
     #[McpTool(
         name: 'example-list-entities',
-        description: 'Lists all entities in the application. Use when the user asks about available entities, models, or database tables.'
+        description: 'List available entities. Use when the user asks which entities, models, or tables exist.'
     )]
     public function execute(): string
     {
@@ -86,16 +108,17 @@ final class ListEntitiesTool
 }
 ```
 
-### Tool Tips
+Tool guidance:
 
-- **name**: Use `{framework}-{action}` format, lowercase with hyphens
-- **description**: Be specific! The AI uses this to decide when to call your tool
-- **Return**: JSON strings work well for structured data
-- **Dependencies**: Use constructor injection, configure in `services.php`
+- Use `{framework}-{action}` for tool names.
+- Write descriptions that say when the AI should call the tool.
+- MatesOfMate examples default to JSON strings with `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`.
+- Current AI Mate also supports array and scalar tool returns. Use JSON when you want stable structured output as part of your package style.
+- Register tool classes in `config/config.php`.
 
 ## Creating Resources
 
-Resources provide static context or configuration data to the AI. They return structured data with a URI, MIME type, and content:
+Resources provide static or semi-static context to the AI.
 
 ```php
 <?php
@@ -104,7 +127,12 @@ namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpResource;
 
-final class ConfigurationResource
+/**
+ * Example resource showing the default MatesOfMate style.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class ConfigurationResource
 {
     #[McpResource(
         uri: 'example://config',
@@ -125,16 +153,16 @@ final class ConfigurationResource
 }
 ```
 
-### Resource Tips
+Resource guidance:
 
-- **uri**: Use custom URI scheme (e.g., `example://config`, `myframework://routes`)
-- **name**: Descriptive name for the resource
-- **mimeType**: Usually `application/json` or `text/plain`
-- **Return structure**: Must include `uri`, `mimeType`, and `text` keys
+- Use a custom URI scheme such as `example://config`.
+- Return `uri`, `mimeType`, and `text`.
+- JSON resources commonly use `application/json`.
+- If you later adopt an optional TOON-or-JSON encoder like the upstream `symfony/ai` PR `#1439` direction, review MIME types deliberately instead of changing them blindly.
 
 ## Registering Services
 
-In `config/services.php`:
+Register capabilities in `config/config.php`:
 
 ```php
 <?php
@@ -152,74 +180,46 @@ return static function (ContainerConfigurator $container): void {
 };
 ```
 
-## Testing & Code Quality
+## Agent Instructions
+
+`INSTRUCTIONS.md` should help AI agents map common user intents to your MCP capabilities. Keep it short, concrete, and focused on when to use your tools instead of CLI commands.
+
+Current Mate workflows also materialize aggregated instructions into `mate/AGENT_INSTRUCTIONS.md` and maintain a managed AI Mate block in the project `AGENTS.md` when discovery is refreshed.
+
+## Testing and Quality
 
 ```bash
-# Run tests
 composer test
-
-# With coverage
-composer test -- --coverage-html coverage/
-
-# Check code style and static analysis
 composer lint
-
-# Auto-fix code style and apply automated refactorings
 composer fix
 ```
 
-### Individual Tools
+Useful direct commands:
 
 ```bash
-# PHP CS Fixer only
-vendor/bin/php-cs-fixer fix --dry-run --diff
-vendor/bin/php-cs-fixer fix
-
-# PHPStan only
+vendor/bin/phpunit
 vendor/bin/phpstan analyse
-
-# Rector only
 vendor/bin/rector process --dry-run
-vendor/bin/rector process
+vendor/bin/php-cs-fixer fix --dry-run --diff
 ```
-
-### Continuous Integration
-
-The template includes a GitHub Actions workflow that automatically runs on every push and pull request:
-
-- **Lint job**: Validates composer.json, runs Rector, PHP CS Fixer, and PHPStan
-- **Test job**: Runs PHPUnit tests on PHP 8.2 and 8.3
-
-The workflow is configured in `.github/workflows/ci.yml`.
-
-### GitHub Templates
-
-The template includes GitHub configuration files to streamline your development workflow:
-
-- **CODEOWNERS**: Define code ownership for automatic review requests (update with your GitHub username)
-- **PULL_REQUEST_TEMPLATE.md**: Standardized PR description format
-- **Issue Templates**: Bug reports and feature requests with structured formats
-- **config.yml**: Links to documentation and community resources
-
-Remember to update CODEOWNERS with your actual GitHub username or team names.
 
 ## Checklist Before Publishing
 
-- [ ] Replace all `example`/`Example` references with your framework name
-- [ ] Update `composer.json` with correct package name and description
-- [ ] Update `.github/CODEOWNERS` with your GitHub username/team
-- [ ] Write meaningful tool descriptions
-- [ ] Add installation instructions to README
-- [ ] Add tests for your tools
-- [ ] Update LICENSE with your name/org
-- [ ] Tag a release (e.g., `v0.1.0`)
-- [ ] Submit to Packagist
+- [ ] Replace all `example` and `ExampleExtension` placeholders
+- [ ] Update `composer.json` package name and description
+- [ ] Update `.github/CODEOWNERS`
+- [ ] Update `LICENSE`
+- [ ] Replace example tool and resource names, URIs, and descriptions
+- [ ] Update README install and usage docs for your framework
+- [ ] Make sure `composer test` passes
+- [ ] Make sure `composer lint` passes
+- [ ] Tag a release and submit to Packagist
 
 ## Resources
 
-- [Symfony AI Mate Docs](https://symfony.com/doc/current/ai/components/mate.html)
-- [Creating MCP Extensions](https://symfony.com/doc/current/ai/components/mate/extensions.html)
-- [MatesOfMate Contributing Guide](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md)
+- [Symfony AI Mate docs](https://symfony.com/doc/current/ai/components/mate.html)
+- [Creating MCP extensions](https://symfony.com/doc/current/ai/components/mate/creating-extensions.html)
+- [MatesOfMate contributing guide](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md)
 
 ---
 

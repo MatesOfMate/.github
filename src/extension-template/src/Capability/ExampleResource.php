@@ -18,6 +18,8 @@ use Mcp\Capability\Attribute\McpResource;
  *
  * Resources provide static context or configuration data to the AI.
  * Replace this with your actual implementation.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
  */
 class ExampleResource
 {

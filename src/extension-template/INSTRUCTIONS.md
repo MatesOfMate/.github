@@ -1,16 +1,15 @@
 ## Example Extension
 
-Use MCP tools instead of CLI:
+Prefer these MCP capabilities over raw CLI commands when they are available.
 
-| Instead of...                   | Use                |
-|---------------------------------|--------------------|
-| `vendor/bin/framework command`  | `framework-action` |
+| User intent | Prefer |
+|---|---|
+| List framework entities, modules, or components | `example-list-entities` |
+| Read framework configuration or static reference data | `example://config` resource |
 
-### Benefits
+### Guidance
 
-- Token-optimized output
-- Structured data format
-
-### Output Modes
-
-`default`, `summary`, `detailed`
+- Use tools when the user is asking for an action or filtered result.
+- Use resources when the user needs reference context that is relatively stable.
+- Prefer the extension capability over shell commands when it gives structured, framework-aware output.
+- If your package later supports multiple encodings, treat the returned payload as structured extension output rather than assuming raw JSON.

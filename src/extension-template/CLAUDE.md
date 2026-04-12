@@ -10,9 +10,8 @@ This package is the starter template for MatesOfMate extensions. It should model
 
 The template should stay aligned with:
 
-- released `symfony/ai-mate` `0.6.x`
-- current `symfony/ai` `main` branch conventions where they are already established
-- the upstream response-encoding direction from `symfony/ai` PR `#1439`, without claiming it is released if it is still pending
+- released `symfony/ai-mate` `0.7.x`
+- current Mate response encoding conventions as shipped in core
 
 Current workflow assumptions:
 
@@ -59,14 +58,13 @@ MatesOfMate house style:
 
 - no `declare(strict_types=1)` in examples
 - no `final` classes in examples
-- JSON encoding uses `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
 - file headers stay consistent with the org
 
 Current AI Mate platform capability:
 
 - tools may return strings, arrays, or scalars
-- MatesOfMate examples default to JSON strings because they provide predictable structured output
-- if the ecosystem adopts an optional encoder similar to upstream PR `#1439`, document the fallback behavior explicitly and review resource MIME types deliberately
+- encoded string payloads should use Mate's built-in `ResponseEncoder`
+- encoder-backed resources should use `text/plain` MIME types
 
 ## Testing Expectations
 

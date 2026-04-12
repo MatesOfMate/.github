@@ -13,23 +13,24 @@ namespace MatesOfMate\ExampleExtension\Tests\Capability;
 
 use MatesOfMate\ExampleExtension\Capability\ExampleTool;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 class ExampleToolTest extends TestCase
 {
-    public function testReturnsValidJson(): void
+    public function testReturnsDecodablePayload(): void
     {
         $tool = new ExampleTool();
 
         $result = $tool->execute();
 
-        $this->assertJson($result);
+        $this->assertIsArray(ResponseEncoder::decode($result));
     }
 
     public function testContainsExpectedKeys(): void
     {
         $tool = new ExampleTool();
 
-        $result = json_decode($tool->execute(), true, 512, \JSON_THROW_ON_ERROR);
+        $result = ResponseEncoder::decode($tool->execute());
 
         $this->assertArrayHasKey('message', $result);
         $this->assertArrayHasKey('hint', $result);

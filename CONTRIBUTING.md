@@ -77,7 +77,7 @@ your-extension/
     "type": "symfony-ai-mate",
     "require": {
         "php": ">=8.2",
-        "symfony/ai-mate": "^0.6"
+        "symfony/ai-mate": "^0.7"
     },
     "autoload": {
         "psr-4": {
@@ -139,23 +139,24 @@ Resources provide static context or configuration data to the AI. They're useful
 namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 class ConfigurationResource
 {
     #[McpResource(
         uri: 'example://config',
         name: 'example_config',
-        mimeType: 'application/json'
+        mimeType: 'text/plain'
     )]
     public function getConfiguration(): array
     {
         return [
             'uri' => 'example://config',
-            'mimeType' => 'application/json',
-            'text' => json_encode([
+            'mimeType' => 'text/plain',
+            'text' => ResponseEncoder::encode([
                 'version' => '1.0.0',
                 'features' => ['feature_a' => true, 'feature_b' => false],
-            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
+            ]),
         ];
     }
 }

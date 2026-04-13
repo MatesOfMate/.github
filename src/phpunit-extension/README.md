@@ -59,7 +59,7 @@ return static function (ContainerConfigurator $container): void {
 - `phpunit-run-method`
 - `phpunit-list-tests`
 
-All tools return encoded strings through Mate's core `ResponseEncoder`. When TOON support is available it is used automatically; otherwise the same payload falls back to JSON.
+All tools return encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
 ## Output Modes
 

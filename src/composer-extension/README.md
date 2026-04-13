@@ -60,7 +60,7 @@ return static function (ContainerConfigurator $container): void {
 - `composer-why`
 - `composer-why-not`
 
-All tools return encoded strings through Mate's core `ResponseEncoder`. When TOON support is available it is used automatically; otherwise the same payload falls back to JSON.
+All tools return encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
 ## Available Resource
 

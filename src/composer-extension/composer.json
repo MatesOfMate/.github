@@ -32,6 +32,9 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "rector/rector": "^2.0"
     },
+    "suggest": {
+        "helgesverre/toon": "Install for TOON-encoded MCP responses; JSON remains the fallback when it is not available"
+    },
     "autoload": {
         "psr-4": {
             "MatesOfMate\\ComposerExtension\\": "src/"

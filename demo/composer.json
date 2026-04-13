@@ -22,7 +22,7 @@
         "phpstan/phpstan": "^2.1.37",
         "phpunit/phpunit": "^12.5.7",
         "psr/log": "^3.0.2",
-        "symfony/ai-mate": "^0.3 || ^0.3@dev",
+        "symfony/ai-mate": "^0.7",
         "symfony/ai-monolog-mate-extension": "^0.3@dev",
         "symfony/ai-symfony-mate-extension": "^0.3@dev"
     },

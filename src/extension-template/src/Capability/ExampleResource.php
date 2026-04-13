@@ -12,6 +12,7 @@
 namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
  * Example resource demonstrating the basic structure of an AI Mate resource.
@@ -36,21 +37,21 @@ class ExampleResource
     #[McpResource(
         uri: 'example://config',
         name: 'example_config',
-        mimeType: 'application/json'
+        mimeType: 'text/plain'
     )]
     public function getConfiguration(): array
     {
         return [
             'uri' => 'example://config',
-            'mimeType' => 'application/json',
-            'text' => json_encode([
+            'mimeType' => 'text/plain',
+            'text' => ResponseEncoder::encode([
                 'version' => '1.0.0',
                 'features' => [
                     'feature_a' => true,
                     'feature_b' => false,
                 ],
                 'hint' => 'Replace this resource with your actual configuration.',
-            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
+            ]),
         ];
     }
 }

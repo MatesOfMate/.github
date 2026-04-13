@@ -12,7 +12,7 @@ A starter template for building [MatesOfMate](https://github.com/matesofmate) ex
 
 ## Current AI Mate Flow
 
-This template is aligned with the current `symfony/ai-mate` `0.6.x` workflow and the latest `symfony/ai` `main` branch guidance:
+This template is aligned with the current `symfony/ai-mate` `0.7.x` workflow and the current core Mate response encoding behavior:
 
 - initialize projects with `vendor/bin/mate init`
 - extension discovery is handled automatically on Composer install and update in current Mate setups
@@ -79,6 +79,7 @@ Tools are PHP classes with methods marked with `#[McpTool]`.
 namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
  * Example tool showing the default MatesOfMate style.
@@ -100,10 +101,10 @@ class ListEntitiesTool
     {
         $entities = $this->service->getEntities();
 
-        return json_encode([
+        return ResponseEncoder::encode([
             'entities' => $entities,
             'count' => count($entities),
-        ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+        ]);
     }
 }
 ```
@@ -112,8 +113,8 @@ Tool guidance:
 
 - Use `{framework}-{action}` for tool names.
 - Write descriptions that say when the AI should call the tool.
-- MatesOfMate examples default to JSON strings with `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`.
-- Current AI Mate also supports array and scalar tool returns. Use JSON when you want stable structured output as part of your package style.
+- For encoded string payloads, use Mate's built-in `ResponseEncoder` so TOON is used when available and JSON is used as a fallback.
+- Current AI Mate also supports array and scalar tool returns. Use encoded strings when you want stable structured output across environments.
 - Register tool classes in `config/config.php`.
 
 ## Creating Resources
@@ -126,6 +127,7 @@ Resources provide static or semi-static context to the AI.
 namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
  * Example resource showing the default MatesOfMate style.
@@ -137,17 +139,17 @@ class ConfigurationResource
     #[McpResource(
         uri: 'example://config',
         name: 'example_config',
-        mimeType: 'application/json'
+        mimeType: 'text/plain'
     )]
     public function getConfiguration(): array
     {
         return [
             'uri' => 'example://config',
-            'mimeType' => 'application/json',
-            'text' => json_encode([
+            'mimeType' => 'text/plain',
+            'text' => ResponseEncoder::encode([
                 'version' => '1.0.0',
                 'features' => ['feature_a' => true],
-            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
+            ]),
         ];
     }
 }
@@ -157,8 +159,8 @@ Resource guidance:
 
 - Use a custom URI scheme such as `example://config`.
 - Return `uri`, `mimeType`, and `text`.
-- JSON resources commonly use `application/json`.
-- If you later adopt an optional TOON-or-JSON encoder like the upstream `symfony/ai` PR `#1439` direction, review MIME types deliberately instead of changing them blindly.
+- Use `text/plain` for encoder-backed resource text because the payload may be TOON or JSON depending on the installed environment.
+- Prefer the core Mate `ResponseEncoder` instead of maintaining a package-local encoding helper.
 
 ## Registering Services
 

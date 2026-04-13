@@ -12,6 +12,7 @@
 namespace MatesOfMate\ExampleExtension\Capability;
 
 use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
  * Example tool demonstrating the basic structure of an AI Mate tool.
@@ -36,9 +37,9 @@ class ExampleTool
     )]
     public function execute(): string
     {
-        return json_encode([
+        return ResponseEncoder::encode([
             'message' => 'Hello from MatesOfMate!',
             'hint' => 'Replace this tool with your actual implementation.',
-        ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+        ]);
     }
 }

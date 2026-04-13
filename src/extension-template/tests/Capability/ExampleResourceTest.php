@@ -13,6 +13,7 @@ namespace MatesOfMate\ExampleExtension\Tests\Capability;
 
 use MatesOfMate\ExampleExtension\Capability\ExampleResource;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 class ExampleResourceTest extends TestCase
 {
@@ -37,23 +38,22 @@ class ExampleResourceTest extends TestCase
         $this->assertEquals('example://config', $result['uri']);
     }
 
-    public function testHasJsonMimeType(): void
+    public function testHasPlainTextMimeType(): void
     {
         $resource = new ExampleResource();
 
         $result = $resource->getConfiguration();
 
-        $this->assertEquals('application/json', $result['mimeType']);
+        $this->assertEquals('text/plain', $result['mimeType']);
     }
 
-    public function testContainsValidJsonText(): void
+    public function testContainsDecodableEncodedText(): void
     {
         $resource = new ExampleResource();
 
         $result = $resource->getConfiguration();
 
-        $this->assertJson($result['text']);
-        $decoded = json_decode((string) $result['text'], true, 512, \JSON_THROW_ON_ERROR);
+        $decoded = ResponseEncoder::decode((string) $result['text']);
         $this->assertArrayHasKey('version', $decoded);
         $this->assertArrayHasKey('features', $decoded);
     }

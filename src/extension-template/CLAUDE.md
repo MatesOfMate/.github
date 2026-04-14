@@ -81,7 +81,8 @@ When updating this template:
 1. keep `README.md`, `CLAUDE.md`, `AGENTS.md`, and `INSTRUCTIONS.md` mutually consistent
 2. keep examples aligned with real package conventions in this monorepo
 3. prefer concrete capability examples over placeholder prose
-4. avoid documenting steps that are obsolete in current Mate workflows
+4. prefer flexible tool shapes over near-duplicate tool variants
+5. avoid documenting steps that are obsolete in current Mate workflows
 
 ## Commit Message Convention
 

@@ -95,7 +95,7 @@ your-extension/
 
 ### Tool Best Practices
 
-1. **Single responsibility**: One tool = one focused action
+1. **Prefer flexible tools**: Merge closely related actions into one tool when the difference is just scope or a simple parameter
 2. **Clear descriptions**: The AI reads these to decide when to use the tool
 3. **Helpful output**: Return structured, actionable information
 4. **Error handling**: Graceful failures with useful error messages
@@ -109,11 +109,14 @@ use Mcp\Capability\Attribute\McpTool;
 
 class ListThingsTool
 {
+    /**
+     * @param string|null $scope Optional scope used to narrow the returned things.
+     */
     #[McpTool(
         name: 'example-list-things',
-        description: 'Lists all configured things in the application. Use this when the user asks about available things or needs to reference thing names.'
+        description: 'List configured things. Use this when the user asks what exists or needs names to reference.'
     )]
-    public function execute(): string
+    public function execute(?string $scope = null): string
     {
         // Implementation
         return 'List of things';

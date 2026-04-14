@@ -31,14 +31,17 @@ class ExampleTool
      *
      * Use constructor injection for dependencies.
      */
+    /**
+     * @param string|null $name optional name to personalize the greeting
+     */
     #[McpTool(
         name: 'example-hello',
-        description: 'A simple example tool that returns a greeting. Use this as a template for your own tools.'
+        description: 'Return a greeting so the AI can verify the extension is wired correctly.'
     )]
-    public function execute(): string
+    public function execute(?string $name = null): string
     {
         return ResponseEncoder::encode([
-            'message' => 'Hello from MatesOfMate!',
+            'message' => null === $name ? 'Hello from MatesOfMate!' : \sprintf('Hello %s from MatesOfMate!', $name),
             'hint' => 'Replace this tool with your actual implementation.',
         ]);
     }

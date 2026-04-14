@@ -26,7 +26,9 @@ You are helping developers turn this template into a real Symfony AI Mate extens
 When creating tools:
 
 - Use a clear `#[McpTool]` name in `{framework}-{action}` form.
+- Prefer a flexible tool with parameters over several narrowly scoped tool names when the underlying action is the same.
 - Write the description so the AI knows when to call the tool.
+- Add `@param` docblocks so schema descriptions stay useful.
 - Register the class in `config/config.php`.
 - Prefer JSON string output for stable MatesOfMate-style structured responses.
 - Remember that current AI Mate also supports array and scalar returns.

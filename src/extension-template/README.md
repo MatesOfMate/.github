@@ -93,13 +93,16 @@ class ListEntitiesTool
     ) {
     }
 
+    /**
+     * @param string|null $scope Optional scope used to narrow the entities that are returned.
+     */
     #[McpTool(
         name: 'example-list-entities',
         description: 'List available entities. Use when the user asks which entities, models, or tables exist.'
     )]
-    public function execute(): string
+    public function execute(?string $scope = null): string
     {
-        $entities = $this->service->getEntities();
+        $entities = $this->service->getEntities($scope);
 
         return ResponseEncoder::encode([
             'entities' => $entities,
@@ -112,7 +115,9 @@ class ListEntitiesTool
 Tool guidance:
 
 - Use `{framework}-{action}` for tool names.
+- Prefer one flexible tool with clear parameters over several near-duplicate tool names.
 - Write descriptions that say when the AI should call the tool.
+- Add `@param` docblocks so generated schemas include parameter descriptions.
 - For encoded string payloads, use Mate's built-in `ResponseEncoder` so TOON is used when available and JSON is used as a fallback.
 - Current AI Mate also supports array and scalar tool returns. Use encoded strings when you want stable structured output across environments.
 - Register tool classes in `config/config.php`.

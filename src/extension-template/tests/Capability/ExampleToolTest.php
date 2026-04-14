@@ -35,4 +35,13 @@ class ExampleToolTest extends TestCase
         $this->assertArrayHasKey('message', $result);
         $this->assertArrayHasKey('hint', $result);
     }
+
+    public function testCanPersonalizeGreeting(): void
+    {
+        $tool = new ExampleTool();
+
+        $result = ResponseEncoder::decode($tool->execute('Johannes'));
+
+        $this->assertSame('Hello Johannes from MatesOfMate!', $result['message']);
+    }
 }

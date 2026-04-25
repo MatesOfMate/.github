@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * This file is part of the MatesOfMate Organisation.
+ *
+ * (c) Johannes Wachter <johannes@sulu.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
+use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
+use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
+use Symfony\Component\Console\Application;
+
+require __DIR__.'/../vendor/autoload.php';
+
+$projectRoot = \dirname(__DIR__);
+$loader = new ScenarioLoader();
+$validator = new ScenarioValidator($projectRoot.'/schema/scenario.schema.json');
+$repository = new ScenarioRepository($projectRoot.'/scenarios', $loader, $validator);
+
+$application = new Application('Symfony AI Mate Benchmark', '0.1.0');
+$application->addCommand(new BenchmarkRunCommand($repository));
+$application->setDefaultCommand('list');
+$application->run();

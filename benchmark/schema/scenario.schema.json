@@ -1,0 +1,116 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://matesofmate.dev/schema/scenario.schema.json",
+    "title": "Benchmark Scenario",
+    "description": "Reproducible scenario definition for the Symfony AI Mate benchmark suite.",
+    "type": "object",
+    "required": ["id", "suite", "fixture", "task", "expected"],
+    "additionalProperties": false,
+    "properties": {
+        "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9._-]*$",
+            "description": "Unique scenario identifier (lowercase, dots, dashes, underscores)."
+        },
+        "suite": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Suite the scenario belongs to (e.g. code-generation, bug-finding, runtime-debugging, tool-usage)."
+        },
+        "difficulty": {
+            "type": "string",
+            "enum": ["trivial", "easy", "medium", "hard", "expert"]
+        },
+        "tags": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": true
+        },
+        "fixture": {
+            "type": "object",
+            "required": ["path"],
+            "additionalProperties": false,
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Path to the fixture directory, relative to the benchmark root."
+                },
+                "setup": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "baseline": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        "task": {
+            "type": "object",
+            "required": ["prompt"],
+            "additionalProperties": false,
+            "properties": {
+                "prompt": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "context": {
+                    "type": "string"
+                },
+                "timeout_seconds": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            }
+        },
+        "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "pass_commands": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "fail_commands": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "root_cause": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "expected_files_changed": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "forbidden_files_changed": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                },
+                "expected_tool_calls": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        "evaluation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "weights": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "functional": {"type": "number", "minimum": 0},
+                        "root_cause": {"type": "number", "minimum": 0},
+                        "mate_tool_usage": {"type": "number", "minimum": 0},
+                        "minimality": {"type": "number", "minimum": 0},
+                        "verification": {"type": "number", "minimum": 0},
+                        "efficiency": {"type": "number", "minimum": 0}
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,36 @@
+id: bug.autowiring.private-service
+suite: bug-finding
+difficulty: medium
+
+fixture:
+  path: fixtures/bug-autowiring-private-service
+  setup:
+    - composer install
+  baseline:
+    - vendor/bin/phpunit
+
+task:
+  prompt: |
+    The application fails when running the tests.
+    Find the root cause and fix it.
+
+expected:
+  pass_commands:
+    - vendor/bin/phpunit
+  root_cause:
+    - autowiring failure
+    - private or missing service definition
+  expected_files_changed:
+    - config/services.yaml
+  forbidden_files_changed:
+    - composer.json
+    - composer.lock
+
+evaluation:
+  weights:
+    functional: 40
+    root_cause: 20
+    mate_tool_usage: 15
+    minimality: 10
+    verification: 10
+    efficiency: 5

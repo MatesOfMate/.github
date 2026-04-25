@@ -1,0 +1,13 @@
+id: code.minimal
+suite: code-generation
+difficulty: easy
+
+fixture:
+  path: fixtures/code-minimal
+
+task:
+  prompt: Generate a hello-world controller.
+
+expected:
+  pass_commands:
+    - vendor/bin/phpunit

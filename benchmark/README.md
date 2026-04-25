@@ -6,12 +6,13 @@ See [`PLAN.md`](PLAN.md) for the overall plan and [`specs/`](specs) for mileston
 
 ## Status
 
-This package is under active development. Only milestones 01 and 02 are implemented:
+This package is under active development. Milestones 01–03 are implemented:
 
 - **01 — Project structure**: directory layout and the `benchmark:run` console command with all required options.
 - **02 — Scenario format**: YAML scenarios validated against [`schema/scenario.schema.json`](schema/scenario.schema.json), loaded via `ScenarioLoader`/`ScenarioValidator`/`ScenarioRepository`.
+- **03 — Fixture isolation**: per-attempt workspaces under `var/benchmark/runs/<run-id>/<scenario-id>/<attempt>/workspace/`, fixture copying, command execution with stdout/stderr/exit/duration capture, git-based diff collection against a sealed baseline, and `--keep-workspace` semantics.
 
-AI execution, fixture isolation, evaluators, scoring and reporting will be added in subsequent milestones.
+AI execution, evaluators, scoring and reporting will be added in subsequent milestones.
 
 ## Layout
 

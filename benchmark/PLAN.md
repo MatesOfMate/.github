@@ -13,7 +13,7 @@ The benchmark must compare generated code quality, debugging ability, problem de
 - symfony/ai
 - symfony/ai-mate
 - symfony/ai-claude-code-platform
-- Codex bridge / adapter
+- symfony/ai-codex-platform
 - PHPUnit
 - PHPStan
 - Symfony Process

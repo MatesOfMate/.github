@@ -77,7 +77,7 @@ your-extension/
     "type": "symfony-ai-mate",
     "require": {
         "php": ">=8.2",
-        "symfony/ai-mate": "^0.7"
+        "symfony/ai-mate": "^0.8"
     },
     "autoload": {
         "psr-4": {

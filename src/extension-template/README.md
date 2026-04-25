@@ -12,7 +12,7 @@ A starter template for building [MatesOfMate](https://github.com/matesofmate) ex
 
 ## Current AI Mate Flow
 
-This template is aligned with the current `symfony/ai-mate` `0.7.x` workflow and the current core Mate response encoding behavior:
+This template is aligned with the current `symfony/ai-mate` `0.8.x` workflow and the current core Mate response encoding behavior:
 
 - initialize projects with `vendor/bin/mate init`
 - extension discovery is handled automatically on Composer install and update in current Mate setups

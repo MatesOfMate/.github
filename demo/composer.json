@@ -19,12 +19,12 @@
         "matesofmate/composer-extension": "^0.2@dev",
         "matesofmate/phpstan-extension": "^0.2@dev",
         "matesofmate/phpunit-extension": "^0.2@dev",
-        "phpstan/phpstan": "^2.1.37",
-        "phpunit/phpunit": "^12.5.7",
+        "phpstan/phpstan": "^2.1.51",
+        "phpunit/phpunit": "^12.5.23",
         "psr/log": "^3.0.2",
-        "symfony/ai-mate": "^0.7",
-        "symfony/ai-monolog-mate-extension": "^0.3@dev",
-        "symfony/ai-symfony-mate-extension": "^0.3@dev"
+        "symfony/ai-mate": "^0.8",
+        "symfony/ai-monolog-mate-extension": "^0.8@dev",
+        "symfony/ai-symfony-mate-extension": "^0.8@dev"
     },
     "config": {
         "allow-plugins": {
@@ -73,6 +73,36 @@
     "conflict": {
         "symfony/symfony": "*"
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../src/common",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../src/composer-extension",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../src/phpstan-extension",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../src/phpunit-extension",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "extra": {
         "symfony": {
             "allow-contrib": false,

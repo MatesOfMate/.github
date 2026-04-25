@@ -13,7 +13,7 @@
     "require": {
         "php": ">=8.2",
         "ext-simplexml": "*",
-        "symfony/ai-mate": "^0.7"
+        "symfony/ai-mate": "^0.8"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0",

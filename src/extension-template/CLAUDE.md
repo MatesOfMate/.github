@@ -10,7 +10,7 @@ This package is the starter template for MatesOfMate extensions. It should model
 
 The template should stay aligned with:
 
-- released `symfony/ai-mate` `0.7.x`
+- released `symfony/ai-mate` `0.8.x`
 - current Mate response encoding conventions as shipped in core
 
 Current workflow assumptions:

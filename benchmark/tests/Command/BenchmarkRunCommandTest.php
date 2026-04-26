@@ -11,7 +11,14 @@
 
 namespace MatesOfMate\Benchmark\Tests\Command;
 
+use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
+use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Runner\CommandExecutor;
+use MatesOfMate\Benchmark\Runner\FixtureCopier;
+use MatesOfMate\Benchmark\Runner\GitDiffCollector;
+use MatesOfMate\Benchmark\Runner\ScenarioRunner;
+use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
 use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
 use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
@@ -19,6 +26,7 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * @author Johannes Wachter <johannes@sulu.io>
@@ -27,6 +35,24 @@ class BenchmarkRunCommandTest extends TestCase
 {
     private const SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
     private const SCENARIOS_DIR = __DIR__.'/../Fixtures/scenarios';
+
+    private string $tmp;
+
+    private Filesystem $filesystem;
+
+    protected function setUp(): void
+    {
+        $this->filesystem = new Filesystem();
+        $this->tmp = sys_get_temp_dir().'/bench-cmd-'.bin2hex(random_bytes(4));
+        $this->filesystem->mkdir($this->tmp);
+    }
+
+    protected function tearDown(): void
+    {
+        if (is_dir($this->tmp)) {
+            $this->filesystem->remove($this->tmp);
+        }
+    }
 
     public function testCommandIsRegistered(): void
     {
@@ -41,28 +67,28 @@ class BenchmarkRunCommandTest extends TestCase
         $command = $this->createCommand();
         $definition = $command->getDefinition();
 
-        $expected = ['scenario', 'suite', 'adapter', 'model', 'mate', 'output', 'repeat', 'keep-workspace'];
+        $expected = ['scenario', 'suite', 'adapter', 'model', 'mate', 'output', 'repeat', 'keep-workspace', 'list'];
         foreach ($expected as $option) {
             $this->assertTrue($definition->hasOption($option), \sprintf('Option --%s is missing.', $option));
         }
     }
 
-    public function testRunsWithoutAiAndListsScenarios(): void
+    public function testListFlagListsScenariosWithoutExecuting(): void
     {
         $tester = new CommandTester($this->createCommand());
-        $exit = $tester->execute([]);
+        $exit = $tester->execute(['--list' => true]);
 
         $this->assertSame(Command::SUCCESS, $exit);
         $output = $tester->getDisplay();
         $this->assertStringContainsString('bug.example', $output);
         $this->assertStringContainsString('code.minimal', $output);
-        $this->assertStringContainsString('2 scenario(s) loaded', $output);
+        $this->assertStringContainsString('2 scenario(s) listed', $output);
     }
 
-    public function testFiltersBySuite(): void
+    public function testFiltersBySuiteWhenListing(): void
     {
         $tester = new CommandTester($this->createCommand());
-        $exit = $tester->execute(['--suite' => 'code-generation']);
+        $exit = $tester->execute(['--list' => true, '--suite' => 'code-generation']);
 
         $this->assertSame(Command::SUCCESS, $exit);
         $output = $tester->getDisplay();
@@ -70,10 +96,10 @@ class BenchmarkRunCommandTest extends TestCase
         $this->assertStringNotContainsString('bug.example', $output);
     }
 
-    public function testFiltersByScenarioId(): void
+    public function testFiltersByScenarioIdWhenListing(): void
     {
         $tester = new CommandTester($this->createCommand());
-        $exit = $tester->execute(['--scenario' => 'bug.example']);
+        $exit = $tester->execute(['--list' => true, '--scenario' => 'bug.example']);
 
         $this->assertSame(Command::SUCCESS, $exit);
         $this->assertStringContainsString('bug.example', $tester->getDisplay());
@@ -82,15 +108,15 @@ class BenchmarkRunCommandTest extends TestCase
     public function testUnknownScenarioReturnsInvalid(): void
     {
         $tester = new CommandTester($this->createCommand());
-        $exit = $tester->execute(['--scenario' => 'does.not.exist']);
+        $exit = $tester->execute(['--list' => true, '--scenario' => 'does.not.exist']);
 
         $this->assertSame(Command::INVALID, $exit);
     }
 
-    public function testInvalidAdapterReturnsInvalid(): void
+    public function testUnknownAdapterReturnsInvalid(): void
     {
         $tester = new CommandTester($this->createCommand());
-        $exit = $tester->execute(['--adapter' => 'unknown']);
+        $exit = $tester->execute(['--adapter' => 'codex']);
 
         $this->assertSame(Command::INVALID, $exit);
     }
@@ -99,6 +125,7 @@ class BenchmarkRunCommandTest extends TestCase
     {
         $tester = new CommandTester($this->createCommand());
         $exit = $tester->execute([
+            '--list' => true,
             '--scenario' => 'bug.example',
             '--suite' => 'bug-finding',
         ]);
@@ -106,14 +133,63 @@ class BenchmarkRunCommandTest extends TestCase
         $this->assertSame(Command::INVALID, $exit);
     }
 
+    public function testRunsScenarioEndToEndWithNullAdapter(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
+        $tester = new CommandTester($command);
+
+        $exit = $tester->execute(['--adapter' => 'null']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('runner.smoke', $output);
+        $this->assertStringContainsString('status=passed', $output);
+        $this->assertStringContainsString('Summary', $output);
+        $this->assertStringContainsString('passed=1', $output);
+    }
+
+    public function testRepeatRunsEachScenarioMultipleTimes(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
+        $tester = new CommandTester($command);
+
+        $exit = $tester->execute(['--adapter' => 'null', '--repeat' => '3']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('attempt 1', $output);
+        $this->assertStringContainsString('attempt 2', $output);
+        $this->assertStringContainsString('attempt 3', $output);
+        $this->assertStringContainsString('passed=3', $output);
+    }
+
     private function createCommand(): BenchmarkRunCommand
     {
+        return $this->createCommandForScenarios(self::SCENARIOS_DIR);
+    }
+
+    private function createCommandForScenarios(string $scenariosDir): BenchmarkRunCommand
+    {
         $repository = new ScenarioRepository(
-            self::SCENARIOS_DIR,
+            $scenariosDir,
             new ScenarioLoader(),
             new ScenarioValidator(self::SCHEMA_PATH),
         );
 
-        return new BenchmarkRunCommand($repository);
+        $workspaceFactory = new WorkspaceFactory($this->tmp.'/var');
+        $executor = new CommandExecutor();
+        $runner = new ScenarioRunner(
+            // Resolve fixture paths from the benchmark package root so scenarios
+            // referencing tests/Fixtures/... continue to work in tests.
+            projectRoot: \dirname(__DIR__, 2),
+            workspaceFactory: $workspaceFactory,
+            fixtureCopier: new FixtureCopier(),
+            commandExecutor: $executor,
+            diffCollector: new GitDiffCollector($executor),
+        );
+
+        $adapters = new AdapterRegistry([new NullAdapter()]);
+
+        return new BenchmarkRunCommand($repository, $adapters, $runner, $workspaceFactory);
     }
 }

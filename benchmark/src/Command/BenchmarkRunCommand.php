@@ -11,6 +11,13 @@
 
 namespace MatesOfMate\Benchmark\Command;
 
+use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
+use MatesOfMate\Benchmark\Adapter\Exception\UnsupportedAdapterException;
+use MatesOfMate\Benchmark\Runner\RunOutcome;
+use MatesOfMate\Benchmark\Runner\RunRequest;
+use MatesOfMate\Benchmark\Runner\RunStatus;
+use MatesOfMate\Benchmark\Runner\ScenarioRunner;
+use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\Scenario;
 use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -21,23 +28,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
- * Lists, filters and (eventually) executes benchmark scenarios.
- *
- * AI execution is intentionally not implemented yet — at this stage the
- * command only loads scenarios from disk and prints them.
+ * Lists, filters and executes benchmark scenarios against the selected adapter.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
 #[AsCommand(
     name: 'benchmark:run',
-    description: 'Run benchmark scenarios against an AI adapter (currently lists scenarios).',
+    description: 'Run benchmark scenarios against an AI adapter.',
 )]
 class BenchmarkRunCommand extends Command
 {
-    public const ADAPTER_CODEX = 'codex';
-    public const ADAPTER_CLAUDE = 'claude';
-    public const ADAPTER_NULL = 'null';
-
     public const OUTPUT_JSON = 'json';
     public const OUTPUT_MARKDOWN = 'markdown';
 
@@ -46,6 +46,9 @@ class BenchmarkRunCommand extends Command
 
     public function __construct(
         private readonly ScenarioRepository $repository,
+        private readonly AdapterRegistry $adapters,
+        private readonly ScenarioRunner $runner,
+        private readonly WorkspaceFactory $workspaceFactory,
     ) {
         parent::__construct();
     }
@@ -55,25 +58,24 @@ class BenchmarkRunCommand extends Command
         $this
             ->addOption('scenario', null, InputOption::VALUE_REQUIRED, 'Run a single scenario by ID.')
             ->addOption('suite', null, InputOption::VALUE_REQUIRED, 'Run all scenarios from a given suite.')
-            ->addOption('adapter', null, InputOption::VALUE_REQUIRED, 'AI adapter to use: codex, claude or null.', self::ADAPTER_NULL)
+            ->addOption('adapter', null, InputOption::VALUE_REQUIRED, 'AI adapter to use (defaults to "null").', 'null')
             ->addOption('model', null, InputOption::VALUE_REQUIRED, 'Model identifier passed to the adapter.')
             ->addOption('mate', null, InputOption::VALUE_REQUIRED, 'Mate integration: enabled or disabled.', self::MATE_ENABLED)
             ->addOption('output', null, InputOption::VALUE_REQUIRED, 'Report format: json or markdown.', self::OUTPUT_MARKDOWN)
             ->addOption('repeat', null, InputOption::VALUE_REQUIRED, 'Number of times each scenario is executed.', '1')
-            ->addOption('keep-workspace', null, InputOption::VALUE_NONE, 'Keep the isolated workspace directory after execution.');
+            ->addOption('keep-workspace', null, InputOption::VALUE_NONE, 'Keep the isolated workspace directory after execution.')
+            ->addOption('list', null, InputOption::VALUE_NONE, 'List the resolved scenarios without executing them.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $adapter = $this->normalizeChoice(
-            (string) $input->getOption('adapter'),
-            [self::ADAPTER_CODEX, self::ADAPTER_CLAUDE, self::ADAPTER_NULL],
-            'adapter',
-            $io,
-        );
-        if (null === $adapter) {
+        try {
+            $adapter = $this->adapters->get((string) $input->getOption('adapter'));
+        } catch (UnsupportedAdapterException $exception) {
+            $io->error($exception->getMessage());
+
             return Command::INVALID;
         }
 
@@ -120,30 +122,49 @@ class BenchmarkRunCommand extends Command
             return Command::SUCCESS;
         }
 
+        $runId = $this->workspaceFactory->generateRunId();
+        $keep = (bool) $input->getOption('keep-workspace');
+        $model = $input->getOption('model');
+
         $io->title('Benchmark scenarios');
         $io->definitionList(
-            ['adapter' => $adapter],
+            ['run-id' => $runId],
+            ['adapter' => $adapter->name()],
             ['mate' => $mate],
             ['output' => $outputFormat],
             ['repeat' => (string) $repeat],
-            ['model' => (string) ($input->getOption('model') ?? 'default')],
-            ['keep-workspace' => $input->getOption('keep-workspace') ? 'yes' : 'no'],
+            ['model' => null !== $model ? (string) $model : 'default'],
+            ['keep-workspace' => $keep ? 'yes' : 'no'],
         );
 
-        $rows = [];
-        foreach ($scenarios as $scenario) {
-            $rows[] = [
-                $scenario->id,
-                $scenario->suite,
-                $scenario->difficulty ?? '-',
-            ];
+        if ($input->getOption('list')) {
+            $this->renderScenarioList($io, $scenarios);
+
+            return Command::SUCCESS;
         }
 
-        $io->table(['ID', 'Suite', 'Difficulty'], $rows);
-        $io->writeln(\sprintf('<info>%d scenario(s) loaded.</info>', \count($scenarios)));
-        $io->note('AI execution is not implemented yet. This command currently only validates and lists scenarios.');
+        $outcomes = [];
+        foreach ($scenarios as $scenario) {
+            for ($attempt = 1; $attempt <= $repeat; ++$attempt) {
+                $request = new RunRequest(
+                    scenario: $scenario,
+                    adapter: $adapter,
+                    runId: $runId,
+                    attempt: $attempt,
+                    model: null !== $model ? (string) $model : null,
+                    mateEnabled: self::MATE_ENABLED === $mate,
+                    keepWorkspace: $keep,
+                );
 
-        return Command::SUCCESS;
+                $outcome = $this->runner->run($request);
+                $outcomes[] = $outcome;
+                $this->renderOutcomeLine($io, $outcome);
+            }
+        }
+
+        $this->renderSummary($io, $outcomes);
+
+        return $this->hasFailure($outcomes) ? Command::FAILURE : Command::SUCCESS;
     }
 
     /**
@@ -193,5 +214,70 @@ class BenchmarkRunCommand extends Command
         }
 
         return $this->repository->all();
+    }
+
+    /**
+     * @param list<Scenario> $scenarios
+     */
+    private function renderScenarioList(SymfonyStyle $io, array $scenarios): void
+    {
+        $rows = [];
+        foreach ($scenarios as $scenario) {
+            $rows[] = [$scenario->id, $scenario->suite, $scenario->difficulty ?? '-'];
+        }
+
+        $io->table(['ID', 'Suite', 'Difficulty'], $rows);
+        $io->writeln(\sprintf('<info>%d scenario(s) listed.</info>', \count($scenarios)));
+    }
+
+    private function renderOutcomeLine(SymfonyStyle $io, RunOutcome $outcome): void
+    {
+        $diff = $outcome->diff;
+        $files = null !== $diff ? \count($diff->changedFiles) : 0;
+
+        $io->writeln(\sprintf(
+            '  <comment>%-40s</comment> attempt %d  status=<info>%s</info>  duration=%6.0fms  files=%d',
+            $outcome->scenario->id,
+            $outcome->workspace->attempt,
+            $outcome->status->value,
+            $outcome->totalDurationMs,
+            $files,
+        ));
+    }
+
+    /**
+     * @param list<RunOutcome> $outcomes
+     */
+    private function renderSummary(SymfonyStyle $io, array $outcomes): void
+    {
+        $total = \count($outcomes);
+        $passed = 0;
+        $failed = 0;
+        $errored = 0;
+
+        foreach ($outcomes as $outcome) {
+            match ($outcome->status) {
+                RunStatus::Passed => ++$passed,
+                RunStatus::Failed => ++$failed,
+                RunStatus::AdapterError, RunStatus::SetupError => ++$errored,
+            };
+        }
+
+        $io->section('Summary');
+        $io->writeln(\sprintf(' <info>passed</info>=%d  <comment>failed</comment>=%d  <error>errors</error>=%d  total=%d', $passed, $failed, $errored, $total));
+    }
+
+    /**
+     * @param list<RunOutcome> $outcomes
+     */
+    private function hasFailure(array $outcomes): bool
+    {
+        foreach ($outcomes as $outcome) {
+            if (RunStatus::Passed !== $outcome->status) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -1,0 +1,13 @@
+id: runner.smoke
+suite: smoke
+difficulty: easy
+
+fixture:
+  path: tests/Fixtures/runner-fixture-tree
+
+task:
+  prompt: Do nothing.
+
+expected:
+  pass_commands:
+    - php -r "exit(0);"

@@ -10,7 +10,14 @@
  * file that was distributed with this source code.
  */
 
+use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
+use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Runner\CommandExecutor;
+use MatesOfMate\Benchmark\Runner\FixtureCopier;
+use MatesOfMate\Benchmark\Runner\GitDiffCollector;
+use MatesOfMate\Benchmark\Runner\ScenarioRunner;
+use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
 use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
 use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
@@ -23,7 +30,22 @@ $loader = new ScenarioLoader();
 $validator = new ScenarioValidator($projectRoot.'/schema/scenario.schema.json');
 $repository = new ScenarioRepository($projectRoot.'/scenarios', $loader, $validator);
 
+$workspaceFactory = new WorkspaceFactory($projectRoot.'/var/benchmark');
+$commandExecutor = new CommandExecutor();
+$diffCollector = new GitDiffCollector($commandExecutor);
+$fixtureCopier = new FixtureCopier();
+
+$runner = new ScenarioRunner(
+    projectRoot: $projectRoot,
+    workspaceFactory: $workspaceFactory,
+    fixtureCopier: $fixtureCopier,
+    commandExecutor: $commandExecutor,
+    diffCollector: $diffCollector,
+);
+
+$adapters = new AdapterRegistry([new NullAdapter()]);
+
 $application = new Application('Symfony AI Mate Benchmark', '0.1.0');
-$application->addCommand(new BenchmarkRunCommand($repository));
+$application->addCommand(new BenchmarkRunCommand($repository, $adapters, $runner, $workspaceFactory));
 $application->setDefaultCommand('list');
 $application->run();

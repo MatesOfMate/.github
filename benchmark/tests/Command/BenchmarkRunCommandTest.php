@@ -14,6 +14,8 @@ namespace MatesOfMate\Benchmark\Tests\Command;
 use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
+use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
 use MatesOfMate\Benchmark\Runner\GitDiffCollector;
@@ -148,6 +150,26 @@ class BenchmarkRunCommandTest extends TestCase
         $this->assertStringContainsString('passed=1', $output);
     }
 
+    public function testMateFlagPropagatesToOutcomeLine(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
+        $tester = new CommandTester($command);
+
+        $tester->execute(['--adapter' => 'null', '--mate' => 'enabled']);
+        $this->assertStringContainsString('mate=on', $tester->getDisplay());
+
+        $tester->execute(['--adapter' => 'null', '--mate' => 'disabled']);
+        $this->assertStringContainsString('mate=off', $tester->getDisplay());
+    }
+
+    public function testInvalidMateValueReturnsInvalid(): void
+    {
+        $tester = new CommandTester($this->createCommand());
+        $exit = $tester->execute(['--mate' => 'maybe']);
+
+        $this->assertSame(Command::INVALID, $exit);
+    }
+
     public function testRepeatRunsEachScenarioMultipleTimes(): void
     {
         $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
@@ -186,6 +208,8 @@ class BenchmarkRunCommandTest extends TestCase
             fixtureCopier: new FixtureCopier(),
             commandExecutor: $executor,
             diffCollector: new GitDiffCollector($executor),
+            mateConfigurationFactory: new MateConfigurationFactory(),
+            mateMetricsCollector: new MateMetricsCollector(),
         );
 
         $adapters = new AdapterRegistry([new NullAdapter()]);

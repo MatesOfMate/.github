@@ -15,6 +15,9 @@ use MatesOfMate\Benchmark\Adapter\AssistantAdapterInterface;
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
+use MatesOfMate\Benchmark\Adapter\ToolCall;
+use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
+use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
 use MatesOfMate\Benchmark\Runner\GitDiffCollector;
@@ -162,6 +165,64 @@ class ScenarioRunnerTest extends TestCase
         $this->assertNotNull($outcome->errorMessage);
     }
 
+    public function testMateDisabledProducesEmptyMetricsAndNoConfigFile(): void
+    {
+        $runner = $this->createRunner();
+        $scenario = $this->scenario([
+            'fixture' => ['path' => $this->fixtureDir],
+            'task' => ['prompt' => 'whatever'],
+            'expected' => ['pass_commands' => []],
+        ]);
+
+        $outcome = $runner->run(new RunRequest(
+            scenario: $scenario,
+            adapter: new NullAdapter(),
+            runId: 'run-test',
+            mateEnabled: false,
+            keepWorkspace: true,
+        ));
+
+        $this->assertFalse($outcome->mateMetrics->enabled);
+        $this->assertSame(0, $outcome->mateMetrics->toolCallCount);
+        $this->assertFileDoesNotExist($outcome->workspace->path.'/.mate/config.json');
+    }
+
+    public function testMateEnabledWritesConfigAndAggregatesToolCalls(): void
+    {
+        $runner = $this->createRunner();
+        $scenario = $this->scenario([
+            'fixture' => ['path' => $this->fixtureDir],
+            'task' => ['prompt' => 'use mate'],
+            'expected' => [
+                'pass_commands' => [],
+                'expected_tool_calls' => ['symfony_logs', 'symfony_container'],
+            ],
+        ]);
+
+        $adapter = $this->toolReportingAdapter([
+            new ToolCall('symfony_logs', startedAtMs: 1500.0),
+            new ToolCall('symfony_logs', startedAtMs: 1900.0),
+            new ToolCall('symfony_profiler', startedAtMs: 2200.0, errored: true),
+        ]);
+
+        $outcome = $runner->run(new RunRequest(
+            scenario: $scenario,
+            adapter: $adapter,
+            runId: 'run-test',
+            mateEnabled: true,
+            keepWorkspace: true,
+        ));
+
+        $this->assertSame(RunStatus::Passed, $outcome->status);
+        $this->assertTrue($outcome->mateMetrics->enabled);
+        $this->assertSame(3, $outcome->mateMetrics->toolCallCount);
+        $this->assertSame(['symfony_logs', 'symfony_profiler'], $outcome->mateMetrics->toolNames);
+        $this->assertSame(1500.0, $outcome->mateMetrics->firstToolCallMs);
+        $this->assertSame(1, $outcome->mateMetrics->toolErrors);
+        $this->assertSame(['symfony_container'], $outcome->mateMetrics->missingExpectedTools);
+        $this->assertFileExists($outcome->workspace->path.'/.mate/config.json');
+    }
+
     public function testKeepWorkspacePreservesWorkspaceDirectory(): void
     {
         $runner = $this->createRunner();
@@ -191,6 +252,8 @@ class ScenarioRunnerTest extends TestCase
             fixtureCopier: new FixtureCopier(),
             commandExecutor: $executor,
             diffCollector: new GitDiffCollector($executor),
+            mateConfigurationFactory: new MateConfigurationFactory(),
+            mateMetricsCollector: new MateMetricsCollector(),
         );
     }
 
@@ -224,6 +287,35 @@ class ScenarioRunnerTest extends TestCase
             public function run(AssistantRunInput $input): AssistantRunResult
             {
                 throw new \RuntimeException($this->message);
+            }
+        };
+    }
+
+    /**
+     * @param list<ToolCall> $toolCalls
+     */
+    private function toolReportingAdapter(array $toolCalls): AssistantAdapterInterface
+    {
+        return new class($toolCalls) implements AssistantAdapterInterface {
+            /**
+             * @param list<ToolCall> $toolCalls
+             */
+            public function __construct(private readonly array $toolCalls)
+            {
+            }
+
+            public function name(): string
+            {
+                return 'tool-reporting';
+            }
+
+            public function run(AssistantRunInput $input): AssistantRunResult
+            {
+                return AssistantRunResult::success(
+                    stdout: 'tool-reporting',
+                    durationMs: 1.0,
+                    toolCalls: $this->toolCalls,
+                );
             }
         };
     }

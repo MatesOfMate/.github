@@ -13,6 +13,10 @@ namespace MatesOfMate\Benchmark\Runner;
 
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
+use MatesOfMate\Benchmark\Mate\MateConfiguration;
+use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
+use MatesOfMate\Benchmark\Mate\MateMetrics;
+use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Runner\Exception\CommandFailedException;
 use MatesOfMate\Benchmark\Runner\Exception\FixtureNotFoundException;
 use MatesOfMate\Benchmark\Scenario\Scenario;
@@ -33,6 +37,8 @@ class ScenarioRunner
         private readonly FixtureCopier $fixtureCopier,
         private readonly CommandExecutor $commandExecutor,
         private readonly GitDiffCollector $diffCollector,
+        private readonly MateConfigurationFactory $mateConfigurationFactory,
+        private readonly MateMetricsCollector $mateMetricsCollector,
     ) {
     }
 
@@ -53,8 +59,10 @@ class ScenarioRunner
         $assistantResult = null;
         $diff = null;
         $verificationResults = [];
+        $mateMetrics = MateMetrics::disabled();
         $status = RunStatus::Failed;
         $errorMessage = null;
+        $mateConfig = MateConfiguration::disabled();
 
         try {
             $this->copyFixture($scenario, $workspace);
@@ -64,13 +72,19 @@ class ScenarioRunner
             $setupResults = $this->runCommands($scenario->fixture['setup'] ?? [], $workspace, mustSucceed: true, stage: 'setup');
             $baselineResults = $this->runCommands($scenario->fixture['baseline'] ?? [], $workspace, mustSucceed: false, stage: 'baseline');
 
+            // Provision Mate config before sealing so it becomes part of the
+            // starting workspace state, not part of the AI-attributed diff.
+            $mateConfig = $this->mateConfigurationFactory->create($workspace, $scenario, $request->mateEnabled);
+
             $this->diffCollector->seal($workspace);
 
-            $assistantResult = $this->invokeAdapter($request, $workspace);
+            $assistantResult = $this->invokeAdapter($request, $workspace, $mateConfig);
 
             $diff = $this->diffCollector->collect($workspace);
 
             $verificationResults = $this->runCommands($scenario->expected['pass_commands'] ?? [], $workspace, mustSucceed: false, stage: 'verify');
+
+            $mateMetrics = $this->mateMetricsCollector->collect($assistantResult, $mateConfig);
 
             $status = $this->classify($assistantResult, $verificationResults);
         } catch (CommandFailedException $exception) {
@@ -93,6 +107,7 @@ class ScenarioRunner
             assistantResult: $assistantResult,
             diff: $diff,
             verificationResults: $verificationResults,
+            mateMetrics: $mateMetrics,
             totalDurationMs: (microtime(true) - $totalStart) * 1000.0,
             errorMessage: $errorMessage,
         );
@@ -140,7 +155,7 @@ class ScenarioRunner
         return $results;
     }
 
-    private function invokeAdapter(RunRequest $request, Workspace $workspace): AssistantRunResult
+    private function invokeAdapter(RunRequest $request, Workspace $workspace, MateConfiguration $mateConfig): AssistantRunResult
     {
         $prompt = (string) ($request->scenario->task['prompt'] ?? '');
         $timeout = (int) ($request->scenario->task['timeout_seconds'] ?? 600);
@@ -149,7 +164,8 @@ class ScenarioRunner
             workspacePath: $workspace->path,
             prompt: $prompt,
             model: $request->model,
-            mateEnabled: $request->mateEnabled,
+            mateConfig: $mateConfig,
+            env: $mateConfig->env,
             timeoutSeconds: $timeout > 0 ? $timeout : 600,
         );
 

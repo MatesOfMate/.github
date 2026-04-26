@@ -12,6 +12,7 @@
 namespace MatesOfMate\Benchmark\Runner;
 
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
+use MatesOfMate\Benchmark\Mate\MateMetrics;
 use MatesOfMate\Benchmark\Scenario\Scenario;
 
 /**
@@ -35,6 +36,7 @@ readonly class RunOutcome
         public ?AssistantRunResult $assistantResult,
         public ?DiffResult $diff,
         public array $verificationResults,
+        public MateMetrics $mateMetrics,
         public float $totalDurationMs,
         public ?string $errorMessage = null,
     ) {

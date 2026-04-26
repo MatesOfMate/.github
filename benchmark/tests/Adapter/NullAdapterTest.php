@@ -13,6 +13,7 @@ namespace MatesOfMate\Benchmark\Tests\Adapter;
 
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
+use MatesOfMate\Benchmark\Mate\MateConfiguration;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -32,7 +33,7 @@ class NullAdapterTest extends TestCase
             workspacePath: '/tmp/does-not-matter',
             prompt: 'Find the bug.',
             model: 'mock-model',
-            mateEnabled: true,
+            mateConfig: MateConfiguration::enabled(),
         ));
 
         $this->assertTrue($result->successful);
@@ -49,7 +50,7 @@ class NullAdapterTest extends TestCase
         $result = (new NullAdapter())->run(new AssistantRunInput(
             workspacePath: '/tmp',
             prompt: 'irrelevant',
-            mateEnabled: false,
+            mateConfig: MateConfiguration::disabled(),
         ));
 
         $this->assertStringContainsString('mate: disabled', $result->stdout);

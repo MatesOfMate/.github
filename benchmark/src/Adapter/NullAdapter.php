@@ -34,7 +34,7 @@ class NullAdapter implements AssistantAdapterInterface
             "NullAdapter run\n  workspace: %s\n  model: %s\n  mate: %s\n  prompt-bytes: %d\n",
             $input->workspacePath,
             $input->model ?? '(none)',
-            $input->mateEnabled ? 'enabled' : 'disabled',
+            $input->isMateEnabled() ? 'enabled' : 'disabled',
             \strlen($input->prompt),
         );
         $duration = (microtime(true) - $start) * 1000.0;

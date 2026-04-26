@@ -234,14 +234,19 @@ class BenchmarkRunCommand extends Command
     {
         $diff = $outcome->diff;
         $files = null !== $diff ? \count($diff->changedFiles) : 0;
+        $mate = $outcome->mateMetrics;
+        $mateLabel = $mate->enabled
+            ? \sprintf('mate=on tools=%d', $mate->toolCallCount)
+            : 'mate=off';
 
         $io->writeln(\sprintf(
-            '  <comment>%-40s</comment> attempt %d  status=<info>%s</info>  duration=%6.0fms  files=%d',
+            '  <comment>%-40s</comment> attempt %d  status=<info>%s</info>  duration=%6.0fms  files=%d  %s',
             $outcome->scenario->id,
             $outcome->workspace->attempt,
             $outcome->status->value,
             $outcome->totalDurationMs,
             $files,
+            $mateLabel,
         ));
     }
 

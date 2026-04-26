@@ -11,6 +11,8 @@
 
 namespace MatesOfMate\Benchmark\Adapter;
 
+use MatesOfMate\Benchmark\Mate\MateConfiguration;
+
 /**
  * Everything an adapter needs to execute one assistant run inside a workspace.
  *
@@ -18,6 +20,8 @@ namespace MatesOfMate\Benchmark\Adapter;
  */
 readonly class AssistantRunInput
 {
+    public MateConfiguration $mateConfig;
+
     /**
      * @param array<string, string> $env
      */
@@ -25,9 +29,18 @@ readonly class AssistantRunInput
         public string $workspacePath,
         public string $prompt,
         public ?string $model = null,
-        public bool $mateEnabled = true,
+        ?MateConfiguration $mateConfig = null,
         public array $env = [],
         public int $timeoutSeconds = 600,
     ) {
+        $this->mateConfig = $mateConfig ?? MateConfiguration::disabled();
+    }
+
+    /**
+     * Convenience accessor mirroring the `--mate=enabled|disabled` CLI semantics.
+     */
+    public function isMateEnabled(): bool
+    {
+        return $this->mateConfig->enabled;
     }
 }

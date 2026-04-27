@@ -14,8 +14,9 @@ This package is under active development. Milestones 01–05 are implemented:
 - **04 — AI adapter interface + runner**: `AssistantAdapterInterface` with `AssistantRunInput`/`AssistantRunResult`/`TokenUsage`/`ToolCall`, `NullAdapter`, `AdapterRegistry`, and `ScenarioRunner` orchestrating fixture copy → setup → seal → adapter → diff → verify into a `RunOutcome`. `benchmark:run` now actually executes scenarios end-to-end (defaults to `--adapter=null`, use `--list` to only list).
 - **05 — Mate integration**: `MateConfiguration` value object + per-workspace `MateConfigurationFactory` writing `.mate/config.json` (provisioned before sealing the baseline so it doesn't pollute the AI diff), `MateMetricsCollector` aggregating tool calls into `MateMetrics` (count, names, first-call ms, errors, missing expected tools), and `--mate=enabled|disabled` driving the toggle.
 - **06 — Metrics collection**: `MetricsBag` exposing every required + optional metric (with `null` for unsupported), pluggable `MetricsCollectorInterface` (`Duration`, `TokenUsage`, `ToolUsage`, `DiffMetrics`, `CommandResult`), and `MetricsAggregator` merging them into the `RunOutcome`.
+- **07 — Evaluators**: `EvaluatorInterface` + `EvaluationInput`/`EvaluationResult` (0..5 score, pass/fail, explanation, evidence) and seven concrete judges — `Functional`, `RootCause`, `DiffMinimality`, `ForbiddenChanges`, `Verification`, `MateToolUsage`, `Efficiency`. Rule-based today; `RootCause` is the natural seam for an LLM-judge later.
 
-Evaluators, scoring and reporting will be added in subsequent milestones.
+Scoring and reporting will be added in subsequent milestones.
 
 ## Layout
 

@@ -9,19 +9,19 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\Benchmark\Runner;
+namespace MatesOfMate\Benchmark\Metrics;
 
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
 use MatesOfMate\Benchmark\Mate\MateMetrics;
-use MatesOfMate\Benchmark\Metrics\MetricsBag;
-use MatesOfMate\Benchmark\Scenario\Scenario;
+use MatesOfMate\Benchmark\Runner\CommandResult;
+use MatesOfMate\Benchmark\Runner\DiffResult;
 
 /**
- * Aggregated record of one scenario attempt.
+ * Read-only bundle of inputs used by metrics collectors.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-readonly class RunOutcome
+readonly class MetricsContext
 {
     /**
      * @param list<CommandResult> $setupResults
@@ -29,18 +29,13 @@ readonly class RunOutcome
      * @param list<CommandResult> $verificationResults
      */
     public function __construct(
-        public Scenario $scenario,
-        public Workspace $workspace,
-        public RunStatus $status,
-        public array $setupResults,
-        public array $baselineResults,
         public ?AssistantRunResult $assistantResult,
         public ?DiffResult $diff,
-        public array $verificationResults,
         public MateMetrics $mateMetrics,
-        public MetricsBag $metrics,
+        public array $setupResults,
+        public array $baselineResults,
+        public array $verificationResults,
         public float $totalDurationMs,
-        public ?string $errorMessage = null,
     ) {
     }
 }

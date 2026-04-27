@@ -17,6 +17,8 @@ use MatesOfMate\Benchmark\Mate\MateConfiguration;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetrics;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
+use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
+use MatesOfMate\Benchmark\Metrics\MetricsContext;
 use MatesOfMate\Benchmark\Runner\Exception\CommandFailedException;
 use MatesOfMate\Benchmark\Runner\Exception\FixtureNotFoundException;
 use MatesOfMate\Benchmark\Scenario\Scenario;
@@ -39,6 +41,7 @@ class ScenarioRunner
         private readonly GitDiffCollector $diffCollector,
         private readonly MateConfigurationFactory $mateConfigurationFactory,
         private readonly MateMetricsCollector $mateMetricsCollector,
+        private readonly MetricsAggregator $metricsAggregator,
     ) {
     }
 
@@ -98,6 +101,18 @@ class ScenarioRunner
             $this->workspaceFactory->destroy($workspace);
         }
 
+        $totalDurationMs = (microtime(true) - $totalStart) * 1000.0;
+
+        $metrics = $this->metricsAggregator->aggregate(new MetricsContext(
+            assistantResult: $assistantResult,
+            diff: $diff,
+            mateMetrics: $mateMetrics,
+            setupResults: $setupResults,
+            baselineResults: $baselineResults,
+            verificationResults: $verificationResults,
+            totalDurationMs: $totalDurationMs,
+        ));
+
         return new RunOutcome(
             scenario: $scenario,
             workspace: $workspace,
@@ -108,7 +123,8 @@ class ScenarioRunner
             diff: $diff,
             verificationResults: $verificationResults,
             mateMetrics: $mateMetrics,
-            totalDurationMs: (microtime(true) - $totalStart) * 1000.0,
+            metrics: $metrics,
+            totalDurationMs: $totalDurationMs,
             errorMessage: $errorMessage,
         );
     }

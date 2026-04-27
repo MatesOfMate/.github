@@ -13,6 +13,7 @@ This package is under active development. Milestones 01–05 are implemented:
 - **03 — Fixture isolation**: per-attempt workspaces under `var/benchmark/runs/<run-id>/<scenario-id>/<attempt>/workspace/`, fixture copying, command execution with stdout/stderr/exit/duration capture, git-based diff collection against a sealed baseline, and `--keep-workspace` semantics.
 - **04 — AI adapter interface + runner**: `AssistantAdapterInterface` with `AssistantRunInput`/`AssistantRunResult`/`TokenUsage`/`ToolCall`, `NullAdapter`, `AdapterRegistry`, and `ScenarioRunner` orchestrating fixture copy → setup → seal → adapter → diff → verify into a `RunOutcome`. `benchmark:run` now actually executes scenarios end-to-end (defaults to `--adapter=null`, use `--list` to only list).
 - **05 — Mate integration**: `MateConfiguration` value object + per-workspace `MateConfigurationFactory` writing `.mate/config.json` (provisioned before sealing the baseline so it doesn't pollute the AI diff), `MateMetricsCollector` aggregating tool calls into `MateMetrics` (count, names, first-call ms, errors, missing expected tools), and `--mate=enabled|disabled` driving the toggle.
+- **06 — Metrics collection**: `MetricsBag` exposing every required + optional metric (with `null` for unsupported), pluggable `MetricsCollectorInterface` (`Duration`, `TokenUsage`, `ToolUsage`, `DiffMetrics`, `CommandResult`), and `MetricsAggregator` merging them into the `RunOutcome`.
 
 Evaluators, scoring and reporting will be added in subsequent milestones.
 

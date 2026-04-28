@@ -6,7 +6,7 @@ See [`PLAN.md`](PLAN.md) for the overall plan and [`specs/`](specs) for mileston
 
 ## Status
 
-This package is under active development. Milestones 01–05 are implemented:
+This package is under active development. Milestones 01–08 are implemented:
 
 - **01 — Project structure**: directory layout and the `benchmark:run` console command with all required options.
 - **02 — Scenario format**: YAML scenarios validated against [`schema/scenario.schema.json`](schema/scenario.schema.json), loaded via `ScenarioLoader`/`ScenarioValidator`/`ScenarioRepository`.
@@ -15,8 +15,9 @@ This package is under active development. Milestones 01–05 are implemented:
 - **05 — Mate integration**: `MateConfiguration` value object + per-workspace `MateConfigurationFactory` writing `.mate/config.json` (provisioned before sealing the baseline so it doesn't pollute the AI diff), `MateMetricsCollector` aggregating tool calls into `MateMetrics` (count, names, first-call ms, errors, missing expected tools), and `--mate=enabled|disabled` driving the toggle.
 - **06 — Metrics collection**: `MetricsBag` exposing every required + optional metric (with `null` for unsupported), pluggable `MetricsCollectorInterface` (`Duration`, `TokenUsage`, `ToolUsage`, `DiffMetrics`, `CommandResult`), and `MetricsAggregator` merging them into the `RunOutcome`.
 - **07 — Evaluators**: `EvaluatorInterface` + `EvaluationInput`/`EvaluationResult` (0..5 score, pass/fail, explanation, evidence) and seven concrete judges — `Functional`, `RootCause`, `DiffMinimality`, `ForbiddenChanges`, `Verification`, `MateToolUsage`, `Efficiency`. Rule-based today; `RootCause` is the natural seam for an LLM-judge later.
+- **08 — Scoring**: `ScoreWeights` (defaults from PLAN.md, scenario `evaluation.weights` override), `Score` exposing `finalScore`/`rawScore`/per-category/missing-evaluators/gate penalties, `ScoreCalculator` weighting evaluator output, `EvaluationPipeline` running the seven judges, all wired through `ScenarioRunner` so every `RunOutcome` carries evaluations + a final score.
 
-Scoring and reporting will be added in subsequent milestones.
+Reporting, initial scenarios and CLI examples will be added in subsequent milestones.
 
 ## Layout
 

@@ -14,9 +14,11 @@ namespace MatesOfMate\Benchmark\Tests\Command;
 use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
+use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
 use MatesOfMate\Benchmark\Runner\GitDiffCollector;
@@ -212,6 +214,8 @@ class BenchmarkRunCommandTest extends TestCase
             mateConfigurationFactory: new MateConfigurationFactory(),
             mateMetricsCollector: new MateMetricsCollector(),
             metricsAggregator: new MetricsAggregator(),
+            evaluationPipeline: new EvaluationPipeline(),
+            scoreCalculator: ScoreCalculator::withDefaults(),
         );
 
         $adapters = new AdapterRegistry([new NullAdapter()]);

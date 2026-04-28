@@ -16,10 +16,12 @@ use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Adapter\ToolCall;
+use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
 use MatesOfMate\Benchmark\Metrics\MetricsBag;
+use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
 use MatesOfMate\Benchmark\Runner\GitDiffCollector;
@@ -250,6 +252,28 @@ class ScenarioRunnerTest extends TestCase
         $this->assertGreaterThan(0.0, $outcome->metrics->get('duration_ms'));
     }
 
+    public function testRunOutcomeCarriesEvaluationsAndScore(): void
+    {
+        $runner = $this->createRunner();
+        $scenario = $this->scenario([
+            'fixture' => ['path' => $this->fixtureDir],
+            'task' => ['prompt' => 'do nothing'],
+            'expected' => ['pass_commands' => ['php -r "exit(0);"']],
+        ]);
+
+        $outcome = $runner->run(new RunRequest(
+            scenario: $scenario,
+            adapter: new NullAdapter(),
+            runId: 'run-test',
+        ));
+
+        $this->assertNotEmpty($outcome->evaluations);
+        $this->assertContains('functional', array_map(static fn ($e) => $e->name, $outcome->evaluations));
+        $this->assertGreaterThanOrEqual(0.0, $outcome->score->finalScore);
+        $this->assertLessThanOrEqual(5.0, $outcome->score->finalScore);
+        $this->assertArrayHasKey('functional', $outcome->score->perCategory);
+    }
+
     public function testKeepWorkspacePreservesWorkspaceDirectory(): void
     {
         $runner = $this->createRunner();
@@ -282,6 +306,8 @@ class ScenarioRunnerTest extends TestCase
             mateConfigurationFactory: new MateConfigurationFactory(),
             mateMetricsCollector: new MateMetricsCollector(),
             metricsAggregator: new MetricsAggregator(),
+            evaluationPipeline: new EvaluationPipeline(),
+            scoreCalculator: ScoreCalculator::withDefaults(),
         );
     }
 

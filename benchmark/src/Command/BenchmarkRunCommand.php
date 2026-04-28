@@ -240,10 +240,11 @@ class BenchmarkRunCommand extends Command
             : 'mate=off';
 
         $io->writeln(\sprintf(
-            '  <comment>%-40s</comment> attempt %d  status=<info>%s</info>  duration=%6.0fms  files=%d  %s',
+            '  <comment>%-40s</comment> attempt %d  status=<info>%s</info>  score=<info>%4.2f</info>  duration=%6.0fms  files=%d  %s',
             $outcome->scenario->id,
             $outcome->workspace->attempt,
             $outcome->status->value,
+            $outcome->score->finalScore,
             $outcome->totalDurationMs,
             $files,
             $mateLabel,

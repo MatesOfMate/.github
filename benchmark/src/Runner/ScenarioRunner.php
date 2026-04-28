@@ -13,6 +13,8 @@ namespace MatesOfMate\Benchmark\Runner;
 
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
+use MatesOfMate\Benchmark\Evaluator\EvaluationInput;
+use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfiguration;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetrics;
@@ -22,6 +24,7 @@ use MatesOfMate\Benchmark\Metrics\MetricsContext;
 use MatesOfMate\Benchmark\Runner\Exception\CommandFailedException;
 use MatesOfMate\Benchmark\Runner\Exception\FixtureNotFoundException;
 use MatesOfMate\Benchmark\Scenario\Scenario;
+use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 
 /**
  * Runs a single scenario attempt: copy fixture, run setup, seal baseline, invoke adapter, collect diff and verify.
@@ -42,6 +45,8 @@ class ScenarioRunner
         private readonly MateConfigurationFactory $mateConfigurationFactory,
         private readonly MateMetricsCollector $mateMetricsCollector,
         private readonly MetricsAggregator $metricsAggregator,
+        private readonly EvaluationPipeline $evaluationPipeline,
+        private readonly ScoreCalculator $scoreCalculator,
     ) {
     }
 
@@ -113,7 +118,7 @@ class ScenarioRunner
             totalDurationMs: $totalDurationMs,
         ));
 
-        return new RunOutcome(
+        $outcome = new RunOutcome(
             scenario: $scenario,
             workspace: $workspace,
             status: $status,
@@ -127,6 +132,11 @@ class ScenarioRunner
             totalDurationMs: $totalDurationMs,
             errorMessage: $errorMessage,
         );
+
+        $evaluations = $this->evaluationPipeline->evaluate(new EvaluationInput($scenario, $outcome));
+        $score = $this->scoreCalculator->calculate($scenario, $evaluations);
+
+        return $outcome->withEvaluations($evaluations, $score);
     }
 
     private function copyFixture(Scenario $scenario, Workspace $workspace): void

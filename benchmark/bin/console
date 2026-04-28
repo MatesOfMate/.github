@@ -11,6 +11,8 @@
  */
 
 use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
+use MatesOfMate\Benchmark\Adapter\ClaudeCodeAdapter;
+use MatesOfMate\Benchmark\Adapter\CodexAdapter;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
 use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
@@ -53,7 +55,11 @@ $runner = new ScenarioRunner(
     scoreCalculator: ScoreCalculator::withDefaults(),
 );
 
-$adapters = new AdapterRegistry([new NullAdapter()]);
+$adapters = new AdapterRegistry([
+    new NullAdapter(),
+    ClaudeCodeAdapter::withDefaults(),
+    CodexAdapter::withDefaults(),
+]);
 
 $application = new Application('Symfony AI Mate Benchmark', '0.1.0');
 $application->addCommand(new BenchmarkRunCommand($repository, $adapters, $runner, $workspaceFactory));

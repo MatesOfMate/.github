@@ -17,8 +17,9 @@ This package is under active development. Milestones 01–08 are implemented:
 - **07 — Evaluators**: `EvaluatorInterface` + `EvaluationInput`/`EvaluationResult` (0..5 score, pass/fail, explanation, evidence) and seven concrete judges — `Functional`, `RootCause`, `DiffMinimality`, `ForbiddenChanges`, `Verification`, `MateToolUsage`, `Efficiency`. Rule-based today; `RootCause` is the natural seam for an LLM-judge later.
 - **08 — Scoring**: `ScoreWeights` (defaults from PLAN.md, scenario `evaluation.weights` override), `Score` exposing `finalScore`/`rawScore`/per-category/missing-evaluators/gate penalties, `ScoreCalculator` weighting evaluator output, `EvaluationPipeline` running the seven judges, all wired through `ScenarioRunner` so every `RunOutcome` carries evaluations + a final score.
 - **Adapters (unnumbered)**: `ClaudeCodeAdapter` driving `claude --print --output-format=stream-json` and `CodexAdapter` driving `codex exec --json`, sharing a `ProcessAdapter` base. Best-effort JSONL parsers (`ClaudeStreamJsonParser`, `CodexJsonParser`) extract token usage and tool calls. Binary paths and extra flags are configurable via `BENCHMARK_CLAUDE_BIN`/`BENCHMARK_CLAUDE_ARGS` and `BENCHMARK_CODEX_BIN`/`BENCHMARK_CODEX_ARGS`. Tests use offline PHP fakes so the suite never makes real model calls.
+- **09 — Reports**: `ReportPipeline` writing `reports/<run-id>/results.json`, `summary.md`, plus `diffs/`, `logs/`, and `raw/` subdirectories per scenario. The Markdown summary covers every spec section (summary, adapter comparison, Mate toggle, scenario results table, tool usage, token usage, slowest runs, failed scenarios, most changed files); the JSON is deterministic and script-friendly.
 
-Reporting, initial scenarios and CLI examples will be added in subsequent milestones.
+Initial scenarios and CLI examples will be added in subsequent milestones.
 
 ## Layout
 

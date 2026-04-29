@@ -13,6 +13,8 @@ namespace MatesOfMate\Benchmark\Command;
 
 use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
 use MatesOfMate\Benchmark\Adapter\Exception\UnsupportedAdapterException;
+use MatesOfMate\Benchmark\Report\ReportContext;
+use MatesOfMate\Benchmark\Report\ReportPipeline;
 use MatesOfMate\Benchmark\Runner\RunOutcome;
 use MatesOfMate\Benchmark\Runner\RunRequest;
 use MatesOfMate\Benchmark\Runner\RunStatus;
@@ -49,6 +51,8 @@ class BenchmarkRunCommand extends Command
         private readonly AdapterRegistry $adapters,
         private readonly ScenarioRunner $runner,
         private readonly WorkspaceFactory $workspaceFactory,
+        private readonly ReportPipeline $reportPipeline,
+        private readonly string $reportsDirectory,
     ) {
         parent::__construct();
     }
@@ -143,6 +147,7 @@ class BenchmarkRunCommand extends Command
             return Command::SUCCESS;
         }
 
+        $startedAt = new \DateTimeImmutable('now');
         $outcomes = [];
         foreach ($scenarios as $scenario) {
             for ($attempt = 1; $attempt <= $repeat; ++$attempt) {
@@ -163,6 +168,20 @@ class BenchmarkRunCommand extends Command
         }
 
         $this->renderSummary($io, $outcomes);
+
+        $reportDir = rtrim($this->reportsDirectory, '/').'/'.$runId;
+        $this->reportPipeline->emit(new ReportContext(
+            runId: $runId,
+            reportDirectory: $reportDir,
+            adapter: $adapter->name(),
+            mateEnabled: self::MATE_ENABLED === $mate,
+            model: null !== $model ? (string) $model : null,
+            repeat: $repeat,
+            outcomes: $outcomes,
+            startedAt: $startedAt,
+            finishedAt: new \DateTimeImmutable('now'),
+        ));
+        $io->writeln(\sprintf('<info>Report written to:</info> %s', $reportDir));
 
         return $this->hasFailure($outcomes) ? Command::FAILURE : Command::SUCCESS;
     }

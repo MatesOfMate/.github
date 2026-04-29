@@ -19,6 +19,7 @@ use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
+use MatesOfMate\Benchmark\Report\ReportPipeline;
 use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
@@ -62,6 +63,13 @@ $adapters = new AdapterRegistry([
 ]);
 
 $application = new Application('Symfony AI Mate Benchmark', '0.1.0');
-$application->addCommand(new BenchmarkRunCommand($repository, $adapters, $runner, $workspaceFactory));
+$application->addCommand(new BenchmarkRunCommand(
+    repository: $repository,
+    adapters: $adapters,
+    runner: $runner,
+    workspaceFactory: $workspaceFactory,
+    reportPipeline: new ReportPipeline(),
+    reportsDirectory: $projectRoot.'/reports',
+));
 $application->setDefaultCommand('list');
 $application->run();

@@ -18,6 +18,7 @@ use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
+use MatesOfMate\Benchmark\Report\ReportPipeline;
 use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
@@ -173,6 +174,27 @@ class BenchmarkRunCommandTest extends TestCase
         $this->assertSame(Command::INVALID, $exit);
     }
 
+    public function testReportArtefactsAreWrittenAfterRun(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
+        $tester = new CommandTester($command);
+
+        $exit = $tester->execute(['--adapter' => 'null']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $reportsRoot = $this->tmp.'/reports';
+        $this->assertDirectoryExists($reportsRoot);
+
+        $runDirs = glob($reportsRoot.'/*');
+        $this->assertNotFalse($runDirs);
+        $this->assertCount(1, $runDirs);
+        $reportDir = $runDirs[0];
+
+        $this->assertFileExists($reportDir.'/results.json');
+        $this->assertFileExists($reportDir.'/summary.md');
+        $this->assertDirectoryExists($reportDir.'/logs');
+    }
+
     public function testRepeatRunsEachScenarioMultipleTimes(): void
     {
         $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios');
@@ -220,6 +242,13 @@ class BenchmarkRunCommandTest extends TestCase
 
         $adapters = new AdapterRegistry([new NullAdapter()]);
 
-        return new BenchmarkRunCommand($repository, $adapters, $runner, $workspaceFactory);
+        return new BenchmarkRunCommand(
+            repository: $repository,
+            adapters: $adapters,
+            runner: $runner,
+            workspaceFactory: $workspaceFactory,
+            reportPipeline: new ReportPipeline(),
+            reportsDirectory: $this->tmp.'/reports',
+        );
     }
 }

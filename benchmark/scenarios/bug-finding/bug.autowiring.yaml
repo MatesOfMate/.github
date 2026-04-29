@@ -1,0 +1,24 @@
+id: bug.autowiring
+suite: bug-finding
+difficulty: medium
+
+fixture:
+  path: fixtures/bug.autowiring
+
+task:
+  prompt: |
+    The verification test fails because the container cannot autowire
+    `OrderService`. Find the root cause in the container or service
+    configuration and fix it. Touch only the file(s) responsible for the
+    misconfiguration.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - autowiring
+    - missing dependency
+  expected_files_changed:
+    - src/services.php
+  forbidden_files_changed:
+    - tests/test.php

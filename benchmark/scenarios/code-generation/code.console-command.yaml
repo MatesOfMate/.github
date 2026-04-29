@@ -1,0 +1,20 @@
+id: code.console-command
+suite: code-generation
+difficulty: easy
+
+fixture:
+  path: fixtures/code.console-command
+
+task:
+  prompt: |
+    A console command class skeleton lives in `src/Command.php`. Its `run()` method
+    must return the string "hello world" (lowercase, exact, no trailing newline).
+    Implement the method so the verification test passes.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  expected_files_changed:
+    - src/Command.php
+  forbidden_files_changed:
+    - tests/test.php

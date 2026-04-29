@@ -1,0 +1,26 @@
+id: bug.security-access-control
+suite: bug-finding
+difficulty: hard
+
+fixture:
+  path: fixtures/bug.security-access-control
+
+task:
+  prompt: |
+    `src/AccessControl.php#canAccess(User $user, Resource $resource)` is supposed
+    to allow access only when the user owns the resource OR the user has the
+    `admin` role. The current implementation incorrectly grants access in cases
+    that the verification test rejects. Fix the authorisation check.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - access control
+    - authorization bypass
+  expected_files_changed:
+    - src/AccessControl.php
+  forbidden_files_changed:
+    - tests/test.php
+    - src/User.php
+    - src/Resource.php

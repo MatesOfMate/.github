@@ -18,8 +18,9 @@ This package is under active development. Milestones 01–08 are implemented:
 - **08 — Scoring**: `ScoreWeights` (defaults from PLAN.md, scenario `evaluation.weights` override), `Score` exposing `finalScore`/`rawScore`/per-category/missing-evaluators/gate penalties, `ScoreCalculator` weighting evaluator output, `EvaluationPipeline` running the seven judges, all wired through `ScenarioRunner` so every `RunOutcome` carries evaluations + a final score.
 - **Adapters (unnumbered)**: `ClaudeCodeAdapter` driving `claude --print --output-format=stream-json` and `CodexAdapter` driving `codex exec --json`, sharing a `ProcessAdapter` base. Best-effort JSONL parsers (`ClaudeStreamJsonParser`, `CodexJsonParser`) extract token usage and tool calls. Binary paths and extra flags are configurable via `BENCHMARK_CLAUDE_BIN`/`BENCHMARK_CLAUDE_ARGS` and `BENCHMARK_CODEX_BIN`/`BENCHMARK_CODEX_ARGS`. Tests use offline PHP fakes so the suite never makes real model calls.
 - **09 — Reports**: `ReportPipeline` writing `reports/<run-id>/results.json`, `summary.md`, plus `diffs/`, `logs/`, and `raw/` subdirectories per scenario. The Markdown summary covers every spec section (summary, adapter comparison, Mate toggle, scenario results table, tool usage, token usage, slowest runs, failed scenarios, most changed files); the JSON is deterministic and script-friendly.
+- **10 — Initial scenarios**: ten reproducible scenarios covering code-generation (`code.console-command`, `code.controller-route-test`, `code.service-with-di`), bug-finding (`bug.autowiring`, `bug.failing-phpunit`, `bug.invalid-env-config`, `bug.security-access-control`), runtime debugging (`runtime.monolog-exception`, `runtime.twig-variable-missing`) and one Mate-specific scenario (`mate.custom-tool-required`). Each fixture is a tiny pure-PHP project with a single deterministic verification command (`php tests/test.php`) and bakes the bug or missing functionality into one or two files.
 
-Initial scenarios and CLI examples will be added in subsequent milestones.
+CLI examples will be added in milestone 11.
 
 ## Layout
 

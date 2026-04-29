@@ -37,7 +37,7 @@ class ScenarioValidatorTest extends TestCase
         $loader = new ScenarioLoader();
         $validator = new ScenarioValidator(self::SCHEMA_PATH);
 
-        $data = $loader->load(__DIR__.'/../../scenarios/bug-finding/bug.autowiring.private-service.yaml');
+        $data = $loader->load(__DIR__.'/../../scenarios/bug-finding/bug.autowiring.yaml');
 
         $this->assertSame([], $validator->validate($data));
     }

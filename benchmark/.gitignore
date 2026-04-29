@@ -5,5 +5,3 @@
 /var/
 /reports/*
 !/reports/.gitkeep
-/fixtures/*
-!/fixtures/.gitkeep

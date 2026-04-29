@@ -1,0 +1,40 @@
+id: mate.custom-tool-required
+suite: mate-specific
+difficulty: hard
+tags:
+  - mate-only
+
+fixture:
+  path: fixtures/mate.custom-tool-required
+
+task:
+  prompt: |
+    The application throws a runtime error during the verification test. The
+    failure has already been recorded by the application's logging stack — the
+    relevant message lives in `var/logs/runtime.log`. Use a Mate tool to read
+    that log (rather than guessing or rerunning the test repeatedly), identify
+    the missing service ID, then register it in `src/services.php` so the
+    verification test passes.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - missing service registration
+    - service not found
+  expected_files_changed:
+    - src/services.php
+  forbidden_files_changed:
+    - tests/test.php
+    - var/logs/runtime.log
+  expected_tool_calls:
+    - symfony_logs
+
+evaluation:
+  weights:
+    functional: 30
+    root_cause: 15
+    mate_tool_usage: 30
+    minimality: 10
+    verification: 10
+    efficiency: 5

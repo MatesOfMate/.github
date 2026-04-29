@@ -1,0 +1,23 @@
+id: bug.failing-phpunit
+suite: bug-finding
+difficulty: easy
+
+fixture:
+  path: fixtures/bug.failing-phpunit
+
+task:
+  prompt: |
+    `src/Calculator.php` exposes `add($a, $b)`. The verification test fails
+    because the implementation is wrong. Find and fix the bug. The test files
+    must not be modified.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - off-by
+    - wrong operator
+  expected_files_changed:
+    - src/Calculator.php
+  forbidden_files_changed:
+    - tests/test.php

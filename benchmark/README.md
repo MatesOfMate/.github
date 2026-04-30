@@ -6,7 +6,7 @@ See [`PLAN.md`](PLAN.md) for the overall plan and [`specs/`](specs) for mileston
 
 ## Status
 
-This package is under active development. Milestones 01–11 are implemented:
+This package is under active development. Milestones 01–12 are implemented:
 
 - **01 — Project structure**: directory layout and the `benchmark:run` console command with all required options.
 - **02 — Scenario format**: YAML scenarios validated against [`schema/scenario.schema.json`](schema/scenario.schema.json), loaded via `ScenarioLoader`/`ScenarioValidator`/`ScenarioRepository`.
@@ -20,8 +20,9 @@ This package is under active development. Milestones 01–11 are implemented:
 - **09 — Reports**: `ReportPipeline` writing `reports/<run-id>/results.json`, `summary.md`, plus `diffs/`, `logs/`, and `raw/` subdirectories per scenario. The Markdown summary covers every spec section (summary, adapter comparison, Mate toggle, scenario results table, tool usage, token usage, slowest runs, failed scenarios, most changed files); the JSON is deterministic and script-friendly.
 - **10 — Initial scenarios**: ten reproducible scenarios covering code-generation (`code.console-command`, `code.controller-route-test`, `code.service-with-di`), bug-finding (`bug.autowiring`, `bug.failing-phpunit`, `bug.invalid-env-config`, `bug.security-access-control`), runtime debugging (`runtime.monolog-exception`, `runtime.twig-variable-missing`) and one Mate-specific scenario (`mate.custom-tool-required`). Each fixture is a tiny pure-PHP project with a single deterministic verification command (`php tests/test.php`) and bakes the bug or missing functionality into one or two files.
 - **11 — CLI examples**: documented invocation patterns in the README and a new `benchmark:compare` command diffing two `results.json` files (per-scenario score / tokens / duration / Mate-call deltas plus a run-level summary), plus a `--suite=all` alias that runs every scenario.
+- **12 — Definition of Done**: every checklist item from `specs/12-definition-of-done.md` mapped to its location in code in [`DEFINITION-OF-DONE.md`](DEFINITION-OF-DONE.md); the offline-safe acceptance run (`bin/console benchmark:run --suite=all --adapter=null` ×2 + `benchmark:compare`) is reproducible end-to-end.
 
-Definition of Done is the next milestone.
+The benchmark suite scaffold is feature-complete against the original spec.
 
 ## Layout
 

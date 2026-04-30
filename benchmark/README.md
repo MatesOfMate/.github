@@ -6,7 +6,7 @@ See [`PLAN.md`](PLAN.md) for the overall plan and [`specs/`](specs) for mileston
 
 ## Status
 
-This package is under active development. Milestones 01–08 are implemented:
+This package is under active development. Milestones 01–11 are implemented:
 
 - **01 — Project structure**: directory layout and the `benchmark:run` console command with all required options.
 - **02 — Scenario format**: YAML scenarios validated against [`schema/scenario.schema.json`](schema/scenario.schema.json), loaded via `ScenarioLoader`/`ScenarioValidator`/`ScenarioRepository`.
@@ -19,8 +19,9 @@ This package is under active development. Milestones 01–08 are implemented:
 - **Adapters (unnumbered)**: `ClaudeCodeAdapter` driving `claude --print --output-format=stream-json` and `CodexAdapter` driving `codex exec --json`, sharing a `ProcessAdapter` base. Best-effort JSONL parsers (`ClaudeStreamJsonParser`, `CodexJsonParser`) extract token usage and tool calls. Binary paths and extra flags are configurable via `BENCHMARK_CLAUDE_BIN`/`BENCHMARK_CLAUDE_ARGS` and `BENCHMARK_CODEX_BIN`/`BENCHMARK_CODEX_ARGS`. Tests use offline PHP fakes so the suite never makes real model calls.
 - **09 — Reports**: `ReportPipeline` writing `reports/<run-id>/results.json`, `summary.md`, plus `diffs/`, `logs/`, and `raw/` subdirectories per scenario. The Markdown summary covers every spec section (summary, adapter comparison, Mate toggle, scenario results table, tool usage, token usage, slowest runs, failed scenarios, most changed files); the JSON is deterministic and script-friendly.
 - **10 — Initial scenarios**: ten reproducible scenarios covering code-generation (`code.console-command`, `code.controller-route-test`, `code.service-with-di`), bug-finding (`bug.autowiring`, `bug.failing-phpunit`, `bug.invalid-env-config`, `bug.security-access-control`), runtime debugging (`runtime.monolog-exception`, `runtime.twig-variable-missing`) and one Mate-specific scenario (`mate.custom-tool-required`). Each fixture is a tiny pure-PHP project with a single deterministic verification command (`php tests/test.php`) and bakes the bug or missing functionality into one or two files.
+- **11 — CLI examples**: documented invocation patterns in the README and a new `benchmark:compare` command diffing two `results.json` files (per-scenario score / tokens / duration / Mate-call deltas plus a run-level summary), plus a `--suite=all` alias that runs every scenario.
 
-CLI examples will be added in milestone 11.
+Definition of Done is the next milestone.
 
 ## Layout
 
@@ -49,19 +50,35 @@ cd benchmark
 composer install
 composer test
 
-# List all scenarios
-bin/console benchmark:run
+# List every scenario without executing them
+bin/console benchmark:run --list
 
-# Filter by suite
-bin/console benchmark:run --suite=bug-finding
-
-# Filter by scenario id
-bin/console benchmark:run --scenario=bug.autowiring.private-service
+# Run everything against the deterministic NullAdapter (no real model calls)
+bin/console benchmark:run --adapter=null
 ```
+
+## CLI examples
+
+```bash
+# A single suite, one adapter, with Mate enabled / disabled
+bin/console benchmark:run --suite=bug-finding --adapter=codex --mate=enabled
+bin/console benchmark:run --suite=bug-finding --adapter=codex --mate=disabled
+
+# All scenarios against Claude Code (--suite=all is equivalent to omitting --suite)
+bin/console benchmark:run --suite=all --adapter=claude --mate=enabled
+
+# A single scenario, three repetitions, against Codex
+bin/console benchmark:run --scenario=bug.autowiring --adapter=codex --mate=enabled --repeat=3
+
+# Compare two finished runs side-by-side (score, tokens, duration, Mate calls)
+bin/console benchmark:compare reports/run-a/results.json reports/run-b/results.json
+```
+
+Reports for each run land in `reports/<run-id>/`, containing `results.json`, `summary.md`, plus per-scenario `diffs/`, `logs/` and `raw/` artefacts.
 
 ## Scenario format
 
-Scenarios are YAML files placed under `scenarios/<suite>/`. Every scenario is validated against [`schema/scenario.schema.json`](schema/scenario.schema.json). See [`specs/02-scenario-format.md`](specs/02-scenario-format.md) for the full spec and [`scenarios/bug-finding/bug.autowiring.private-service.yaml`](scenarios/bug-finding/bug.autowiring.private-service.yaml) for an example.
+Scenarios are YAML files placed under `scenarios/<suite>/`. Every scenario is validated against [`schema/scenario.schema.json`](schema/scenario.schema.json). See [`specs/02-scenario-format.md`](specs/02-scenario-format.md) for the full spec and [`scenarios/bug-finding/bug.autowiring.yaml`](scenarios/bug-finding/bug.autowiring.yaml) for an example.
 
 Required top-level keys: `id`, `suite`, `fixture`, `task`, `expected`. Optional: `difficulty`, `tags`, `evaluation`.
 

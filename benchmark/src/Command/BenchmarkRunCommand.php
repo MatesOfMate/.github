@@ -228,7 +228,7 @@ class BenchmarkRunCommand extends Command
             return [$scenario];
         }
 
-        if (null !== $suite) {
+        if (null !== $suite && 'all' !== $suite) {
             return $this->repository->bySuite((string) $suite);
         }
 

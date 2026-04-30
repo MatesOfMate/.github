@@ -14,6 +14,7 @@ use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
 use MatesOfMate\Benchmark\Adapter\ClaudeCodeAdapter;
 use MatesOfMate\Benchmark\Adapter\CodexAdapter;
 use MatesOfMate\Benchmark\Adapter\NullAdapter;
+use MatesOfMate\Benchmark\Command\BenchmarkCompareCommand;
 use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
 use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
@@ -63,6 +64,7 @@ $adapters = new AdapterRegistry([
 ]);
 
 $application = new Application('Symfony AI Mate Benchmark', '0.1.0');
+$application->addCommand(new BenchmarkCompareCommand());
 $application->addCommand(new BenchmarkRunCommand(
     repository: $repository,
     adapters: $adapters,

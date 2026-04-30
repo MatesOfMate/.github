@@ -111,6 +111,18 @@ class BenchmarkRunCommandTest extends TestCase
         $this->assertStringContainsString('bug.example', $tester->getDisplay());
     }
 
+    public function testSuiteAllReturnsAllScenarios(): void
+    {
+        $tester = new CommandTester($this->createCommand());
+        $exit = $tester->execute(['--list' => true, '--suite' => 'all']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('bug.example', $output);
+        $this->assertStringContainsString('code.minimal', $output);
+        $this->assertStringContainsString('2 scenario(s) listed', $output);
+    }
+
     public function testUnknownScenarioReturnsInvalid(): void
     {
         $tester = new CommandTester($this->createCommand());

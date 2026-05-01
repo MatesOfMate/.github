@@ -15,91 +15,137 @@ use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\ClaudeCodeAdapter;
 use MatesOfMate\Benchmark\Mate\MateConfiguration;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\AI\Platform\PlatformInterface;
+use Symfony\AI\Platform\Result\DeferredResult;
+use Symfony\AI\Platform\Result\RawResultInterface;
+use Symfony\AI\Platform\Result\TextResult;
+use Symfony\AI\Platform\ResultConverterInterface;
 
 /**
- * Drives the adapter against a fake Claude binary so the suite stays offline.
- *
  * @author Johannes Wachter <johannes@sulu.io>
  */
 class ClaudeCodeAdapterTest extends TestCase
 {
-    private string $tmp;
-
-    private Filesystem $filesystem;
-
-    protected function setUp(): void
-    {
-        $this->filesystem = new Filesystem();
-        $this->tmp = sys_get_temp_dir().'/bench-claude-'.bin2hex(random_bytes(4));
-        $this->filesystem->mkdir($this->tmp);
-    }
-
-    protected function tearDown(): void
-    {
-        if (is_dir($this->tmp)) {
-            $this->filesystem->remove($this->tmp);
-        }
-    }
-
     public function testReportsName(): void
     {
-        $this->assertSame('claude', (new ClaudeCodeAdapter(binary: 'echo'))->name());
+        $platform = $this->createMock(PlatformInterface::class);
+        $this->assertSame('claude', (new ClaudeCodeAdapter($platform))->name());
     }
 
-    public function testRunCapturesUsageAndToolCallsFromFakeBinary(): void
+    public function testInvokesPlatformWithDefaultModelAndExtractsTextAndTokens(): void
     {
-        $adapter = new ClaudeCodeAdapter(binary: $this->fakeBinary());
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                'sonnet',
+                'find the bug',
+                $this->callback(static function (array $options): bool {
+                    return '/tmp/workspace' === ($options['cwd'] ?? null);
+                }),
+            )
+            ->willReturn($this->stubDeferred(
+                text: 'patched',
+                usage: ['input_tokens' => 1234, 'output_tokens' => 567, 'cache_read_input_tokens' => 100],
+            ));
 
+        $adapter = new ClaudeCodeAdapter($platform);
         $result = $adapter->run(new AssistantRunInput(
-            workspacePath: $this->tmp,
+            workspacePath: '/tmp/workspace',
             prompt: 'find the bug',
-            model: 'sonnet',
         ));
 
         $this->assertTrue($result->successful);
-        $this->assertSame(0, $result->exitCode);
-        $this->assertCount(2, $result->toolCalls);
-        $this->assertSame(1234, $result->tokenUsage?->inputTokens);
-        $this->assertSame(567, $result->tokenUsage?->outputTokens);
+        $this->assertSame('patched', $result->stdout);
+        $this->assertNotNull($result->tokenUsage);
+        $this->assertSame(1234, $result->tokenUsage->inputTokens);
+        $this->assertSame(567, $result->tokenUsage->outputTokens);
+        $this->assertSame(100, $result->tokenUsage->cachedTokens);
+        $this->assertSame([], $result->toolCalls);
     }
 
-    public function testFailedBinaryProducesFailureResult(): void
+    public function testForwardsMateConfigAsMcpConfigOption(): void
     {
-        $adapter = new ClaudeCodeAdapter(binary: '/usr/bin/false');
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->callback(static fn (array $options): bool => '/tmp/.mate/config.json' === ($options['mcp_config'] ?? null)),
+            )
+            ->willReturn($this->stubDeferred(text: 'ok'));
 
-        $result = $adapter->run(new AssistantRunInput(
-            workspacePath: $this->tmp,
-            prompt: 'irrelevant',
+        (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp/workspace',
+            prompt: 'use mate',
+            mateConfig: MateConfiguration::enabled(configPath: '/tmp/.mate/config.json'),
+        ));
+    }
+
+    public function testInputModelOverridesDefault(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with('opus', $this->anything(), $this->anything())
+            ->willReturn($this->stubDeferred(text: 'ok'));
+
+        (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'test',
+            model: 'opus',
+        ));
+    }
+
+    public function testPlatformExceptionBecomesFailure(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->method('invoke')->willThrowException(new \RuntimeException('CLI not found'));
+
+        $result = (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'fix',
         ));
 
         $this->assertFalse($result->successful);
-        $this->assertNotSame(0, $result->exitCode);
-        $this->assertNotNull($result->errorMessage);
+        $this->assertSame('CLI not found', $result->errorMessage);
+        $this->assertNull($result->tokenUsage);
     }
 
-    public function testMateConfigPathFlowsToBinary(): void
+    public function testMissingUsageDataLeavesTokenUsageNull(): void
     {
-        $adapter = new ClaudeCodeAdapter(binary: $this->fakeBinary());
-        $configPath = $this->tmp.'/mate.json';
-        file_put_contents($configPath, '{}');
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->method('invoke')->willReturn($this->stubDeferred(text: 'ok'));
 
-        $result = $adapter->run(new AssistantRunInput(
-            workspacePath: $this->tmp,
-            prompt: 'with mate',
-            mateConfig: MateConfiguration::enabled(configPath: $configPath, expectedTools: ['symfony_logs']),
+        $result = (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'irrelevant',
         ));
 
         $this->assertTrue($result->successful);
-        // The fake binary echoes the --mcp-config argument back into the result event;
-        // JSON encodes slashes, so we look for the file basename instead of the absolute path.
-        $this->assertStringContainsString('mate.json', $result->stdout);
+        $this->assertNull($result->tokenUsage);
     }
 
-    private function fakeBinary(): string
+    /**
+     * @param array<string, int>|null $usage
+     */
+    private function stubDeferred(string $text, ?array $usage = null): DeferredResult
     {
-        $script = __DIR__.'/Fakes/fake-claude.php';
-        // Wrap the script invocation so escapeshellcmd preserves the argument.
-        return \PHP_BINARY.' '.escapeshellarg($script);
+        $rawData = ['result' => $text];
+        if (null !== $usage) {
+            $rawData['usage'] = $usage;
+        }
+
+        $rawResult = $this->createMock(RawResultInterface::class);
+        $rawResult->method('getData')->willReturn($rawData);
+
+        $textResult = new TextResult($text);
+        $textResult->setRawResult($rawResult);
+
+        $converter = $this->createMock(ResultConverterInterface::class);
+        $converter->method('convert')->willReturn($textResult);
+
+        return new DeferredResult($converter, $rawResult);
     }
 }

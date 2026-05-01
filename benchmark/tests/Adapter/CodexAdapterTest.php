@@ -14,75 +14,79 @@ namespace MatesOfMate\Benchmark\Tests\Adapter;
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\CodexAdapter;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\AI\Platform\PlatformInterface;
+use Symfony\AI\Platform\Result\DeferredResult;
+use Symfony\AI\Platform\Result\RawResultInterface;
+use Symfony\AI\Platform\Result\TextResult;
+use Symfony\AI\Platform\ResultConverterInterface;
 
 /**
  * @author Johannes Wachter <johannes@sulu.io>
  */
 class CodexAdapterTest extends TestCase
 {
-    private string $tmp;
-
-    private Filesystem $filesystem;
-
-    protected function setUp(): void
-    {
-        $this->filesystem = new Filesystem();
-        $this->tmp = sys_get_temp_dir().'/bench-codex-'.bin2hex(random_bytes(4));
-        $this->filesystem->mkdir($this->tmp);
-    }
-
-    protected function tearDown(): void
-    {
-        if (is_dir($this->tmp)) {
-            $this->filesystem->remove($this->tmp);
-        }
-    }
-
     public function testReportsName(): void
     {
-        $this->assertSame('codex', (new CodexAdapter(binary: 'echo'))->name());
+        $platform = $this->createMock(PlatformInterface::class);
+        $this->assertSame('codex', (new CodexAdapter($platform))->name());
     }
 
-    public function testRunCapturesUsageAndToolCallsFromFakeBinary(): void
+    public function testInvokesPlatformWithDefaultModelAndWorkspaceWriteSandbox(): void
     {
-        $adapter = new CodexAdapter(binary: $this->fakeBinary());
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                'gpt-5-codex',
+                'do the thing',
+                $this->callback(static fn (array $options): bool => 'workspace-write' === ($options['sandbox'] ?? null)
+                    && '/tmp/workspace' === ($options['cwd'] ?? null)),
+            )
+            ->willReturn($this->stubDeferred('done', ['input_tokens' => 800, 'output_tokens' => 300]));
 
-        $result = $adapter->run(new AssistantRunInput(
-            workspacePath: $this->tmp,
+        $result = (new CodexAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp/workspace',
             prompt: 'do the thing',
-            model: 'gpt-5',
         ));
 
         $this->assertTrue($result->successful);
-        $this->assertSame(0, $result->exitCode);
-        $this->assertCount(2, $result->toolCalls);
+        $this->assertSame('done', $result->stdout);
         $this->assertSame(800, $result->tokenUsage?->inputTokens);
-        $this->assertSame(300, $result->tokenUsage?->outputTokens);
     }
 
-    public function testTimeoutMarksResultAsTimedOut(): void
+    public function testFailureFromPlatformIsCapturedNotThrown(): void
     {
-        $sleeper = $this->tmp.'/sleeper.sh';
-        file_put_contents($sleeper, "#!/usr/bin/env sh\nsleep 2\n");
-        chmod($sleeper, 0o755);
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->method('invoke')->willThrowException(new \RuntimeException('codex exited 2'));
 
-        $adapter = new CodexAdapter(binary: $sleeper);
-
-        $result = $adapter->run(new AssistantRunInput(
-            workspacePath: $this->tmp,
+        $result = (new CodexAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
             prompt: 'whatever',
-            timeoutSeconds: 1,
         ));
 
         $this->assertFalse($result->successful);
-        $this->assertTrue($result->timedOut);
+        $this->assertStringContainsString('codex exited 2', (string) $result->errorMessage);
     }
 
-    private function fakeBinary(): string
+    /**
+     * @param array<string, int>|null $usage
+     */
+    private function stubDeferred(string $text, ?array $usage = null): DeferredResult
     {
-        $script = __DIR__.'/Fakes/fake-codex.php';
+        $rawData = ['result' => $text];
+        if (null !== $usage) {
+            $rawData['usage'] = $usage;
+        }
 
-        return \PHP_BINARY.' '.escapeshellarg($script);
+        $rawResult = $this->createMock(RawResultInterface::class);
+        $rawResult->method('getData')->willReturn($rawData);
+
+        $textResult = new TextResult($text);
+        $textResult->setRawResult($rawResult);
+
+        $converter = $this->createMock(ResultConverterInterface::class);
+        $converter->method('convert')->willReturn($textResult);
+
+        return new DeferredResult($converter, $rawResult);
     }
 }

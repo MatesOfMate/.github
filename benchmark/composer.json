@@ -12,12 +12,17 @@
     "require": {
         "php": ">=8.3",
         "justinrainbow/json-schema": "^6.0",
+        "symfony/ai-claude-code-platform": "^0.8@dev",
+        "symfony/ai-codex-platform": "^0.8@dev",
+        "symfony/ai-platform": "^0.8@dev",
         "symfony/console": "^7.3|^8.0",
         "symfony/filesystem": "^7.3|^8.0",
         "symfony/finder": "^7.3|^8.0",
         "symfony/process": "^7.3|^8.0",
         "symfony/yaml": "^7.3|^8.0"
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^2.0",

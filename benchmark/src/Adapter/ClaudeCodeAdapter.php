@@ -11,76 +11,43 @@
 
 namespace MatesOfMate\Benchmark\Adapter;
 
-use MatesOfMate\Benchmark\Adapter\Process\AssistantOutputParserInterface;
-use MatesOfMate\Benchmark\Adapter\Process\ClaudeStreamJsonParser;
-use MatesOfMate\Benchmark\Adapter\Process\ProcessAdapter;
+use MatesOfMate\Benchmark\Adapter\Platform\PlatformAdapter;
+use Symfony\AI\Platform\Bridge\ClaudeCode\Factory as ClaudeCodeFactory;
+use Symfony\AI\Platform\PlatformInterface;
 
 /**
- * Drives the `claude` CLI in non-interactive mode and parses its JSONL stream.
+ * Drives the Claude Code CLI via the `symfony/ai-claude-code-platform` bridge.
  *
- * Defaults to `claude --print --output-format=stream-json --verbose --bare` and
- * pipes the prompt via stdin. The Mate config path produced by
- * {@see \MatesOfMate\Benchmark\Mate\MateConfigurationFactory} is forwarded via
- * `--mcp-config` whenever Mate is enabled for the run.
- *
- * The binary path can be overridden with `BENCHMARK_CLAUDE_BIN`. Additional
- * flags can be appended via `BENCHMARK_CLAUDE_ARGS`.
+ * The bridge owns subprocess management, stream-json parsing and
+ * `--mcp-config` plumbing; this adapter only marshals benchmark inputs into
+ * `Platform::invoke()` arguments. Override the binary with
+ * `BENCHMARK_CLAUDE_BIN`.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-class ClaudeCodeAdapter extends ProcessAdapter
+class ClaudeCodeAdapter extends PlatformAdapter
 {
     public const NAME = 'claude';
+    public const DEFAULT_MODEL = 'sonnet';
     public const ENV_BINARY = 'BENCHMARK_CLAUDE_BIN';
-    public const ENV_ARGS = 'BENCHMARK_CLAUDE_ARGS';
-
-    public function __construct(
-        ?string $binary = null,
-        ?AssistantOutputParserInterface $parser = null,
-        private readonly string $extraArgs = '',
-    ) {
-        parent::__construct(
-            binary: $binary ?? (getenv(self::ENV_BINARY) ?: 'claude'),
-            parser: $parser ?? new ClaudeStreamJsonParser(),
-        );
-    }
 
     public static function withDefaults(): self
     {
-        return new self(
-            extraArgs: getenv(self::ENV_ARGS) ?: '',
-        );
+        $binary = getenv(self::ENV_BINARY);
+
+        return new self(ClaudeCodeFactory::createPlatform(
+            cliBinary: false === $binary || '' === $binary ? null : $binary,
+            timeout: 600,
+        ));
+    }
+
+    public function __construct(PlatformInterface $platform, string $defaultModel = self::DEFAULT_MODEL)
+    {
+        parent::__construct($platform, $defaultModel);
     }
 
     public function name(): string
     {
         return self::NAME;
-    }
-
-    protected function buildCommand(\MatesOfMate\Benchmark\Adapter\AssistantRunInput $input): string
-    {
-        $parts = [
-            escapeshellcmd($this->binary),
-            '--print',
-            '--output-format=stream-json',
-            '--verbose',
-            '--bare',
-            '--dangerously-skip-permissions',
-        ];
-
-        if (null !== $input->model) {
-            $parts[] = '--model='.escapeshellarg($input->model);
-        }
-
-        $mateConfig = $input->mateConfig;
-        if ($mateConfig->enabled && null !== $mateConfig->configPath) {
-            $parts[] = '--mcp-config='.escapeshellarg($mateConfig->configPath);
-        }
-
-        if ('' !== $this->extraArgs) {
-            $parts[] = $this->extraArgs;
-        }
-
-        return implode(' ', $parts);
     }
 }

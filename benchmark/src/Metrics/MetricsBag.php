@@ -25,6 +25,7 @@ readonly class MetricsBag
         'duration_ms',
         'input_tokens',
         'output_tokens',
+        'cached_tokens',
         'total_tokens',
         'tool_call_count',
         'mate_tool_call_count',

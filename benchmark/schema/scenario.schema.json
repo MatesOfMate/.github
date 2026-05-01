@@ -91,6 +91,11 @@
                 "expected_tool_calls": {
                     "type": "array",
                     "items": {"type": "string"}
+                },
+                "expected_tool_calls_any": {
+                    "description": "At least one of these tool names must appear in the run (alternatives for the same capability).",
+                    "type": "array",
+                    "items": {"type": "string"}
                 }
             }
         },

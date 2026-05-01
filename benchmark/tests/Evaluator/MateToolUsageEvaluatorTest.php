@@ -99,4 +99,41 @@ class MateToolUsageEvaluatorTest extends TestCase
         $this->assertSame(1.0, $result->score);
         $this->assertFalse($result->passed);
     }
+
+    public function testAnyOfMatchScoresFive(): void
+    {
+        $outcome = RunOutcomeBuilder::build(mateMetrics: new MateMetrics(
+            enabled: true,
+            toolCallCount: 5,
+            toolNames: ['monolog-tail', 'Read', 'Edit'],
+            firstToolCallMs: 1000.0,
+            toolErrors: 0,
+            expectedToolsAny: ['monolog-search', 'monolog-tail', 'monolog-list-files'],
+            anyToolMatched: true,
+        ));
+
+        $result = (new MateToolUsageEvaluator())->evaluate(new EvaluationInput($outcome->scenario, $outcome));
+
+        $this->assertSame(5.0, $result->score);
+        $this->assertTrue($result->passed);
+        $this->assertStringContainsString('monolog-tail', $result->explanation);
+    }
+
+    public function testAnyOfWithNoMatchScoresZero(): void
+    {
+        $outcome = RunOutcomeBuilder::build(mateMetrics: new MateMetrics(
+            enabled: true,
+            toolCallCount: 5,
+            toolNames: ['Read', 'Bash', 'Edit'],
+            firstToolCallMs: 1000.0,
+            toolErrors: 0,
+            expectedToolsAny: ['monolog-search', 'monolog-tail', 'monolog-list-files'],
+            anyToolMatched: false,
+        ));
+
+        $result = (new MateToolUsageEvaluator())->evaluate(new EvaluationInput($outcome->scenario, $outcome));
+
+        $this->assertSame(0.0, $result->score);
+        $this->assertFalse($result->passed);
+    }
 }

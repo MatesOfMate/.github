@@ -21,12 +21,14 @@ readonly class MateConfiguration
     /**
      * @param array<string, string> $env
      * @param list<string>          $expectedTools
+     * @param list<string>          $expectedToolsAny
      */
     public function __construct(
         public bool $enabled,
         public ?string $configPath = null,
         public array $env = [],
         public array $expectedTools = [],
+        public array $expectedToolsAny = [],
     ) {
     }
 
@@ -37,15 +39,17 @@ readonly class MateConfiguration
 
     /**
      * @param list<string>          $expectedTools
+     * @param list<string>          $expectedToolsAny
      * @param array<string, string> $env
      */
-    public static function enabled(?string $configPath = null, array $expectedTools = [], array $env = []): self
+    public static function enabled(?string $configPath = null, array $expectedTools = [], array $expectedToolsAny = [], array $env = []): self
     {
         return new self(
             enabled: true,
             configPath: $configPath,
             env: $env,
             expectedTools: $expectedTools,
+            expectedToolsAny: $expectedToolsAny,
         );
     }
 }

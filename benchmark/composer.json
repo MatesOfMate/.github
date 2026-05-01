@@ -23,6 +23,38 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-platform": "0.8.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform/src/Bridge/Codex",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-codex-platform": "0.8.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform/src/Bridge/ClaudeCode",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-claude-code-platform": "0.8.x-dev"
+                }
+            }
+        }
+    ],
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
         "phpstan/phpstan": "^2.0",

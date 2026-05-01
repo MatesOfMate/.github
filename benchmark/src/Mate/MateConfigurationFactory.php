@@ -13,29 +13,26 @@ namespace MatesOfMate\Benchmark\Mate;
 
 use MatesOfMate\Benchmark\Runner\Workspace;
 use MatesOfMate\Benchmark\Scenario\Scenario;
-use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Builds a per-workspace {@see MateConfiguration} for a given scenario run.
  *
- * When Mate is enabled, the factory writes a small descriptor file
- * (`.mate/config.json`) into the workspace listing the tools the scenario
- * expects. Real adapter implementations can pick this up to provision MCP
- * servers; the file is otherwise informational.
+ * When Mate is enabled, the factory delegates to a {@see MateProvisioner} to
+ * install Mate into the workspace and produce the standard `mcp.json`
+ * descriptor that adapters forward as `--mcp-config`. The list of expected
+ * tools declared on the scenario is carried alongside on the configuration
+ * object so evaluators can score tool usage without re-reading the file.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
 class MateConfigurationFactory
 {
-    public const CONFIG_RELATIVE_PATH = '.mate/config.json';
     public const ENV_CONFIG = 'MATE_BENCHMARK_CONFIG';
     public const ENV_ENABLED = 'MATE_BENCHMARK_ENABLED';
 
-    private readonly Filesystem $filesystem;
-
-    public function __construct(?Filesystem $filesystem = null)
-    {
-        $this->filesystem = $filesystem ?? new Filesystem();
+    public function __construct(
+        private readonly ?MateProvisionerInterface $provisioner = null,
+    ) {
     }
 
     public function create(Workspace $workspace, Scenario $scenario, bool $enabled): MateConfiguration
@@ -44,24 +41,18 @@ class MateConfigurationFactory
             return MateConfiguration::disabled();
         }
 
-        $expectedTools = $this->extractExpectedTools($scenario);
-        $configPath = $workspace->path.'/'.self::CONFIG_RELATIVE_PATH;
+        if (null === $this->provisioner) {
+            throw new \LogicException('Mate is enabled for this run but no MateProvisioner was wired into MateConfigurationFactory.');
+        }
 
-        $payload = [
-            'workspace' => $workspace->path,
-            'scenario' => $scenario->id,
-            'expected_tools' => $expectedTools,
-        ];
-
-        $this->filesystem->mkdir(\dirname($configPath));
-        $this->filesystem->dumpFile(
-            $configPath,
-            json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
-        );
+        $configPath = $this->provisioner->provision($workspace);
+        $expectedTools = $this->extractStringList($scenario->expected['expected_tool_calls'] ?? []);
+        $expectedToolsAny = $this->extractStringList($scenario->expected['expected_tool_calls_any'] ?? []);
 
         return MateConfiguration::enabled(
             configPath: $configPath,
             expectedTools: $expectedTools,
+            expectedToolsAny: $expectedToolsAny,
             env: [
                 self::ENV_ENABLED => '1',
                 self::ENV_CONFIG => $configPath,
@@ -70,19 +61,20 @@ class MateConfigurationFactory
     }
 
     /**
+     * @param mixed $raw
+     *
      * @return list<string>
      */
-    private function extractExpectedTools(Scenario $scenario): array
+    private function extractStringList(mixed $raw): array
     {
-        $tools = $scenario->expected['expected_tool_calls'] ?? [];
-        if (!\is_array($tools)) {
+        if (!\is_array($raw)) {
             return [];
         }
 
         $clean = [];
-        foreach ($tools as $tool) {
-            if (\is_string($tool) && '' !== $tool) {
-                $clean[] = $tool;
+        foreach ($raw as $item) {
+            if (\is_string($item) && '' !== $item) {
+                $clean[] = $item;
             }
         }
 

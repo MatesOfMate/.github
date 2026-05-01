@@ -69,4 +69,35 @@ class MateMetricsCollectorTest extends TestCase
         $this->assertSame(0, $metrics->toolCallCount);
         $this->assertSame([], $metrics->missingExpectedTools);
     }
+
+    public function testAnyOfMatchDetectedWhenOneToolPresent(): void
+    {
+        $collector = new MateMetricsCollector();
+        $result = AssistantRunResult::success(stdout: '', durationMs: 0.0, toolCalls: [
+            new ToolCall('monolog-tail'),
+            new ToolCall('Read'),
+        ]);
+
+        $metrics = $collector->collect($result, MateConfiguration::enabled(
+            expectedToolsAny: ['monolog-search', 'monolog-tail', 'monolog-list-files'],
+        ));
+
+        $this->assertTrue($metrics->anyToolMatched);
+        $this->assertSame(['monolog-search', 'monolog-tail', 'monolog-list-files'], $metrics->expectedToolsAny);
+    }
+
+    public function testAnyOfNoMatchWhenNonePresent(): void
+    {
+        $collector = new MateMetricsCollector();
+        $result = AssistantRunResult::success(stdout: '', durationMs: 0.0, toolCalls: [
+            new ToolCall('Read'),
+            new ToolCall('Bash'),
+        ]);
+
+        $metrics = $collector->collect($result, MateConfiguration::enabled(
+            expectedToolsAny: ['monolog-search', 'monolog-tail'],
+        ));
+
+        $this->assertFalse($metrics->anyToolMatched);
+    }
 }

@@ -29,6 +29,7 @@ class TokenUsageCollector implements MetricsCollectorInterface
             return [
                 'input_tokens' => null,
                 'output_tokens' => null,
+                'cached_tokens' => null,
                 'total_tokens' => null,
             ];
         }
@@ -36,6 +37,7 @@ class TokenUsageCollector implements MetricsCollectorInterface
         return [
             'input_tokens' => $usage->inputTokens,
             'output_tokens' => $usage->outputTokens,
+            'cached_tokens' => $usage->cachedTokens,
             'total_tokens' => $usage->totalTokens(),
         ];
     }

@@ -19,6 +19,7 @@ use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
 use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
+use MatesOfMate\Benchmark\Mate\MateProvisioner;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
 use MatesOfMate\Benchmark\Report\ReportPipeline;
 use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
@@ -50,7 +51,9 @@ $runner = new ScenarioRunner(
     fixtureCopier: $fixtureCopier,
     commandExecutor: $commandExecutor,
     diffCollector: $diffCollector,
-    mateConfigurationFactory: new MateConfigurationFactory(),
+    mateConfigurationFactory: new MateConfigurationFactory(
+        MateProvisioner::withMonorepoDefaults(\dirname($projectRoot), $commandExecutor),
+    ),
     mateMetricsCollector: new MateMetricsCollector(),
     metricsAggregator: new MetricsAggregator(),
     evaluationPipeline: new EvaluationPipeline(),
@@ -64,7 +67,7 @@ $adapters = new AdapterRegistry([
 ]);
 
 $application = new Application('Symfony AI Mate Benchmark', '0.1.0');
-$application->addCommand(new BenchmarkCompareCommand());
+$application->addCommand(new BenchmarkCompareCommand($projectRoot.'/reports'));
 $application->addCommand(new BenchmarkRunCommand(
     repository: $repository,
     adapters: $adapters,

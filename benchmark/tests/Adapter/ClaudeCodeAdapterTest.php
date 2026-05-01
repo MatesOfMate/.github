@@ -64,6 +64,65 @@ class ClaudeCodeAdapterTest extends TestCase
         $this->assertSame([], $result->toolCalls);
     }
 
+    public function testExtractsToolCallsFromPlatformMetadata(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->willReturn($this->stubDeferred(
+                text: 'patched',
+                toolCallTraces: [[
+                    'name' => 'symfony_logs',
+                    'arguments' => ['channel' => 'app'],
+                    'started_at_ms' => 1200.0,
+                    'duration_ms' => 8.0,
+                    'errored' => false,
+                ]],
+            ));
+
+        $result = (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp/workspace',
+            prompt: 'find the bug',
+        ));
+
+        $this->assertCount(1, $result->toolCalls);
+        $this->assertSame('symfony_logs', $result->toolCalls[0]->name);
+        $this->assertSame(['channel' => 'app'], $result->toolCalls[0]->arguments);
+        $this->assertSame(1200.0, $result->toolCalls[0]->startedAtMs);
+        $this->assertSame(8.0, $result->toolCalls[0]->durationMs);
+        $this->assertFalse($result->toolCalls[0]->errored);
+    }
+
+    public function testStripsClaudeCodeMcpPrefixFromMcpToolNames(): void
+    {
+        // Claude Code emits MCP tool calls as `mcp__<server>__<tool>`. Codex
+        // emits the bare `<tool>`. Without stripping, scenarios'
+        // `expected_tool_calls` (which use the bare names) never match Claude
+        // tool calls and `mate_tool_usage` scores 0 even when the tool was
+        // exercised correctly.
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->willReturn($this->stubDeferred(
+                text: 'patched',
+                toolCallTraces: [
+                    ['name' => 'mcp__symfony-ai-mate__monolog-search', 'arguments' => ['term' => 'service']],
+                    ['name' => 'mcp__symfony_ai_mate__monolog-search', 'arguments' => ['term' => 'runtime']],
+                    ['name' => 'Read', 'arguments' => ['path' => 'src/services.php']],
+                ],
+            ));
+
+        $result = (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp/workspace',
+            prompt: 'find the bug',
+        ));
+
+        $this->assertCount(3, $result->toolCalls);
+        $this->assertSame('monolog-search', $result->toolCalls[0]->name);
+        $this->assertSame('monolog-search', $result->toolCalls[1]->name);
+        $this->assertSame('Read', $result->toolCalls[2]->name);
+    }
+
     public function testForwardsMateConfigAsMcpConfigOption(): void
     {
         $platform = $this->createMock(PlatformInterface::class);
@@ -80,6 +139,42 @@ class ClaudeCodeAdapterTest extends TestCase
             workspacePath: '/tmp/workspace',
             prompt: 'use mate',
             mateConfig: MateConfiguration::enabled(configPath: '/tmp/.mate/config.json'),
+        ));
+    }
+
+    public function testForwardsBypassPermissionsForUnattendedRuns(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->callback(static fn (array $options): bool => 'bypassPermissions' === ($options['permission_mode'] ?? null)),
+            )
+            ->willReturn($this->stubDeferred(text: 'ok'));
+
+        (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'fix',
+        ));
+    }
+
+    public function testDisablesSessionPersistenceToIsolateAttempts(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->callback(static fn (array $options): bool => true === ($options['no_session_persistence'] ?? null)),
+            )
+            ->willReturn($this->stubDeferred(text: 'ok'));
+
+        (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'fix',
         ));
     }
 
@@ -127,10 +222,12 @@ class ClaudeCodeAdapterTest extends TestCase
         $this->assertNull($result->tokenUsage);
     }
 
+
     /**
-     * @param array<string, int>|null $usage
+     * @param array<string, int>|null                   $usage
+     * @param list<array<string, mixed>>|array<int, object> $toolCallTraces
      */
-    private function stubDeferred(string $text, ?array $usage = null): DeferredResult
+    private function stubDeferred(string $text, ?array $usage = null, array $toolCallTraces = []): DeferredResult
     {
         $rawData = ['result' => $text];
         if (null !== $usage) {
@@ -142,6 +239,9 @@ class ClaudeCodeAdapterTest extends TestCase
 
         $textResult = new TextResult($text);
         $textResult->setRawResult($rawResult);
+        if ([] !== $toolCallTraces) {
+            $textResult->getMetadata()->add('tool_call_traces', $toolCallTraces);
+        }
 
         $converter = $this->createMock(ResultConverterInterface::class);
         $converter->method('convert')->willReturn($textResult);

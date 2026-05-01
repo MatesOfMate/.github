@@ -12,7 +12,7 @@ This package is under active development. Milestones 01–12 are implemented:
 - **02 — Scenario format**: YAML scenarios validated against [`schema/scenario.schema.json`](schema/scenario.schema.json), loaded via `ScenarioLoader`/`ScenarioValidator`/`ScenarioRepository`.
 - **03 — Fixture isolation**: per-attempt workspaces under `var/benchmark/runs/<run-id>/<scenario-id>/<attempt>/workspace/`, fixture copying, command execution with stdout/stderr/exit/duration capture, git-based diff collection against a sealed baseline, and `--keep-workspace` semantics.
 - **04 — AI adapter interface + runner**: `AssistantAdapterInterface` with `AssistantRunInput`/`AssistantRunResult`/`TokenUsage`/`ToolCall`, `NullAdapter`, `AdapterRegistry`, and `ScenarioRunner` orchestrating fixture copy → setup → seal → adapter → diff → verify into a `RunOutcome`. `benchmark:run` now actually executes scenarios end-to-end (defaults to `--adapter=null`, use `--list` to only list).
-- **05 — Mate integration**: `MateConfiguration` value object + per-workspace `MateConfigurationFactory` writing `.mate/config.json` (provisioned before sealing the baseline so it doesn't pollute the AI diff), `MateMetricsCollector` aggregating tool calls into `MateMetrics` (count, names, first-call ms, errors, missing expected tools), and `--mate=enabled|disabled` driving the toggle.
+- **05 — Mate integration**: `MateConfiguration` value object + per-workspace `MateConfigurationFactory` driving a `MateProvisioner` that writes a generated `composer.json`, runs `composer install` against the monorepo's local `src/*` packages, then `vendor/bin/mate init && vendor/bin/mate discover` to materialise a real `mcp.json` in the workspace (provisioned before sealing the baseline so it does not pollute the AI diff). The Claude adapter forwards that `mcp.json` to the CLI as `--mcp-config`. `MateMetricsCollector` aggregates tool calls into `MateMetrics` (count, names, first-call ms, errors, missing expected tools), and `--mate=enabled|disabled` drives the toggle.
 - **06 — Metrics collection**: `MetricsBag` exposing every required + optional metric (with `null` for unsupported), pluggable `MetricsCollectorInterface` (`Duration`, `TokenUsage`, `ToolUsage`, `DiffMetrics`, `CommandResult`), and `MetricsAggregator` merging them into the `RunOutcome`.
 - **07 — Evaluators**: `EvaluatorInterface` + `EvaluationInput`/`EvaluationResult` (0..5 score, pass/fail, explanation, evidence) and seven concrete judges — `Functional`, `RootCause`, `DiffMinimality`, `ForbiddenChanges`, `Verification`, `MateToolUsage`, `Efficiency`. Rule-based today; `RootCause` is the natural seam for an LLM-judge later.
 - **08 — Scoring**: `ScoreWeights` (defaults from PLAN.md, scenario `evaluation.weights` override), `Score` exposing `finalScore`/`rawScore`/per-category/missing-evaluators/gate penalties, `ScoreCalculator` weighting evaluator output, `EvaluationPipeline` running the seven judges, all wired through `ScenarioRunner` so every `RunOutcome` carries evaluations + a final score.
@@ -76,6 +76,16 @@ bin/console benchmark:compare reports/run-a/results.json reports/run-b/results.j
 ```
 
 Reports for each run land in `reports/<run-id>/`, containing `results.json`, `summary.md`, plus per-scenario `diffs/`, `logs/` and `raw/` artefacts.
+
+### `--mate=enabled` requirements
+
+When Mate is enabled the runner provisions every workspace before invoking the assistant: it writes a generated `composer.json`, runs `composer install --no-scripts` (resolving `matesofmate/*` from the monorepo via `path` repositories), then runs `vendor/bin/mate init && vendor/bin/mate discover`. This produces a real `mcp.json` in the workspace, which the Claude adapter forwards via `--mcp-config`.
+
+Implications:
+
+- The first scenario per run pays a `composer install` cost (Composer's HTTP cache makes subsequent installs faster).
+- `composer` and a working internet connection are required when Mate is enabled.
+- **Codex + Mate** translates the workspace `mcp.json` into `-c mcp_servers.<name>.command/args=` overrides for the codex CLI and adds `--dangerously-bypass-approvals-and-sandbox`. The bypass flag is required because `codex exec` always pins `approval_policy=never`, which causes every MCP tool invocation to be auto-cancelled with "user cancelled MCP tool call". Codex documents the flag as "intended solely for running in environments that are externally sandboxed", which the per-attempt benchmark workspace under `var/benchmark/runs/<id>/<scenario>/<attempt>/workspace/` is. As a side effect Codex runs without a sandbox during these scenarios — only enable Mate-on-Codex against trusted scenarios.
 
 ## Scenario format
 

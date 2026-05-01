@@ -99,4 +99,34 @@ class ArtifactsWriterTest extends TestCase
 
         $this->assertFileDoesNotExist($this->tmp.'/diffs/eval.test-attempt-1.diff');
     }
+
+    public function testWritesAssistantErrorIntoLog(): void
+    {
+        $outcome = RunOutcomeBuilder::build(
+            assistantResult: AssistantRunResult::failure(
+                errorMessage: 'Codex session storage is not accessible.',
+                stdout: 'probe-stdout',
+                stderr: 'probe-stderr',
+            ),
+        );
+
+        $context = new ReportContext(
+            runId: 'assistant-error',
+            reportDirectory: $this->tmp,
+            adapter: 'codex',
+            mateEnabled: false,
+            model: null,
+            repeat: 1,
+            outcomes: [$outcome],
+            startedAt: new \DateTimeImmutable('now'),
+            finishedAt: new \DateTimeImmutable('now'),
+        );
+
+        (new ArtifactsWriter())->write($context);
+
+        $log = file_get_contents($this->tmp.'/logs/eval.test-attempt-1.log');
+        $this->assertNotFalse($log);
+        $this->assertStringContainsString('## ASSISTANT ERROR', $log);
+        $this->assertStringContainsString('Codex session storage is not accessible.', $log);
+    }
 }

@@ -44,6 +44,28 @@ class MateToolUsageEvaluator implements EvaluatorInterface
             );
         }
 
+        // any-of check: full score when at least one of the declared alternatives was called.
+        if ([] !== $mate->expectedToolsAny) {
+            $matched = array_values(array_intersect($mate->expectedToolsAny, $mate->toolNames));
+            $score = $mate->anyToolMatched ? EvaluationResult::MAX_SCORE : 0.0;
+
+            return new EvaluationResult(
+                name: self::NAME,
+                score: $score,
+                passed: $mate->anyToolMatched,
+                explanation: $mate->anyToolMatched
+                    ? \sprintf('Used at least one expected Mate tool: %s.', implode(', ', $matched))
+                    : \sprintf('None of the expected Mate tools were used (needed any of: %s).', implode(', ', $mate->expectedToolsAny)),
+                evidence: [
+                    'enabled' => true,
+                    'expected_any' => $mate->expectedToolsAny,
+                    'matched' => $matched,
+                    'tool_call_count' => $mate->toolCallCount,
+                    'tool_names' => $mate->toolNames,
+                ],
+            );
+        }
+
         $expected = $mate->expectedTools;
         if ([] === $expected) {
             $score = $mate->toolCallCount > 0 ? 4.0 : 1.0;

@@ -15,6 +15,7 @@ use MatesOfMate\Benchmark\Adapter\AssistantAdapterInterface;
 use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\AssistantRunResult;
 use MatesOfMate\Benchmark\Adapter\TokenUsage;
+use MatesOfMate\Benchmark\Adapter\ToolCall;
 use Symfony\AI\Platform\PlatformInterface;
 use Symfony\AI\Platform\Result\ResultInterface;
 
@@ -30,6 +31,8 @@ use Symfony\AI\Platform\Result\ResultInterface;
  */
 abstract class PlatformAdapter implements AssistantAdapterInterface
 {
+    private const TOOL_CALL_TRACES = 'tool_call_traces';
+
     public function __construct(
         protected readonly PlatformInterface $platform,
         protected readonly string $defaultModel,
@@ -57,15 +60,13 @@ abstract class PlatformAdapter implements AssistantAdapterInterface
         $durationMs = (microtime(true) - $start) * 1000.0;
         $stdout = $this->extractText($result);
         $tokens = $this->extractTokens($result);
+        $toolCalls = $this->extractToolCalls($result);
 
         return AssistantRunResult::success(
             stdout: $stdout,
             durationMs: $durationMs,
             tokenUsage: $tokens,
-            // Tool calls are intentionally empty: the platform's non-streaming
-            // path keeps only the final `result` event, so per-tool details
-            // are not surfaced. A streaming variant could populate this list.
-            toolCalls: [],
+            toolCalls: $toolCalls,
         );
     }
 
@@ -158,5 +159,93 @@ abstract class PlatformAdapter implements AssistantAdapterInterface
             outputTokens: $output,
             cachedTokens: $cached,
         );
+    }
+
+    /**
+     * @return list<ToolCall>
+     */
+    private function extractToolCalls(ResultInterface $result): array
+    {
+        $traces = $result->getMetadata()->get(self::TOOL_CALL_TRACES);
+        if (!\is_iterable($traces)) {
+            return [];
+        }
+
+        $toolCalls = [];
+
+        foreach ($traces as $trace) {
+            $normalized = $this->normalizeToolCallTrace($trace);
+            if (null === $normalized) {
+                continue;
+            }
+
+            $toolCalls[] = new ToolCall(
+                name: $normalized['name'],
+                arguments: $normalized['arguments'],
+                durationMs: $normalized['duration_ms'],
+                errored: $normalized['errored'],
+                startedAtMs: $normalized['started_at_ms'],
+            );
+        }
+
+        return $toolCalls;
+    }
+
+    /**
+     * @param mixed $trace
+     *
+     * @return array{
+     *     name: string,
+     *     arguments: array<string, mixed>,
+     *     started_at_ms: ?float,
+     *     duration_ms: ?float,
+     *     errored: bool
+     * }|null
+     */
+    private function normalizeToolCallTrace(mixed $trace): ?array
+    {
+        if (\is_array($trace)) {
+            $name = $trace['name'] ?? null;
+            if (!\is_string($name) || '' === $name) {
+                return null;
+            }
+
+            return [
+                'name' => $this->stripMcpPrefix($name),
+                'arguments' => \is_array($trace['arguments'] ?? null) ? $trace['arguments'] : [],
+                'started_at_ms' => \is_int($trace['started_at_ms'] ?? null) || \is_float($trace['started_at_ms'] ?? null) ? (float) $trace['started_at_ms'] : null,
+                'duration_ms' => \is_int($trace['duration_ms'] ?? null) || \is_float($trace['duration_ms'] ?? null) ? (float) $trace['duration_ms'] : null,
+                'errored' => true === ($trace['errored'] ?? false),
+            ];
+        }
+
+        if (!\is_object($trace) || !method_exists($trace, 'getName')) {
+            return null;
+        }
+
+        $name = $trace->getName();
+        if (!\is_string($name) || '' === $name) {
+            return null;
+        }
+
+        return [
+            'name' => $this->stripMcpPrefix($name),
+            'arguments' => method_exists($trace, 'getArguments') && \is_array($trace->getArguments()) ? $trace->getArguments() : [],
+            'started_at_ms' => method_exists($trace, 'getStartedAtMs') && (\is_int($trace->getStartedAtMs()) || \is_float($trace->getStartedAtMs())) ? (float) $trace->getStartedAtMs() : null,
+            'duration_ms' => method_exists($trace, 'getDurationMs') && (\is_int($trace->getDurationMs()) || \is_float($trace->getDurationMs())) ? (float) $trace->getDurationMs() : null,
+            'errored' => method_exists($trace, 'isErrored') ? true === $trace->isErrored() : false,
+        ];
+    }
+
+    /**
+     * Strip Claude Code's `mcp__<server>__` namespacing so MCP tool names match
+     * the bare names produced by other bridges (and by the scenarios'
+     * `expected_tool_calls`). Names without the prefix pass through unchanged.
+     */
+    private function stripMcpPrefix(string $name): string
+    {
+        // Non-greedy match stops at the first `__` after the server segment, so
+        // a tool name that itself contains `__` (rare) survives intact.
+        return (string) preg_replace('/^mcp__[A-Za-z0-9._-]+?__/', '', $name);
     }
 }

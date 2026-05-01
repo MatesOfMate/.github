@@ -12,6 +12,7 @@
 namespace MatesOfMate\Benchmark\Tests\Mate;
 
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
+use MatesOfMate\Benchmark\Mate\MateProvisionerInterface;
 use MatesOfMate\Benchmark\Runner\Workspace;
 use MatesOfMate\Benchmark\Scenario\Scenario;
 use PHPUnit\Framework\TestCase;
@@ -40,46 +41,79 @@ class MateConfigurationFactoryTest extends TestCase
         }
     }
 
-    public function testDisabledShortCircuits(): void
+    public function testDisabledShortCircuitsWithoutProvisioning(): void
+    {
+        $provisioner = $this->createMock(MateProvisionerInterface::class);
+        $provisioner->expects($this->never())->method('provision');
+
+        $factory = new MateConfigurationFactory($provisioner);
+        $config = $factory->create($this->workspace(), $this->scenario([]), enabled: false);
+
+        $this->assertFalse($config->enabled);
+        $this->assertNull($config->configPath);
+    }
+
+    public function testDisabledWorksWithoutAProvisioner(): void
     {
         $factory = new MateConfigurationFactory();
         $config = $factory->create($this->workspace(), $this->scenario([]), enabled: false);
 
         $this->assertFalse($config->enabled);
-        $this->assertFileDoesNotExist($this->tmp.'/.mate/config.json');
     }
 
-    public function testEnabledWritesConfigFileAndCarriesExpectedTools(): void
+    public function testEnabledDelegatesToProvisionerAndForwardsConfigPath(): void
     {
-        $factory = new MateConfigurationFactory();
-        $scenario = $this->scenario([
-            'expected' => [
-                'expected_tool_calls' => ['symfony_logs', 'symfony_logs', 'symfony_container'],
-            ],
-        ]);
+        $expectedConfigPath = $this->tmp.'/mcp.json';
 
-        $config = $factory->create($this->workspace(), $scenario, enabled: true);
+        $provisioner = $this->createMock(MateProvisionerInterface::class);
+        $provisioner->expects($this->once())
+            ->method('provision')
+            ->willReturn($expectedConfigPath);
+
+        $factory = new MateConfigurationFactory($provisioner);
+        $config = $factory->create(
+            $this->workspace(),
+            $this->scenario([
+                'expected' => [
+                    'expected_tool_calls' => ['symfony_logs', 'symfony_logs', 'symfony_container'],
+                ],
+            ]),
+            enabled: true,
+        );
 
         $this->assertTrue($config->enabled);
+        $this->assertSame($expectedConfigPath, $config->configPath);
         $this->assertSame(['symfony_logs', 'symfony_container'], $config->expectedTools);
-        $this->assertNotNull($config->configPath);
-        $this->assertFileExists($config->configPath);
-
-        $payload = json_decode((string) file_get_contents($config->configPath), true, 512, \JSON_THROW_ON_ERROR);
-        $this->assertSame(['symfony_logs', 'symfony_container'], $payload['expected_tools']);
-
-        $this->assertSame($config->configPath, $config->env[MateConfigurationFactory::ENV_CONFIG]);
+        $this->assertSame($expectedConfigPath, $config->env[MateConfigurationFactory::ENV_CONFIG]);
         $this->assertSame('1', $config->env[MateConfigurationFactory::ENV_ENABLED]);
     }
 
-    public function testEnabledWithoutExpectedToolsStillProducesConfig(): void
+    public function testEnabledExtractsExpectedToolsAny(): void
+    {
+        $provisioner = $this->createMock(MateProvisionerInterface::class);
+        $provisioner->method('provision')->willReturn($this->tmp.'/mcp.json');
+
+        $factory = new MateConfigurationFactory($provisioner);
+        $config = $factory->create(
+            $this->workspace(),
+            $this->scenario([
+                'expected' => [
+                    'expected_tool_calls_any' => ['monolog-search', 'monolog-tail'],
+                ],
+            ]),
+            enabled: true,
+        );
+
+        $this->assertSame([], $config->expectedTools);
+        $this->assertSame(['monolog-search', 'monolog-tail'], $config->expectedToolsAny);
+    }
+
+    public function testEnabledRequiresAProvisioner(): void
     {
         $factory = new MateConfigurationFactory();
-        $config = $factory->create($this->workspace(), $this->scenario([]), enabled: true);
 
-        $this->assertTrue($config->enabled);
-        $this->assertSame([], $config->expectedTools);
-        $this->assertFileExists((string) $config->configPath);
+        $this->expectException(\LogicException::class);
+        $factory->create($this->workspace(), $this->scenario([]), enabled: true);
     }
 
     private function workspace(): Workspace

@@ -15,6 +15,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -29,21 +30,44 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class BenchmarkCompareCommand extends Command
 {
+    public function __construct(
+        private readonly ?string $reportsDirectory = null,
+    ) {
+        parent::__construct();
+    }
+
     protected function configure(): void
     {
         $this
-            ->addArgument('left', InputArgument::REQUIRED, 'Path to the first results.json file.')
-            ->addArgument('right', InputArgument::REQUIRED, 'Path to the second results.json file.');
+            ->addArgument('left', InputArgument::OPTIONAL, 'Path to the first results.json file.')
+            ->addArgument('right', InputArgument::OPTIONAL, 'Path to the second results.json file.')
+            ->addOption('latest', 'l', InputOption::VALUE_NONE, 'Compare the two most recent results.json files in the reports directory.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $leftPath = (string) $input->getArgument('left');
-        $rightPath = (string) $input->getArgument('right');
+        $latest = (bool) $input->getOption('latest');
+        $leftArg = $input->getArgument('left');
+        $rightArg = $input->getArgument('right');
 
         try {
+            if ($latest) {
+                if (null !== $leftArg || null !== $rightArg) {
+                    throw new \RuntimeException('--latest cannot be combined with explicit "left"/"right" arguments.');
+                }
+
+                [$leftPath, $rightPath] = $this->findLatestPair();
+            } else {
+                if (null === $leftArg || null === $rightArg) {
+                    throw new \RuntimeException('Provide either --latest or both "left" and "right" arguments.');
+                }
+
+                $leftPath = (string) $leftArg;
+                $rightPath = (string) $rightArg;
+            }
+
             $left = $this->loadReport($leftPath);
             $right = $this->loadReport($rightPath);
         } catch (\RuntimeException $exception) {
@@ -58,6 +82,49 @@ class BenchmarkCompareCommand extends Command
         $this->renderSummary($io, $left, $right);
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * @return array{0: string, 1: string} The older report path first, newer second
+     */
+    private function findLatestPair(): array
+    {
+        if (null === $this->reportsDirectory) {
+            throw new \RuntimeException('Reports directory is not configured; pass paths explicitly.');
+        }
+
+        if (!is_dir($this->reportsDirectory)) {
+            throw new \RuntimeException(\sprintf('Reports directory "%s" does not exist.', $this->reportsDirectory));
+        }
+
+        // Run IDs are timestamp-prefixed (YYYYMMDD-HHMMSS-XXXX), so a reverse
+        // lexicographic sort gives newest-first without hitting the filesystem
+        // for mtimes.
+        $entries = (array) scandir($this->reportsDirectory, \SCANDIR_SORT_DESCENDING);
+        $candidates = [];
+        foreach ($entries as $entry) {
+            if (!\is_string($entry) || \in_array($entry, ['.', '..'], true)) {
+                continue;
+            }
+            $resultsPath = $this->reportsDirectory.'/'.$entry.'/results.json';
+            if (is_file($resultsPath)) {
+                $candidates[] = $resultsPath;
+                if (2 === \count($candidates)) {
+                    break;
+                }
+            }
+        }
+
+        if (\count($candidates) < 2) {
+            throw new \RuntimeException(\sprintf(
+                'Need at least two reports under "%s" to compare; found %d.',
+                $this->reportsDirectory,
+                \count($candidates),
+            ));
+        }
+
+        // Newest goes on the right so the diff reads "previous → latest".
+        return [$candidates[1], $candidates[0]];
     }
 
     /**

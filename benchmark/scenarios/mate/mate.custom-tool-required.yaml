@@ -10,25 +10,30 @@ fixture:
 task:
   prompt: |
     The application throws a runtime error during the verification test. The
-    failure has already been recorded by the application's logging stack — the
-    relevant message lives in `var/logs/runtime.log`. Use a Mate tool to read
-    that log (rather than guessing or rerunning the test repeatedly), identify
-    the missing service ID, then register it in `src/services.php` so the
-    verification test passes.
+    failure has already been recorded by the application's logging stack.
+    Use any MCP tools available to you to inspect the runtime logs and
+    identify the missing service ID — do not read the log files directly
+    from disk, and do not rerun the test repeatedly to infer the answer
+    from its output. Once you have the missing service ID, open
+    `src/Container.php` to confirm how services must be registered, then
+    add the registration to `src/services.php`. After applying your edit,
+    run `php tests/test.php` once to verify the fix works before finishing.
 
 expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - missing service registration
-    - service not found
+    - report.exporter
+    - registered
   expected_files_changed:
     - src/services.php
   forbidden_files_changed:
     - tests/test.php
     - var/logs/runtime.log
-  expected_tool_calls:
-    - symfony_logs
+  expected_tool_calls_any:
+    - monolog-search
+    - monolog-tail
+    - monolog-list-files
 
 evaluation:
   weights:

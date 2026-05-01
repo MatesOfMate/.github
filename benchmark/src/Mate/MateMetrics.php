@@ -24,6 +24,8 @@ readonly class MateMetrics
      * @param list<string> $toolNames
      * @param list<string> $expectedTools
      * @param list<string> $missingExpectedTools
+     * @param list<string> $expectedToolsAny
+     * @param bool         $anyToolMatched
      */
     public function __construct(
         public bool $enabled,
@@ -33,6 +35,8 @@ readonly class MateMetrics
         public int $toolErrors,
         public array $expectedTools = [],
         public array $missingExpectedTools = [],
+        public array $expectedToolsAny = [],
+        public bool $anyToolMatched = false,
     ) {
     }
 

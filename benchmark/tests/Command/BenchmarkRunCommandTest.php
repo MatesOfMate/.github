@@ -28,6 +28,7 @@ use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
 use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
 use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
+use MatesOfMate\Benchmark\Tests\Fixtures\Mate\FakeMateProvisioner;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -245,7 +246,7 @@ class BenchmarkRunCommandTest extends TestCase
             fixtureCopier: new FixtureCopier(),
             commandExecutor: $executor,
             diffCollector: new GitDiffCollector($executor),
-            mateConfigurationFactory: new MateConfigurationFactory(),
+            mateConfigurationFactory: new MateConfigurationFactory(new FakeMateProvisioner()),
             mateMetricsCollector: new MateMetricsCollector(),
             metricsAggregator: new MetricsAggregator(),
             evaluationPipeline: new EvaluationPipeline(),

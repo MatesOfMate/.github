@@ -19,6 +19,7 @@ use MatesOfMate\Benchmark\Adapter\ToolCall;
 use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
 use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
+use MatesOfMate\Benchmark\Mate\MateProvisionerInterface;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
 use MatesOfMate\Benchmark\Metrics\MetricsBag;
 use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
@@ -31,6 +32,7 @@ use MatesOfMate\Benchmark\Runner\ScenarioRunner;
 use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\Scenario;
 use PHPUnit\Framework\TestCase;
+use MatesOfMate\Benchmark\Tests\Fixtures\Mate\FakeMateProvisioner;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -188,12 +190,12 @@ class ScenarioRunnerTest extends TestCase
 
         $this->assertFalse($outcome->mateMetrics->enabled);
         $this->assertSame(0, $outcome->mateMetrics->toolCallCount);
-        $this->assertFileDoesNotExist($outcome->workspace->path.'/.mate/config.json');
+        $this->assertFileDoesNotExist($outcome->workspace->path.'/mcp.json');
     }
 
     public function testMateEnabledWritesConfigAndAggregatesToolCalls(): void
     {
-        $runner = $this->createRunner();
+        $runner = $this->createRunner(new FakeMateProvisioner());
         $scenario = $this->scenario([
             'fixture' => ['path' => $this->fixtureDir],
             'task' => ['prompt' => 'use mate'],
@@ -224,7 +226,7 @@ class ScenarioRunnerTest extends TestCase
         $this->assertSame(1500.0, $outcome->mateMetrics->firstToolCallMs);
         $this->assertSame(1, $outcome->mateMetrics->toolErrors);
         $this->assertSame(['symfony_container'], $outcome->mateMetrics->missingExpectedTools);
-        $this->assertFileExists($outcome->workspace->path.'/.mate/config.json');
+        $this->assertFileExists($outcome->workspace->path.'/mcp.json');
     }
 
     public function testOutcomeIncludesPopulatedMetricsBag(): void
@@ -293,7 +295,7 @@ class ScenarioRunnerTest extends TestCase
         $this->assertDirectoryExists($outcome->workspace->path);
     }
 
-    private function createRunner(): ScenarioRunner
+    private function createRunner(?MateProvisionerInterface $provisioner = null): ScenarioRunner
     {
         $executor = new CommandExecutor();
 
@@ -303,7 +305,7 @@ class ScenarioRunnerTest extends TestCase
             fixtureCopier: new FixtureCopier(),
             commandExecutor: $executor,
             diffCollector: new GitDiffCollector($executor),
-            mateConfigurationFactory: new MateConfigurationFactory(),
+            mateConfigurationFactory: new MateConfigurationFactory($provisioner ?? new FakeMateProvisioner()),
             mateMetricsCollector: new MateMetricsCollector(),
             metricsAggregator: new MetricsAggregator(),
             evaluationPipeline: new EvaluationPipeline(),

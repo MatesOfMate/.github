@@ -45,6 +45,9 @@ class MateMetricsCollector
         $expected = $configuration->expectedTools;
         $missing = [] === $expected ? [] : array_values(array_diff($expected, $names));
 
+        $expectedAny = $configuration->expectedToolsAny;
+        $anyMatched = [] !== $expectedAny && [] !== array_intersect($expectedAny, $names);
+
         return new MateMetrics(
             enabled: true,
             toolCallCount: \count($result->toolCalls),
@@ -53,6 +56,8 @@ class MateMetricsCollector
             toolErrors: $errors,
             expectedTools: $expected,
             missingExpectedTools: $missing,
+            expectedToolsAny: $expectedAny,
+            anyToolMatched: $anyMatched,
         );
     }
 }

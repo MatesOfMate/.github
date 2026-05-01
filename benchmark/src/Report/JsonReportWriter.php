@@ -125,6 +125,8 @@ class JsonReportWriter implements ReportWriterInterface
                 'tool_errors' => $outcome->mateMetrics->toolErrors,
                 'expected_tools' => $outcome->mateMetrics->expectedTools,
                 'missing_expected_tools' => $outcome->mateMetrics->missingExpectedTools,
+                'expected_tools_any' => $outcome->mateMetrics->expectedToolsAny,
+                'any_tool_matched' => $outcome->mateMetrics->anyToolMatched,
             ],
             'diff' => null === $diff ? null : [
                 'files_changed' => $diff->changedFiles,

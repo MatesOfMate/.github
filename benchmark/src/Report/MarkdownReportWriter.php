@@ -179,6 +179,7 @@ class MarkdownReportWriter implements ReportWriterInterface
     {
         $input = 0;
         $output = 0;
+        $cached = 0;
         $total = 0;
         $hasData = false;
 
@@ -190,6 +191,7 @@ class MarkdownReportWriter implements ReportWriterInterface
             $hasData = true;
             $input += $usage->inputTokens;
             $output += $usage->outputTokens;
+            $cached += $usage->cachedTokens;
             $total += $usage->totalTokens();
         }
 
@@ -198,9 +200,10 @@ class MarkdownReportWriter implements ReportWriterInterface
         }
 
         return \sprintf(
-            "## Token usage\n\n| Metric | Total |\n|---|---:|\n| input_tokens | %d |\n| output_tokens | %d |\n| total_tokens | %d |",
+            "## Token usage\n\n| Metric | Total |\n|---|---:|\n| input_tokens | %d |\n| output_tokens | %d |\n| cached_tokens | %d |\n| total_tokens | %d |",
             $input,
             $output,
+            $cached,
             $total,
         );
     }

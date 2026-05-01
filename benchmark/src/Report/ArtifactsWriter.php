@@ -64,6 +64,10 @@ class ArtifactsWriter implements ReportWriterInterface
         $sections[] = $this->section('BASELINE', $outcome->baselineResults);
         $sections[] = $this->section('VERIFY', $outcome->verificationResults);
 
+        if (null !== $outcome->assistantResult?->errorMessage) {
+            $sections[] = "## ASSISTANT ERROR\n".$outcome->assistantResult->errorMessage."\n";
+        }
+
         if (null !== $outcome->errorMessage) {
             $sections[] = "## ERROR\n".$outcome->errorMessage."\n";
         }

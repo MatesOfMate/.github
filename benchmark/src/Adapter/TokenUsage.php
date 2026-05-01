@@ -27,6 +27,6 @@ readonly class TokenUsage
 
     public function totalTokens(): int
     {
-        return $this->inputTokens + $this->outputTokens;
+        return $this->inputTokens + $this->outputTokens + $this->cachedTokens;
     }
 }

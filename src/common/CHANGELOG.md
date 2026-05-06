@@ -1,16 +1,6 @@
 CHANGELOG
 =========
 
-0.3.0
------
-
- * Remove obsolete Rector skip rule for SafeDeclareStrictTypesRector
-
-0.2.0
------
-
- * Maintain compatibility with matesofmate extension 0.2 releases
-
 0.1.0
 -----
 

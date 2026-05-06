@@ -10,6 +10,7 @@ Thumbs.db
 # Composer
 /vendor/
 composer.lock
+src/*/composer.lock
 
 # PHPUnit
 .phpunit.cache/

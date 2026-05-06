@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.3.0
+-----
+
+ * Remove obsolete Rector skip rule for SafeDeclareStrictTypesRector
+
 0.2.0
 -----
 

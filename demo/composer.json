@@ -19,8 +19,8 @@
         "matesofmate/composer-extension": "^0.2@dev",
         "matesofmate/phpstan-extension": "^0.2@dev",
         "matesofmate/phpunit-extension": "^0.2@dev",
-        "phpstan/phpstan": "^2.1.51",
-        "phpunit/phpunit": "^12.5.23",
+        "phpstan/phpstan": "^2.1.54",
+        "phpunit/phpunit": "^12.5.24",
         "psr/log": "^3.0.2",
         "symfony/ai-mate": "^0.8",
         "symfony/ai-monolog-mate-extension": "^0.8@dev",
@@ -29,6 +29,7 @@
     "config": {
         "allow-plugins": {
             "php-http/discovery": true,
+            "symfony/ai-mate-composer-plugin": true,
             "symfony/flex": true,
             "symfony/runtime": true
         },

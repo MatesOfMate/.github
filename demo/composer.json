@@ -15,10 +15,10 @@
         "symfony/yaml": "8.0.*"
     },
     "require-dev": {
-        "matesofmate/common": "^0.2@dev",
-        "matesofmate/composer-extension": "^0.2@dev",
-        "matesofmate/phpstan-extension": "^0.2@dev",
-        "matesofmate/phpunit-extension": "^0.2@dev",
+        "matesofmate/common": "^0.2",
+        "matesofmate/composer-extension": "^0.2",
+        "matesofmate/phpstan-extension": "^0.2",
+        "matesofmate/phpunit-extension": "^0.2",
         "phpstan/phpstan": "^2.1.54",
         "phpunit/phpunit": "^12.5.24",
         "psr/log": "^3.0.2",

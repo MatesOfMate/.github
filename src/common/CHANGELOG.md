@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.2.0
+-----
+
+ * Maintain compatibility with matesofmate extension 0.2 releases
+
 0.1.0
 -----
 

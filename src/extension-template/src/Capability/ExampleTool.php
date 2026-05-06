@@ -34,10 +34,7 @@ class ExampleTool
     /**
      * @param string|null $name optional name to personalize the greeting
      */
-    #[McpTool(
-        name: 'example-hello',
-        description: 'Return a greeting so the AI can verify the extension is wired correctly.'
-    )]
+    #[McpTool(name: 'example-hello', title: 'Example Hello', description: 'Return a greeting so the AI can verify the extension is wired correctly.')]
     public function execute(?string $name = null): string
     {
         return ResponseEncoder::encode([

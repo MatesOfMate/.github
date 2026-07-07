@@ -1,0 +1,2 @@
+[2026-04-27 19:55:01] app.ERROR: Service "report.exporter" was requested but is not registered. Stack: Container::get -> ReportRunner::run.
+[2026-04-27 19:55:02] app.ERROR: Service "report.exporter" was requested but is not registered. Retry failed.

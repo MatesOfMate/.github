@@ -1,0 +1,22 @@
+id: code.service-with-di
+suite: code-generation
+difficulty: medium
+
+fixture:
+  path: fixtures/code.service-with-di
+
+task:
+  prompt: |
+    `src/Container.php` is a tiny service container. `UserService` exists in
+    `src/UserService.php` but it is never registered with the container. Wire
+    it up (in whichever file makes sense for the design) and implement
+    `UserService::getName(int $id)` so it returns "Alice" for id 1, "Bob" for
+    id 2, and "unknown" otherwise.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  expected_files_changed:
+    - src/UserService.php
+  forbidden_files_changed:
+    - tests/test.php

@@ -1,0 +1,25 @@
+id: runtime.twig-variable-missing
+suite: runtime-debugging
+difficulty: medium
+
+fixture:
+  path: fixtures/runtime.twig-variable-missing
+
+task:
+  prompt: |
+    The render function in `src/Renderer.php` mimics a tiny Twig-like template
+    engine. The verification test exercises a template that references a
+    variable not present in the data and currently throws a runtime error.
+    Make the renderer tolerant: missing variables must produce an empty string
+    instead of an exception, and the test must pass.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - undefined variable
+    - missing template context
+  expected_files_changed:
+    - src/Renderer.php
+  forbidden_files_changed:
+    - tests/test.php

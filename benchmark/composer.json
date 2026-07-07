@@ -1,0 +1,92 @@
+{
+    "name": "matesofmate/benchmark",
+    "description": "Symfony AI Mate benchmark suite for evaluating AI assistants across code generation, bug finding, and tool usage scenarios.",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Johannes Wachter",
+            "email": "johannes@sulu.io"
+        }
+    ],
+    "require": {
+        "php": ">=8.3",
+        "justinrainbow/json-schema": "^6.0",
+        "symfony/ai-claude-code-platform": "^0.8@dev",
+        "symfony/ai-codex-platform": "^0.8@dev",
+        "symfony/ai-platform": "^0.8@dev",
+        "symfony/console": "^7.3|^8.0",
+        "symfony/filesystem": "^7.3|^8.0",
+        "symfony/finder": "^7.3|^8.0",
+        "symfony/process": "^7.3|^8.0",
+        "symfony/yaml": "^7.3|^8.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-platform": "0.8.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform/src/Bridge/Codex",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-codex-platform": "0.8.x-dev"
+                }
+            }
+        },
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/ai/mate-improvements/src/platform/src/Bridge/ClaudeCode",
+            "options": {
+                "symlink": true,
+                "versions": {
+                    "symfony/ai-claude-code-platform": "0.8.x-dev"
+                }
+            }
+        }
+    ],
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpunit/phpunit": "^10.5",
+        "rector/rector": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MatesOfMate\\Benchmark\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MatesOfMate\\Benchmark\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/console"],
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": [
+            "@composer validate --strict",
+            "vendor/bin/rector process --dry-run",
+            "vendor/bin/php-cs-fixer fix --dry-run --diff",
+            "vendor/bin/phpstan analyse"
+        ],
+        "fix": [
+            "vendor/bin/rector process",
+            "vendor/bin/php-cs-fixer fix"
+        ]
+    }
+}

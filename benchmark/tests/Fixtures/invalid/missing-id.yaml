@@ -1,0 +1,11 @@
+suite: bug-finding
+
+fixture:
+  path: fixtures/missing-id
+
+task:
+  prompt: Whatever.
+
+expected:
+  pass_commands:
+    - vendor/bin/phpunit

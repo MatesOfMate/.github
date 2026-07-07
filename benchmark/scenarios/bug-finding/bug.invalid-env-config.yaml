@@ -1,0 +1,25 @@
+id: bug.invalid-env-config
+suite: bug-finding
+difficulty: medium
+
+fixture:
+  path: fixtures/bug.invalid-env-config
+
+task:
+  prompt: |
+    The application reads database settings from `.env` via `src/Config.php`.
+    The verification test expects `Config::get('DB_HOST')` to return `localhost`
+    and `Config::get('DB_PORT')` to return `5432`, but a key is missing in the
+    env file and the loader silently returns the wrong default. Fix the
+    configuration so the test passes; touch only the env or config file as
+    needed.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - missing env variable
+  expected_files_changed:
+    - .env
+  forbidden_files_changed:
+    - tests/test.php

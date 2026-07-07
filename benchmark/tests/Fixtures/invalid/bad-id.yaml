@@ -1,0 +1,12 @@
+id: "Bad ID with spaces"
+suite: bug-finding
+
+fixture:
+  path: fixtures/bad-id
+
+task:
+  prompt: Whatever.
+
+expected:
+  pass_commands:
+    - vendor/bin/phpunit

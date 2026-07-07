@@ -1,0 +1,80 @@
+#!/usr/bin/env php
+<?php
+
+/*
+ * This file is part of the MatesOfMate Organisation.
+ *
+ * (c) Johannes Wachter <johannes@sulu.io>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+use MatesOfMate\Benchmark\Adapter\AdapterRegistry;
+use MatesOfMate\Benchmark\Adapter\ClaudeCodeAdapter;
+use MatesOfMate\Benchmark\Adapter\CodexAdapter;
+use MatesOfMate\Benchmark\Adapter\NullAdapter;
+use MatesOfMate\Benchmark\Command\BenchmarkCompareCommand;
+use MatesOfMate\Benchmark\Command\BenchmarkRunCommand;
+use MatesOfMate\Benchmark\Evaluator\EvaluationPipeline;
+use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
+use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
+use MatesOfMate\Benchmark\Mate\MateProvisioner;
+use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
+use MatesOfMate\Benchmark\Report\ReportPipeline;
+use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
+use MatesOfMate\Benchmark\Runner\CommandExecutor;
+use MatesOfMate\Benchmark\Runner\FixtureCopier;
+use MatesOfMate\Benchmark\Runner\GitDiffCollector;
+use MatesOfMate\Benchmark\Runner\ScenarioRunner;
+use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
+use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
+use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
+use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
+use Symfony\Component\Console\Application;
+
+require __DIR__.'/../vendor/autoload.php';
+
+$projectRoot = \dirname(__DIR__);
+$loader = new ScenarioLoader();
+$validator = new ScenarioValidator($projectRoot.'/schema/scenario.schema.json');
+$repository = new ScenarioRepository($projectRoot.'/scenarios', $loader, $validator);
+
+$workspaceFactory = new WorkspaceFactory($projectRoot.'/var/benchmark');
+$commandExecutor = new CommandExecutor();
+$diffCollector = new GitDiffCollector($commandExecutor);
+$fixtureCopier = new FixtureCopier();
+
+$runner = new ScenarioRunner(
+    projectRoot: $projectRoot,
+    workspaceFactory: $workspaceFactory,
+    fixtureCopier: $fixtureCopier,
+    commandExecutor: $commandExecutor,
+    diffCollector: $diffCollector,
+    mateConfigurationFactory: new MateConfigurationFactory(
+        MateProvisioner::withMonorepoDefaults(\dirname($projectRoot), $commandExecutor),
+    ),
+    mateMetricsCollector: new MateMetricsCollector(),
+    metricsAggregator: new MetricsAggregator(),
+    evaluationPipeline: new EvaluationPipeline(),
+    scoreCalculator: ScoreCalculator::withDefaults(),
+);
+
+$adapters = new AdapterRegistry([
+    new NullAdapter(),
+    ClaudeCodeAdapter::withDefaults(),
+    CodexAdapter::withDefaults(),
+]);
+
+$application = new Application('Symfony AI Mate Benchmark', '0.1.0');
+$application->addCommand(new BenchmarkCompareCommand($projectRoot.'/reports'));
+$application->addCommand(new BenchmarkRunCommand(
+    repository: $repository,
+    adapters: $adapters,
+    runner: $runner,
+    workspaceFactory: $workspaceFactory,
+    reportPipeline: new ReportPipeline(),
+    reportsDirectory: $projectRoot.'/reports',
+));
+$application->setDefaultCommand('list');
+$application->run();

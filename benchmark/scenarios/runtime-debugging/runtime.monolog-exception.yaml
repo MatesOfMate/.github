@@ -1,0 +1,24 @@
+id: runtime.monolog-exception
+suite: runtime-debugging
+difficulty: easy
+
+fixture:
+  path: fixtures/runtime.monolog-exception
+
+task:
+  prompt: |
+    `src/AuditLogger.php` calls a logger method with the wrong number of
+    arguments, causing a runtime exception during the verification test. Fix
+    the call so the audit message is logged correctly and the test passes.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  root_cause:
+    - argument mismatch
+    - wrong method signature
+  expected_files_changed:
+    - src/AuditLogger.php
+  forbidden_files_changed:
+    - tests/test.php
+    - src/SimpleLogger.php

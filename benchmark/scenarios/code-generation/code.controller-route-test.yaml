@@ -1,0 +1,22 @@
+id: code.controller-route-test
+suite: code-generation
+difficulty: easy
+
+fixture:
+  path: fixtures/code.controller-route-test
+
+task:
+  prompt: |
+    A tiny router lives in `src/Router.php`. The route `GET /hello` is registered
+    but its `HelloController::index()` returns nothing. Implement the controller
+    so it returns the body "Welcome" with HTTP status 200, then make sure the
+    verification test passes.
+
+expected:
+  pass_commands:
+    - php tests/test.php
+  expected_files_changed:
+    - src/HelloController.php
+  forbidden_files_changed:
+    - tests/test.php
+    - src/Router.php

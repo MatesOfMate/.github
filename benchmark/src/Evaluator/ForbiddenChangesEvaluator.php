@@ -28,10 +28,10 @@ class ForbiddenChangesEvaluator implements EvaluatorInterface
     public function evaluate(EvaluationInput $input): EvaluationResult
     {
         $forbidden = $input->scenario->expected['forbidden_files_changed'] ?? [];
-        $forbidden = \is_array($forbidden) ? array_values(array_filter($forbidden, 'is_string')) : [];
+        $forbidden = \is_array($forbidden) ? array_values(array_filter($forbidden, is_string(...))) : [];
 
         $diff = $input->outcome->diff;
-        $changed = null !== $diff ? $diff->changedFiles : [];
+        $changed = $diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult ? $diff->changedFiles : [];
 
         $violations = [];
         foreach ($changed as $path) {

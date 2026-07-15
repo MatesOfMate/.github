@@ -7,11 +7,10 @@ fixture:
 
 task:
   prompt: |
-    `src/Container.php` is a tiny service container. `UserService` exists in
-    `src/UserService.php` but it is never registered with the container. Wire
-    it up (in whichever file makes sense for the design) and implement
-    `UserService::getName(int $id)` so it returns "Alice" for id 1, "Bob" for
-    id 2, and "unknown" otherwise.
+    `src/Container.php` is a tiny service container, and the verification test
+    already wires `UserService` into it. The service itself is unfinished:
+    implement `UserService::getName(int $id)` in `src/UserService.php` so it
+    returns "Alice" for id 1, "Bob" for id 2, and "unknown" for any other id.
 
 expected:
   pass_commands:

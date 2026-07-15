@@ -37,7 +37,6 @@ class FixtureCopier
         $this->filesystem->mirror(
             $fixturePath,
             $workspace->path,
-            iterator: null,
             options: ['override' => true, 'copy_on_windows' => true, 'delete' => false],
         );
     }

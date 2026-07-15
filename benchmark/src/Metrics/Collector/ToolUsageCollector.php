@@ -24,7 +24,7 @@ class ToolUsageCollector implements MetricsCollectorInterface
     public function collect(MetricsContext $context): array
     {
         $assistant = $context->assistantResult;
-        $toolCalls = $assistant?->toolCalls ?? [];
+        $toolCalls = $assistant->toolCalls ?? [];
         $callCount = \count($toolCalls);
 
         $errors = 0;

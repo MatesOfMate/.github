@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ScenarioValidatorTest extends TestCase
 {
-    private const SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
+    private const string SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
 
     public function testValidScenarioPassesValidation(): void
     {

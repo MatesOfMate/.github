@@ -72,6 +72,8 @@ class ScenarioRunner
         $errorMessage = null;
         $mateConfig = MateConfiguration::disabled();
 
+        $baselineRedResults = [];
+
         try {
             $this->copyFixture($scenario, $workspace);
 
@@ -80,21 +82,41 @@ class ScenarioRunner
             $setupResults = $this->runCommands($scenario->fixture['setup'] ?? [], $workspace, mustSucceed: true, stage: 'setup');
             $baselineResults = $this->runCommands($scenario->fixture['baseline'] ?? [], $workspace, mustSucceed: false, stage: 'baseline');
 
-            // Provision Mate config before sealing so it becomes part of the
-            // starting workspace state, not part of the AI-attributed diff.
-            $mateConfig = $this->mateConfigurationFactory->create($workspace, $scenario, $request->mateEnabled);
+            // Red-check: the verification commands must FAIL before the
+            // assistant runs, otherwise the scenario proves nothing. Runs
+            // before sealing so any artefacts become baseline state.
+            $baselineRedResults = $this->runCommands($scenario->expected['pass_commands'] ?? [], $workspace, mustSucceed: false, stage: 'baseline-red');
 
-            $this->diffCollector->seal($workspace);
+            if ([] !== $baselineRedResults && $this->allSuccessful($baselineRedResults)) {
+                $status = RunStatus::InvalidScenario;
+                $errorMessage = 'All pass_commands already succeed before the assistant ran; the scenario does not reproduce a failure.';
+            } else {
+                // Provision Mate config before sealing so it becomes part of the
+                // starting workspace state, not part of the AI-attributed diff.
+                $mateConfig = $this->mateConfigurationFactory->create($workspace, $scenario, $request->mateEnabled);
 
-            $assistantResult = $this->invokeAdapter($request, $workspace, $mateConfig);
+                $this->diffCollector->seal($workspace);
 
-            $diff = $this->diffCollector->collect($workspace);
+                $assistantResult = $this->invokeAdapter($request, $workspace, $mateConfig);
 
-            $verificationResults = $this->runCommands($scenario->expected['pass_commands'] ?? [], $workspace, mustSucceed: false, stage: 'verify');
+                $diff = $this->diffCollector->collect($workspace);
 
-            $mateMetrics = $this->mateMetricsCollector->collect($assistantResult, $mateConfig);
+                // Cheat-proof verification: protected files (typically the
+                // tests) are restored to their baseline content, so editing
+                // them cannot fake a pass. The tampering itself stays visible
+                // in the collected diff and is gated by forbidden_changes.
+                $this->diffCollector->restoreFiles($workspace, $this->forbiddenFiles($scenario));
 
-            $status = $this->classify($assistantResult, $verificationResults);
+                $verificationResults = $this->runCommands($scenario->expected['pass_commands'] ?? [], $workspace, mustSucceed: false, stage: 'verify');
+
+                $mateMetrics = $this->mateMetricsCollector->collect($assistantResult, $mateConfig);
+
+                $status = $this->classify($assistantResult, $verificationResults);
+
+                if (RunStatus::AdapterError === $status) {
+                    $errorMessage = $assistantResult->errorMessage ?? 'Adapter reported an unsuccessful run.';
+                }
+            }
         } catch (CommandFailedException $exception) {
             $status = RunStatus::SetupError;
             $errorMessage = $exception->getMessage();
@@ -131,6 +153,7 @@ class ScenarioRunner
             metrics: $metrics,
             totalDurationMs: $totalDurationMs,
             errorMessage: $errorMessage,
+            baselineRedResults: $baselineRedResults,
         );
 
         $evaluations = $this->evaluationPipeline->evaluate(new EvaluationInput($scenario, $outcome));
@@ -169,10 +192,12 @@ class ScenarioRunner
         $results = [];
 
         foreach ($commands as $command) {
-            if (!\is_string($command) || '' === trim($command)) {
+            if (!\is_string($command)) {
                 continue;
             }
-
+            if ('' === trim($command)) {
+                continue;
+            }
             $results[] = $mustSucceed
                 ? $this->commandExecutor->mustExecute($command, $workspace->path, $stage)
                 : $this->commandExecutor->execute($command, $workspace->path);
@@ -181,9 +206,62 @@ class ScenarioRunner
         return $results;
     }
 
+    /**
+     * @param list<CommandResult> $results
+     */
+    private function allSuccessful(array $results): bool
+    {
+        foreach ($results as $result) {
+            if (!$result->successful()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function forbiddenFiles(Scenario $scenario): array
+    {
+        $raw = $scenario->expected['forbidden_files_changed'] ?? [];
+        if (!\is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_filter($raw, static fn ($file): bool => \is_string($file) && '' !== trim($file)));
+    }
+
+    /**
+     * Append a standardised context block so every assistant gets the same
+     * ground rules: how the work is verified and which files are protected.
+     * Benchmarks measure ability, not guessing the harness.
+     */
+    private function buildPrompt(Scenario $scenario): string
+    {
+        $prompt = trim((string) ($scenario->task['prompt'] ?? ''));
+
+        $lines = [];
+
+        $passCommands = array_values(array_filter($scenario->expected['pass_commands'] ?? [], is_string(...)));
+        if ([] !== $passCommands) {
+            $lines[] = 'Your work is verified with: '.implode(' && ', array_map(static fn (string $command): string => '`'.$command.'`', $passCommands)).'. Run it yourself to confirm before finishing.';
+        }
+
+        $forbidden = $this->forbiddenFiles($scenario);
+        if ([] !== $forbidden) {
+            $lines[] = 'You must not modify: '.implode(', ', array_map(static fn (string $file): string => '`'.$file.'`', $forbidden)).'.';
+        }
+
+        $lines[] = 'Work only inside the current directory.';
+
+        return $prompt."\n\n---\nBenchmark rules:\n- ".implode("\n- ", $lines)."\n";
+    }
+
     private function invokeAdapter(RunRequest $request, Workspace $workspace, MateConfiguration $mateConfig): AssistantRunResult
     {
-        $prompt = (string) ($request->scenario->task['prompt'] ?? '');
+        $prompt = $this->buildPrompt($request->scenario);
         $timeout = (int) ($request->scenario->task['timeout_seconds'] ?? 600);
 
         $input = new AssistantRunInput(

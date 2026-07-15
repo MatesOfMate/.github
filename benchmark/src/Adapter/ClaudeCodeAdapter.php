@@ -11,7 +11,6 @@
 
 namespace MatesOfMate\Benchmark\Adapter;
 
-use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\Platform\PlatformAdapter;
 use Symfony\AI\Platform\Bridge\ClaudeCode\Factory as ClaudeCodeFactory;
 use Symfony\AI\Platform\PlatformInterface;
@@ -34,23 +33,27 @@ class ClaudeCodeAdapter extends PlatformAdapter
     public const DEFAULT_MODEL = 'sonnet';
     public const ENV_BINARY = 'BENCHMARK_CLAUDE_BIN';
 
+    /**
+     * @param (\Closure(float): PlatformInterface)|null $platformFactory
+     */
+    public function __construct(PlatformInterface $platform, string $defaultModel = self::DEFAULT_MODEL, private readonly ?\Closure $platformFactory = null)
+    {
+        parent::__construct($platform, $defaultModel);
+    }
+
     public static function withDefaults(): self
     {
         $binary = getenv(self::ENV_BINARY);
+        $cliBinary = false === $binary || '' === $binary ? null : $binary;
 
-        return new self(ClaudeCodeFactory::createPlatform(
-            cliBinary: false === $binary || '' === $binary ? null : $binary,
-            // 300s is enough headroom for the slowest scenarios in practice
-            // while still failing fast on stalls (we observed Claude looping
-            // for 10+ minutes without reaching `--mate=disabled` scenarios
-            // that depend on MCP tools).
-            timeout: 300,
-        ));
-    }
+        $factory = static fn (float $timeout): PlatformInterface => ClaudeCodeFactory::createPlatform(
+            cliBinary: $cliBinary,
+            timeout: $timeout,
+        );
 
-    public function __construct(PlatformInterface $platform, string $defaultModel = self::DEFAULT_MODEL)
-    {
-        parent::__construct($platform, $defaultModel);
+        // The concrete platform is rebuilt per run so the scenario's
+        // task.timeout_seconds actually bounds the CLI subprocess.
+        return new self($factory(300.0), platformFactory: $factory);
     }
 
     public function name(): string
@@ -58,10 +61,17 @@ class ClaudeCodeAdapter extends PlatformAdapter
         return self::NAME;
     }
 
+    #[\Override]
     public function run(AssistantRunInput $input): AssistantRunResult
     {
+        if ($this->platformFactory instanceof \Closure) {
+            $platform = ($this->platformFactory)((float) max($input->timeoutSeconds, 60));
+
+            return (new self($platform, $this->defaultModel))->run($input);
+        }
+
         $authFailure = $this->preflightAuthenticationCheck();
-        if (null !== $authFailure) {
+        if ($authFailure instanceof AssistantRunResult) {
             return $authFailure;
         }
 
@@ -71,6 +81,7 @@ class ClaudeCodeAdapter extends PlatformAdapter
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     protected function buildOptions(AssistantRunInput $input): array
     {
         $options = parent::buildOptions($input);
@@ -85,6 +96,10 @@ class ClaudeCodeAdapter extends PlatformAdapter
         // referencing a sibling run's workspace mid-prompt). Each scenario
         // attempt must start from a clean slate.
         $options['no_session_persistence'] = true;
+        // Only the benchmark-provisioned MCP servers may be visible; without
+        // this the developer's personal MCP configuration leaks into every
+        // run and contaminates tool-usage metrics.
+        $options['strict_mcp_config'] = true;
 
         return $options;
     }
@@ -110,9 +125,9 @@ class ClaudeCodeAdapter extends PlatformAdapter
         if (\is_array($status) && false === ($status['loggedIn'] ?? true)) {
             return AssistantRunResult::failure(
                 errorMessage: 'Claude CLI is not authenticated. Run `claude auth login` before benchmarking.',
+                exitCode: $process->getExitCode() ?? -1,
                 stdout: $stdout,
                 stderr: $stderr,
-                exitCode: $process->getExitCode() ?? -1,
             );
         }
 

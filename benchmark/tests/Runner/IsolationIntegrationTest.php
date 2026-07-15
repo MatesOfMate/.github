@@ -26,7 +26,7 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class IsolationIntegrationTest extends TestCase
 {
-    private const FIXTURE_PATH = __DIR__.'/../Fixtures/sample-fixture';
+    private const string FIXTURE_PATH = __DIR__.'/../Fixtures/sample-fixture';
 
     private string $tmp;
 

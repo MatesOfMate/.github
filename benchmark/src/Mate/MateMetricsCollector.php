@@ -29,8 +29,16 @@ class MateMetricsCollector
         $names = [];
         $errors = 0;
         $firstCallMs = null;
+        $mateCallCount = 0;
 
         foreach ($result->toolCalls as $call) {
+            // Only MCP-namespaced calls are Mate usage. Built-in tools
+            // (Read/Bash/Edit/...) must not earn Mate credit.
+            if (!$call->mcp) {
+                continue;
+            }
+
+            ++$mateCallCount;
             $names[] = $call->name;
 
             if ($call->errored) {
@@ -50,7 +58,7 @@ class MateMetricsCollector
 
         return new MateMetrics(
             enabled: true,
-            toolCallCount: \count($result->toolCalls),
+            toolCallCount: $mateCallCount,
             toolNames: array_values(array_unique($names)),
             firstToolCallMs: $firstCallMs,
             toolErrors: $errors,

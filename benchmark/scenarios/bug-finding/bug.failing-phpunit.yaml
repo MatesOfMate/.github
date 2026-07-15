@@ -15,8 +15,7 @@ expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - off-by
-    - wrong operator
+    - ["subtract", "subtracts", "subtracting", "subtraction", "minus", "- instead of +", "wrong operator", "wrong sign"]
   expected_files_changed:
     - src/Calculator.php
   forbidden_files_changed:

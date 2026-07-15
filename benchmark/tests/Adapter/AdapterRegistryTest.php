@@ -65,8 +65,8 @@ class AdapterRegistryTest extends TestCase
 
     private function makeAdapter(string $name): AssistantAdapterInterface
     {
-        return new class($name) implements AssistantAdapterInterface {
-            public function __construct(private readonly string $name)
+        return new readonly class($name) implements AssistantAdapterInterface {
+            public function __construct(private string $name)
             {
             }
 

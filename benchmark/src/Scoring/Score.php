@@ -22,10 +22,12 @@ readonly class Score
     public const MAX = 5.0;
 
     /**
-     * @param array<string, float|null> $perCategory     Score per category; null means no evaluator data
-     * @param array<string, float>      $weights         Normalised weights actually used
+     * @param array<string, float|null> $perCategory       Score per category; null means no evaluator data
+     * @param array<string, float>      $weights           Normalised weights actually used
      * @param list<string>              $missingEvaluators
-     * @param array<string, float>      $gatePenalties   Multipliers applied due to gate-evaluator failures
+     * @param array<string, float>      $gatePenalties     Multipliers applied due to gate-evaluator failures
+     * @param list<string>              $notApplicable     Categories excluded from scoring for this run
+     * @param array<string, float>      $effectiveWeights  Renormalised weights actually applied after exclusions
      */
     public function __construct(
         public float $finalScore,
@@ -34,6 +36,8 @@ readonly class Score
         public array $weights,
         public array $missingEvaluators = [],
         public array $gatePenalties = [],
+        public array $notApplicable = [],
+        public array $effectiveWeights = [],
     ) {
     }
 

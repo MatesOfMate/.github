@@ -7,7 +7,6 @@ class HelloController
      */
     public function index(): array
     {
-        // TODO: return [200, 'Welcome'].
         return [];
     }
 }

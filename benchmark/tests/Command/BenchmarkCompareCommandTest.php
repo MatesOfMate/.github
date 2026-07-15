@@ -71,9 +71,112 @@ class BenchmarkCompareCommandTest extends TestCase
         $this->assertStringContainsString('5000ms → 4000ms', $output);
         $this->assertStringContainsString('1500 → 1300', $output);
         $this->assertStringContainsString('+0.50', $output);
+        $this->assertStringContainsString('pass rate:', $output);
+        $this->assertStringContainsString('100.0% → 100.0%', $output);
     }
 
-    public function testHandlesMissingScenariosOnEitherSide(): void
+    public function testRendersPerCategoryScoreDeltas(): void
+    {
+        $left = $this->writeReport('left.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 3.0],
+            'scenarios' => [
+                $this->scenario('bug.failing-phpunit', 3.0, 1000, 5000.0, 1, perCategory: [
+                    'functional' => 3.0,
+                    'root_cause' => 2.0,
+                    'efficiency' => null,
+                ]),
+            ],
+        ]);
+        $right = $this->writeReport('right.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 4.5],
+            'scenarios' => [
+                $this->scenario('bug.failing-phpunit', 4.5, 900, 4000.0, 2, perCategory: [
+                    'functional' => 5.0,
+                    'root_cause' => 2.0,
+                    'efficiency' => 4.0,
+                ]),
+            ],
+        ]);
+
+        $tester = new CommandTester(new BenchmarkCompareCommand());
+        $exit = $tester->execute(['left' => $left, 'right' => $right]);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('functional +2.00', $output);
+        $this->assertStringContainsString('root_cause +0.00', $output);
+        // Null on one side (not applicable) renders as an explicit one-sided pair.
+        $this->assertStringContainsString('efficiency —→4.00', $output);
+    }
+
+    public function testRendersCostDeltaWhenBothRunsReportCost(): void
+    {
+        $left = $this->writeReport('left.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 4.0],
+            'scenarios' => [$this->scenario('bug.failing-phpunit', 4.0, 1000, 5000.0, 1, cost: 0.10)],
+        ]);
+        $right = $this->writeReport('right.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 4.5],
+            'scenarios' => [$this->scenario('bug.failing-phpunit', 4.5, 900, 4000.0, 2, cost: 0.25)],
+        ]);
+
+        $tester = new CommandTester(new BenchmarkCompareCommand());
+        $tester->execute(['left' => $left, 'right' => $right]);
+
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('cost:', $output);
+        $this->assertStringContainsString('$0.1000 → $0.2500', $output);
+        $this->assertStringContainsString('+0.1500 USD', $output);
+    }
+
+    public function testCostDeltaIsOmittedWhenOnlyOneRunReportsCost(): void
+    {
+        $left = $this->writeReport('left.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 4.0],
+            'scenarios' => [$this->scenario('bug.failing-phpunit', 4.0, 1000, 5000.0, 1)],
+        ]);
+        $right = $this->writeReport('right.json', [
+            'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 4.5],
+            'scenarios' => [$this->scenario('bug.failing-phpunit', 4.5, 900, 4000.0, 2, cost: 0.25)],
+        ]);
+
+        $tester = new CommandTester(new BenchmarkCompareCommand());
+        $tester->execute(['left' => $left, 'right' => $right]);
+
+        $this->assertStringNotContainsString('cost:', $tester->getDisplay());
+    }
+
+    public function testWarnsAndComparesIntersectionWhenScenarioIdSetsDiffer(): void
+    {
+        $left = $this->writeReport('left.json', [
+            'summary' => ['total' => 2, 'passed' => 2, 'failed' => 0, 'errors' => 0, 'average_score' => 4.5],
+            'scenarios' => [
+                $this->scenario('shared.scenario', 4.0, 100, 50.0, 0),
+                $this->scenario('only.left', 5.0, 100, 50.0, 0),
+            ],
+        ]);
+        $right = $this->writeReport('right.json', [
+            'summary' => ['total' => 2, 'passed' => 1, 'failed' => 1, 'errors' => 0, 'average_score' => 2.5],
+            'scenarios' => [
+                $this->scenario('shared.scenario', 4.5, 90, 40.0, 0),
+                $this->scenario('only.right', 1.0, 200, 80.0, 0),
+            ],
+        ]);
+
+        $tester = new CommandTester(new BenchmarkCompareCommand());
+        $exit = $tester->execute(['left' => $left, 'right' => $right]);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('different scenario id sets', $output);
+        $this->assertStringContainsString('Only in left: only.left', $output);
+        $this->assertStringContainsString('Only in right: only.right', $output);
+        // The intersection is still compared.
+        $this->assertStringContainsString('shared.scenario', $output);
+        $this->assertStringContainsString('4.00 → 4.50', $output);
+    }
+
+    public function testHandlesEntirelyDisjointScenarioSets(): void
     {
         $left = $this->writeReport('left.json', [
             'summary' => ['total' => 1, 'passed' => 1, 'failed' => 0, 'errors' => 0, 'average_score' => 5.0],
@@ -85,12 +188,13 @@ class BenchmarkCompareCommandTest extends TestCase
         ]);
 
         $tester = new CommandTester(new BenchmarkCompareCommand());
-        $tester->execute(['left' => $left, 'right' => $right]);
+        $exit = $tester->execute(['left' => $left, 'right' => $right]);
 
+        $this->assertSame(Command::SUCCESS, $exit);
         $output = $tester->getDisplay();
-        $this->assertStringContainsString('only.left', $output);
-        $this->assertStringContainsString('only.right', $output);
-        $this->assertStringContainsString('— →', $output);
+        $this->assertStringContainsString('Only in left: only.left', $output);
+        $this->assertStringContainsString('Only in right: only.right', $output);
+        $this->assertStringContainsString('No overlapping scenarios to compare', $output);
     }
 
     public function testMissingFileReturnsInvalid(): void
@@ -238,17 +342,24 @@ class BenchmarkCompareCommandTest extends TestCase
     }
 
     /**
+     * @param array<string, float|null> $perCategory
+     *
      * @return array<string, mixed>
      */
-    private function scenario(string $id, float $score, int $tokens, float $durationMs, int $mateCalls): array
+    private function scenario(string $id, float $score, int $tokens, float $durationMs, int $mateCalls, array $perCategory = [], ?float $cost = null): array
     {
+        $metrics = ['total_tokens' => $tokens];
+        if (null !== $cost) {
+            $metrics['cost_usd'] = $cost;
+        }
+
         return [
             'id' => $id,
             'attempt' => 1,
             'status' => 'passed',
             'duration_ms' => $durationMs,
-            'score' => ['final' => $score],
-            'metrics' => ['total_tokens' => $tokens],
+            'score' => ['final' => $score, 'per_category' => $perCategory],
+            'metrics' => $metrics,
             'mate' => ['enabled' => true, 'tool_call_count' => $mateCalls],
         ];
     }

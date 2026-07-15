@@ -11,7 +11,6 @@
 
 namespace MatesOfMate\Benchmark\Adapter;
 
-use MatesOfMate\Benchmark\Adapter\AssistantRunInput;
 use MatesOfMate\Benchmark\Adapter\Platform\PlatformAdapter;
 use Symfony\AI\Platform\Bridge\Codex\Factory as CodexFactory;
 use Symfony\AI\Platform\PlatformInterface;
@@ -33,6 +32,15 @@ class CodexAdapter extends PlatformAdapter
     public const DEFAULT_MODEL = 'gpt-5.3-codex';
     public const ENV_BINARY = 'BENCHMARK_CODEX_BIN';
 
+    public function __construct(
+        PlatformInterface $platform,
+        string $defaultModel = self::DEFAULT_MODEL,
+        private readonly ?string $configuredBinary = null,
+        private readonly bool $dynamicBinaryResolution = false,
+    ) {
+        parent::__construct($platform, $defaultModel);
+    }
+
     public static function withDefaults(): self
     {
         $binary = getenv(self::ENV_BINARY);
@@ -44,44 +52,35 @@ class CodexAdapter extends PlatformAdapter
         ), configuredBinary: false === $binary || '' === $binary ? null : $binary, dynamicBinaryResolution: true);
     }
 
-    public function __construct(
-        PlatformInterface $platform,
-        string $defaultModel = self::DEFAULT_MODEL,
-        private readonly ?string $configuredBinary = null,
-        private readonly float $timeout = 600,
-        private readonly bool $dynamicBinaryResolution = false,
-    )
-    {
-        parent::__construct($platform, $defaultModel);
-    }
-
     public function name(): string
     {
         return self::NAME;
     }
 
+    #[\Override]
     public function run(AssistantRunInput $input): AssistantRunResult
     {
         $sessionFailure = $this->preflightSessionStorageCheck();
-        if (null !== $sessionFailure) {
+        if ($sessionFailure instanceof AssistantRunResult) {
             return $sessionFailure;
         }
 
         if ($this->dynamicBinaryResolution) {
+            // Rebuild the platform per run so both the resolved binary and the
+            // scenario's task.timeout_seconds are honored by the subprocess.
             $binary = $this->resolveCliBinary($input);
-            if ($binary !== $this->configuredBinary) {
-                return (new self(
-                    CodexFactory::createPlatform(
-                        cliBinary: $binary,
-                        timeout: $this->timeout,
-                        environment: self::isolatedCodexEnvironment(),
-                    ),
-                    $this->defaultModel,
-                    $binary,
-                    $this->timeout,
-                    false,
-                ))->run($input);
-            }
+            $timeout = (float) max($input->timeoutSeconds, 60);
+
+            return (new self(
+                CodexFactory::createPlatform(
+                    cliBinary: $binary,
+                    timeout: $timeout,
+                    environment: self::isolatedCodexEnvironment(),
+                ),
+                $this->defaultModel,
+                $binary,
+                false,
+            ))->run($input);
         }
 
         return parent::run($input);
@@ -90,6 +89,7 @@ class CodexAdapter extends PlatformAdapter
     /**
      * @return array<string, mixed>
      */
+    #[\Override]
     protected function buildOptions(AssistantRunInput $input): array
     {
         $options = parent::buildOptions($input);
@@ -188,7 +188,7 @@ class CodexAdapter extends PlatformAdapter
         $probePath = $directory.'/.benchmark-codex-write-probe-'.bin2hex(random_bytes(8));
 
         try {
-            $handle = @fopen($probePath, 'wb');
+            $handle = @fopen($probePath, 'w');
             if (false === $handle) {
                 return false;
             }
@@ -223,10 +223,15 @@ class CodexAdapter extends PlatformAdapter
         $overrides = [];
 
         foreach ($servers as $name => $server) {
-            if (!\is_string($name) || '' === $name || !\is_array($server)) {
+            if (!\is_string($name)) {
                 continue;
             }
-
+            if ('' === $name) {
+                continue;
+            }
+            if (!\is_array($server)) {
+                continue;
+            }
             $normalizedName = str_replace('-', '_', $name);
             $command = $server['command'] ?? null;
             if (!\is_string($command) || '' === $command) {

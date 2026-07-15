@@ -36,24 +36,38 @@ class MateProvisioner implements MateProvisionerInterface
     public const COMPOSER_TIMEOUT_SECONDS = 600;
     public const MATE_TIMEOUT_SECONDS = 120;
     public const MCP_CONFIG_FILE = 'mcp.json';
-    private const DEFAULT_LOCAL_SYMFONY_AI_ROOT = '/Users/johannes/Development/ai/mate-improvements';
+    private const string DEFAULT_LOCAL_SYMFONY_AI_ROOT = '/Users/johannes/Development/ai/mate-improvements';
+    private const string SYMFONY_AI_MATE_VERSION = '0.10.x-dev';
+    private const string SYMFONY_AI_MATE_CONSTRAINT = '^0.10@dev';
+
+    public const ENV_KEEP_INSTRUCTIONS = 'BENCHMARK_MATE_KEEP_INSTRUCTIONS';
 
     /**
      * @param list<array{name: string, path: string, version?: string}> $localPackages
      * @param array<string, string>                                     $requirements
+     * @param bool                                                      $keepAgentInstructions when true, the `AGENTS.md`
+     *                                                                                         block and `mate/AGENT_INSTRUCTIONS.md`
+     *                                                                                         produced by `mate discover` are left
+     *                                                                                         in place so the assistant is tested
+     *                                                                                         with Mate exactly as it ships
      */
     public function __construct(
         private readonly CommandExecutor $commandExecutor,
         private readonly Filesystem $filesystem,
         private readonly array $localPackages,
         private readonly array $requirements,
+        private readonly bool $keepAgentInstructions = false,
     ) {
     }
 
     public static function withMonorepoDefaults(string $monorepoRoot, ?CommandExecutor $commandExecutor = null, ?Filesystem $filesystem = null): self
     {
         $monorepoRoot = rtrim($monorepoRoot, '/');
-        $symfonyAiRoot = getenv('BENCHMARK_LOCAL_SYMFONY_AI_ROOT');
+        $symfonyAiRoot = getenv('BENCHMARK_SYMFONY_AI_ROOT');
+        if (false === $symfonyAiRoot || '' === $symfonyAiRoot) {
+            // Legacy name, kept for backwards compatibility.
+            $symfonyAiRoot = getenv('BENCHMARK_LOCAL_SYMFONY_AI_ROOT');
+        }
         if (false === $symfonyAiRoot || '' === $symfonyAiRoot) {
             $symfonyAiRoot = self::DEFAULT_LOCAL_SYMFONY_AI_ROOT;
         }
@@ -70,15 +84,26 @@ class MateProvisioner implements MateProvisionerInterface
             ], self::symfonyAiMatePackages($symfonyAiRoot)),
             requirements: [
                 'php' => '>=8.3',
-                'symfony/ai-mate' => '^0.8@dev',
-                'symfony/ai-monolog-mate-extension' => '^0.8@dev',
-                'symfony/ai-symfony-mate-extension' => '^0.8@dev',
+                'symfony/ai-mate' => self::SYMFONY_AI_MATE_CONSTRAINT,
+                'symfony/ai-monolog-mate-extension' => self::SYMFONY_AI_MATE_CONSTRAINT,
+                'symfony/ai-symfony-mate-extension' => self::SYMFONY_AI_MATE_CONSTRAINT,
                 'matesofmate/common' => '@dev',
                 'matesofmate/composer-extension' => '@dev',
                 'matesofmate/phpunit-extension' => '@dev',
                 'matesofmate/phpstan-extension' => '@dev',
             ],
+            keepAgentInstructions: self::envFlag(self::ENV_KEEP_INSTRUCTIONS),
         );
+    }
+
+    /**
+     * Reads a boolean-ish environment flag (`1`, `true`, `yes`, `on`).
+     */
+    private static function envFlag(string $name): bool
+    {
+        $value = getenv($name);
+
+        return \is_string($value) && \in_array(strtolower(trim($value)), ['1', 'true', 'yes', 'on'], true);
     }
 
     /**
@@ -116,21 +141,23 @@ class MateProvisioner implements MateProvisionerInterface
         );
 
         // `mate discover` writes `mate/AGENT_INSTRUCTIONS.md` and a managed
-        // block in `AGENTS.md` describing every available extension. Both
-        // files are auto-ingested by the assistants we benchmark (Codex reads
-        // AGENTS.md, Claude reads CLAUDE.md/AGENTS.md from cwd), which would
-        // pre-load tool guidance into the model's context and contaminate the
-        // scenario. The MCP server itself does not need these files at runtime
-        // — they are pure agent-facing documentation — so we remove them.
-        $this->stripAgentDocumentation($workspace);
+        // block in `AGENTS.md` describing every available extension. Both files
+        // are auto-ingested by the assistants we benchmark (Codex reads
+        // AGENTS.md, Claude reads CLAUDE.md/AGENTS.md from cwd), so they tell
+        // the model which Mate tools to prefer over raw shell.
+        //
+        // Keeping them tests Mate exactly as it ships (tools + self-advertised
+        // usage guidance); stripping them tests whether the tools win on their
+        // own merit without any prompting. Both are legitimate measurements, so
+        // it is a toggle rather than a hard-coded choice.
+        if (!$this->keepAgentInstructions) {
+            $this->stripAgentDocumentation($workspace);
+        }
 
         $mcpConfigPath = $workspace->path.'/'.self::MCP_CONFIG_FILE;
 
         if (!$this->filesystem->exists($mcpConfigPath)) {
-            throw new \RuntimeException(\sprintf(
-                'Mate provisioning finished without producing the expected mcp.json at "%s".',
-                $mcpConfigPath,
-            ));
+            throw new \RuntimeException(\sprintf('Mate provisioning finished without producing the expected mcp.json at "%s".', $mcpConfigPath));
         }
 
         return $mcpConfigPath;
@@ -145,10 +172,7 @@ class MateProvisioner implements MateProvisionerInterface
             // a composer.json; if one shows up here it means something
             // upstream is producing surprising state we should not silently
             // overwrite.
-            throw new \RuntimeException(\sprintf(
-                'Refusing to provision Mate: workspace already contains a composer.json at "%s".',
-                $composerPath,
-            ));
+            throw new \RuntimeException(\sprintf('Refusing to provision Mate: workspace already contains a composer.json at "%s".', $composerPath));
         }
 
         $payload = [
@@ -237,10 +261,7 @@ class MateProvisioner implements MateProvisionerInterface
         $replacement = "    \$container->parameters()\n        ->set('ai_mate_monolog.log_dir', '%mate.root_dir%/var/logs')\n";
 
         if (!str_contains($config, $needle)) {
-            throw new \RuntimeException(\sprintf(
-                'Cannot customize Mate config at "%s": expected parameter section not found.',
-                $mateConfigPath,
-            ));
+            throw new \RuntimeException(\sprintf('Cannot customize Mate config at "%s": expected parameter section not found.', $mateConfigPath));
         }
 
         $this->filesystem->dumpFile($mateConfigPath, str_replace($needle, $replacement, $config));
@@ -255,10 +276,10 @@ class MateProvisioner implements MateProvisionerInterface
     private static function symfonyAiMatePackages(string $symfonyAiRoot): array
     {
         $packages = [
-            ['name' => 'symfony/ai-mate', 'path' => $symfonyAiRoot.'/src/mate', 'version' => '0.8.x-dev'],
-            ['name' => 'symfony/ai-mate-composer-plugin', 'path' => $symfonyAiRoot.'/src/mate/composer-plugin', 'version' => '0.8.x-dev'],
-            ['name' => 'symfony/ai-monolog-mate-extension', 'path' => $symfonyAiRoot.'/src/mate/src/Bridge/Monolog', 'version' => '0.8.x-dev'],
-            ['name' => 'symfony/ai-symfony-mate-extension', 'path' => $symfonyAiRoot.'/src/mate/src/Bridge/Symfony', 'version' => '0.8.x-dev'],
+            ['name' => 'symfony/ai-mate', 'path' => $symfonyAiRoot.'/src/mate', 'version' => self::SYMFONY_AI_MATE_VERSION],
+            ['name' => 'symfony/ai-mate-composer-plugin', 'path' => $symfonyAiRoot.'/src/mate/composer-plugin', 'version' => self::SYMFONY_AI_MATE_VERSION],
+            ['name' => 'symfony/ai-monolog-mate-extension', 'path' => $symfonyAiRoot.'/src/mate/src/Bridge/Monolog', 'version' => self::SYMFONY_AI_MATE_VERSION],
+            ['name' => 'symfony/ai-symfony-mate-extension', 'path' => $symfonyAiRoot.'/src/mate/src/Bridge/Symfony', 'version' => self::SYMFONY_AI_MATE_VERSION],
         ];
 
         return array_values(array_filter($packages, static fn (array $package): bool => is_file($package['path'].'/composer.json')));

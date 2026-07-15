@@ -22,16 +22,16 @@ use PHPUnit\Framework\TestCase;
  */
 class ScenarioRepositoryTest extends TestCase
 {
-    private const SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
-    private const VALID_DIR = __DIR__.'/../Fixtures/scenarios';
-    private const INVALID_DIR = __DIR__.'/../Fixtures/invalid';
+    private const string SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
+    private const string VALID_DIR = __DIR__.'/../Fixtures/scenarios';
+    private const string INVALID_DIR = __DIR__.'/../Fixtures/invalid';
 
     public function testAllReturnsEverySceneInTheTree(): void
     {
         $repository = $this->createRepository(self::VALID_DIR);
         $scenarios = $repository->all();
 
-        $ids = array_map(static fn ($s) => $s->id, $scenarios);
+        $ids = array_map(static fn (\MatesOfMate\Benchmark\Scenario\Scenario $s): string => $s->id, $scenarios);
         sort($ids);
 
         $this->assertSame(['bug.example', 'code.minimal'], $ids);

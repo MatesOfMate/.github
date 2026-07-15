@@ -25,7 +25,7 @@ class DiffMetricsCollector implements MetricsCollectorInterface
     {
         $diff = $context->diff;
 
-        if (null === $diff) {
+        if (!$diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult) {
             return [
                 'files_changed_count' => null,
                 'diff_added_lines' => null,

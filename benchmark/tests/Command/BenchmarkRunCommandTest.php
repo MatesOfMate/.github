@@ -19,7 +19,6 @@ use MatesOfMate\Benchmark\Mate\MateConfigurationFactory;
 use MatesOfMate\Benchmark\Mate\MateMetricsCollector;
 use MatesOfMate\Benchmark\Metrics\MetricsAggregator;
 use MatesOfMate\Benchmark\Report\ReportPipeline;
-use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Runner\CommandExecutor;
 use MatesOfMate\Benchmark\Runner\FixtureCopier;
 use MatesOfMate\Benchmark\Runner\GitDiffCollector;
@@ -28,6 +27,7 @@ use MatesOfMate\Benchmark\Runner\WorkspaceFactory;
 use MatesOfMate\Benchmark\Scenario\ScenarioLoader;
 use MatesOfMate\Benchmark\Scenario\ScenarioRepository;
 use MatesOfMate\Benchmark\Scenario\ScenarioValidator;
+use MatesOfMate\Benchmark\Scoring\ScoreCalculator;
 use MatesOfMate\Benchmark\Tests\Fixtures\Mate\FakeMateProvisioner;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
@@ -40,8 +40,8 @@ use Symfony\Component\Filesystem\Filesystem;
  */
 class BenchmarkRunCommandTest extends TestCase
 {
-    private const SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
-    private const SCENARIOS_DIR = __DIR__.'/../Fixtures/scenarios';
+    private const string SCHEMA_PATH = __DIR__.'/../../schema/scenario.schema.json';
+    private const string SCENARIOS_DIR = __DIR__.'/../Fixtures/scenarios';
 
     private string $tmp;
 
@@ -159,12 +159,44 @@ class BenchmarkRunCommandTest extends TestCase
 
         $exit = $tester->execute(['--adapter' => 'null']);
 
-        $this->assertSame(Command::SUCCESS, $exit);
+        // The smoke scenario is genuinely broken at baseline (red-check) and
+        // the NullAdapter does not fix anything, so the honest outcome is a
+        // failure — not a vacuous pass.
+        $this->assertSame(Command::FAILURE, $exit);
         $output = $tester->getDisplay();
         $this->assertStringContainsString('runner.smoke', $output);
-        $this->assertStringContainsString('status=passed', $output);
+        $this->assertStringContainsString('status=failed', $output);
         $this->assertStringContainsString('Summary', $output);
-        $this->assertStringContainsString('passed=1', $output);
+        $this->assertStringContainsString('failed=1', $output);
+        $this->assertStringContainsString('invalid=0', $output);
+    }
+
+    public function testMateOnlyScenariosAreSkippedWhenMateDisabled(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios-mate-only');
+        $tester = new CommandTester($command);
+
+        $exit = $tester->execute(['--list' => true, '--mate' => 'disabled']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('Skipping mateonly.scenario', $output);
+        $this->assertStringContainsString('regular.scenario', $output);
+        $this->assertStringContainsString('1 scenario(s) listed', $output);
+    }
+
+    public function testMateOnlyScenariosAreKeptWhenMateEnabled(): void
+    {
+        $command = $this->createCommandForScenarios(__DIR__.'/../Fixtures/runner-scenarios-mate-only');
+        $tester = new CommandTester($command);
+
+        $exit = $tester->execute(['--list' => true, '--mate' => 'enabled']);
+
+        $this->assertSame(Command::SUCCESS, $exit);
+        $output = $tester->getDisplay();
+        $this->assertStringContainsString('mateonly.scenario', $output);
+        $this->assertStringContainsString('regular.scenario', $output);
+        $this->assertStringContainsString('2 scenario(s) listed', $output);
     }
 
     public function testMateFlagPropagatesToOutcomeLine(): void
@@ -194,7 +226,8 @@ class BenchmarkRunCommandTest extends TestCase
 
         $exit = $tester->execute(['--adapter' => 'null']);
 
-        $this->assertSame(Command::SUCCESS, $exit);
+        // Reports must be written even when the run itself failed.
+        $this->assertSame(Command::FAILURE, $exit);
         $reportsRoot = $this->tmp.'/reports';
         $this->assertDirectoryExists($reportsRoot);
 
@@ -215,12 +248,12 @@ class BenchmarkRunCommandTest extends TestCase
 
         $exit = $tester->execute(['--adapter' => 'null', '--repeat' => '3']);
 
-        $this->assertSame(Command::SUCCESS, $exit);
+        $this->assertSame(Command::FAILURE, $exit);
         $output = $tester->getDisplay();
         $this->assertStringContainsString('attempt 1', $output);
         $this->assertStringContainsString('attempt 2', $output);
         $this->assertStringContainsString('attempt 3', $output);
-        $this->assertStringContainsString('passed=3', $output);
+        $this->assertStringContainsString('failed=3', $output);
     }
 
     private function createCommand(): BenchmarkRunCommand

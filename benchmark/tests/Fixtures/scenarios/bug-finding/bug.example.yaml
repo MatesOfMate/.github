@@ -18,6 +18,7 @@ expected:
     - vendor/bin/phpunit
   root_cause:
     - missing service definition
+    - ["not registered", "never registered", "unregistered"]
   expected_files_changed:
     - config/services.yaml
   forbidden_files_changed:

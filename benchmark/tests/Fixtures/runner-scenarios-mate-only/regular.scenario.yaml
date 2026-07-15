@@ -1,4 +1,4 @@
-id: runner.smoke
+id: regular.scenario
 suite: smoke
 difficulty: easy
 
@@ -9,7 +9,5 @@ task:
   prompt: Create the solution file.
 
 expected:
-  # Must FAIL against the untouched fixture (red-check): the fixture does not
-  # contain solution.txt, so only an adapter that creates it can pass.
   pass_commands:
     - 'php -r "exit(file_exists(''solution.txt'') ? 0 : 1);"'

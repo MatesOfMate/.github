@@ -120,6 +120,8 @@ class BenchmarkRunCommand extends Command
             return Command::INVALID;
         }
 
+        $scenarios = $this->filterForMateState($scenarios, self::MATE_ENABLED === $mate, $io);
+
         if ([] === $scenarios) {
             $io->warning('No scenarios matched the given filters.');
 
@@ -219,7 +221,7 @@ class BenchmarkRunCommand extends Command
         if (null !== $scenarioId) {
             $scenario = $this->repository->find((string) $scenarioId);
 
-            if (null === $scenario) {
+            if (!$scenario instanceof Scenario) {
                 $io->error(\sprintf('Scenario "%s" was not found.', (string) $scenarioId));
 
                 return null;
@@ -233,6 +235,34 @@ class BenchmarkRunCommand extends Command
         }
 
         return $this->repository->all();
+    }
+
+    /**
+     * Scenarios tagged `mate-only` measure Mate tool usage specifically and
+     * are meaningless (often unsolvable) without a provisioned Mate setup, so
+     * they are skipped when Mate is disabled.
+     *
+     * @param list<Scenario> $scenarios
+     *
+     * @return list<Scenario>
+     */
+    private function filterForMateState(array $scenarios, bool $mateEnabled, SymfonyStyle $io): array
+    {
+        if ($mateEnabled) {
+            return $scenarios;
+        }
+
+        $kept = [];
+        foreach ($scenarios as $scenario) {
+            if (\in_array('mate-only', $scenario->tags, true)) {
+                $io->writeln(\sprintf('<comment>Skipping %s (tagged mate-only, but --mate=disabled).</comment>', $scenario->id));
+                continue;
+            }
+
+            $kept[] = $scenario;
+        }
+
+        return $kept;
     }
 
     /**
@@ -252,7 +282,7 @@ class BenchmarkRunCommand extends Command
     private function renderOutcomeLine(SymfonyStyle $io, RunOutcome $outcome): void
     {
         $diff = $outcome->diff;
-        $files = null !== $diff ? \count($diff->changedFiles) : 0;
+        $files = $diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult ? \count($diff->changedFiles) : 0;
         $mate = $outcome->mateMetrics;
         $mateLabel = $mate->enabled
             ? \sprintf('mate=on tools=%d', $mate->toolCallCount)
@@ -279,17 +309,19 @@ class BenchmarkRunCommand extends Command
         $passed = 0;
         $failed = 0;
         $errored = 0;
+        $invalid = 0;
 
         foreach ($outcomes as $outcome) {
             match ($outcome->status) {
                 RunStatus::Passed => ++$passed,
                 RunStatus::Failed => ++$failed,
                 RunStatus::AdapterError, RunStatus::SetupError => ++$errored,
+                RunStatus::InvalidScenario => ++$invalid,
             };
         }
 
         $io->section('Summary');
-        $io->writeln(\sprintf(' <info>passed</info>=%d  <comment>failed</comment>=%d  <error>errors</error>=%d  total=%d', $passed, $failed, $errored, $total));
+        $io->writeln(\sprintf(' <info>passed</info>=%d  <comment>failed</comment>=%d  <error>errors</error>=%d  invalid=%d  total=%d', $passed, $failed, $errored, $invalid, $total));
     }
 
     /**

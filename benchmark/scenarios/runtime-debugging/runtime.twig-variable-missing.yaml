@@ -17,8 +17,8 @@ expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - undefined variable
-    - missing template context
+    - ["undefined array key", "typeerror", "type error", "returned null", "returns null", "null returned"]
+    - ["null coalescing", "coalescing", "coalesce", "isset", "array_key_exists"]
   expected_files_changed:
     - src/Renderer.php
   forbidden_files_changed:

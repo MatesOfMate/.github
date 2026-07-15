@@ -14,10 +14,13 @@ namespace MatesOfMate\Benchmark\Evaluator;
 /**
  * Scores how well the assistant exercised Mate tools relative to scenario expectations.
  *
- * Disabled Mate runs always score 0 (there is nothing to evaluate). Enabled
- * runs are scored proportionally to the share of expected tool names that
- * actually appeared in the run; if no expectation is declared, any tool call
- * counts as decent usage.
+ * The category only applies when Mate is enabled *and* the scenario declares
+ * expected Mate tools. Disabled runs, and enabled runs on scenarios with no
+ * tool expectation, are marked not-applicable so they are excluded from the
+ * weighted score (weights renormalise over the remaining categories). This
+ * keeps Mate-on and Mate-off scores comparable on tasks that native tooling
+ * already solves. When an expectation is declared, the score is proportional
+ * to the share of expected tool names that actually appeared in the run.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
@@ -35,12 +38,10 @@ class MateToolUsageEvaluator implements EvaluatorInterface
         $mate = $input->outcome->mateMetrics;
 
         if (!$mate->enabled) {
-            return new EvaluationResult(
-                name: self::NAME,
-                score: 0.0,
-                passed: false,
-                explanation: 'Mate is disabled for this run; tool usage cannot be evaluated.',
-                evidence: ['enabled' => false],
+            return EvaluationResult::notApplicable(
+                self::NAME,
+                'Mate is disabled for this run; category excluded and weights renormalised.',
+                ['enabled' => false],
             );
         }
 
@@ -68,16 +69,18 @@ class MateToolUsageEvaluator implements EvaluatorInterface
 
         $expected = $mate->expectedTools;
         if ([] === $expected) {
-            $score = $mate->toolCallCount > 0 ? 4.0 : 1.0;
-
-            return new EvaluationResult(
-                name: self::NAME,
-                score: $score,
-                passed: $mate->toolCallCount > 0,
-                explanation: $mate->toolCallCount > 0
-                    ? \sprintf('Mate enabled with %d tool calls but no expected tools were declared.', $mate->toolCallCount)
-                    : 'Mate enabled but no tool calls were observed.',
-                evidence: [
+            // The scenario declares no Mate-tool expectation, so Mate-tool usage
+            // is out of scope: a task solvable with native tools must not be
+            // penalised for skipping Mate, nor credited for touching it. Marking
+            // the category not-applicable keeps Mate-on and Mate-off scores
+            // comparable on scenarios that do not measure Mate specifically.
+            return EvaluationResult::notApplicable(
+                self::NAME,
+                \sprintf(
+                    'Scenario declares no expected Mate tools; Mate-tool usage is out of scope (observed %d Mate call(s)). Category excluded and weights renormalised.',
+                    $mate->toolCallCount,
+                ),
+                [
                     'enabled' => true,
                     'tool_call_count' => $mate->toolCallCount,
                     'expected' => [],

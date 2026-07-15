@@ -8,17 +8,16 @@ fixture:
 task:
   prompt: |
     The application reads database settings from `.env` via `src/Config.php`.
-    The verification test expects `Config::get('DB_HOST')` to return `localhost`
-    and `Config::get('DB_PORT')` to return `5432`, but a key is missing in the
-    env file and the loader silently returns the wrong default. Fix the
-    configuration so the test passes; touch only the env or config file as
-    needed.
+    The verification test expects `Config::get('DB_HOST')` to return
+    `localhost` and `Config::get('DB_PORT')` to return `5432`, but it
+    currently fails. Find the root cause and fix the configuration so the
+    test passes. Do not modify the test.
 
 expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - missing env variable
+    - ["missing", "not set", "not defined", "not present", "absent", "omitted", "never set"]
   expected_files_changed:
     - .env
   forbidden_files_changed:

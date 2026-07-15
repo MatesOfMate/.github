@@ -30,9 +30,11 @@ class NullAdapter implements AssistantAdapterInterface
     public function run(AssistantRunInput $input): AssistantRunResult
     {
         $start = microtime(true);
+        // Deliberately content-free: the output must not echo the workspace
+        // path, scenario id or prompt, or keyword-based evaluators would hand
+        // the no-op run unearned credit.
         $stdout = \sprintf(
-            "NullAdapter run\n  workspace: %s\n  model: %s\n  mate: %s\n  prompt-bytes: %d\n",
-            $input->workspacePath,
+            "NullAdapter run\n  model: %s\n  mate: %s\n  prompt-bytes: %d\n",
             $input->model ?? '(none)',
             $input->isMateEnabled() ? 'enabled' : 'disabled',
             \strlen($input->prompt),
@@ -42,7 +44,6 @@ class NullAdapter implements AssistantAdapterInterface
         return AssistantRunResult::success(
             stdout: $stdout,
             durationMs: $duration,
-            tokenUsage: null,
             toolCalls: [],
         );
     }

@@ -51,7 +51,7 @@ readonly class Scenario
             task: \is_array($data['task'] ?? null) ? $data['task'] : [],
             expected: \is_array($data['expected'] ?? null) ? $data['expected'] : [],
             evaluation: \is_array($data['evaluation'] ?? null) ? $data['evaluation'] : [],
-            tags: array_values(array_map('strval', \is_array($data['tags'] ?? null) ? $data['tags'] : [])),
+            tags: array_values(array_map(strval(...), \is_array($data['tags'] ?? null) ? $data['tags'] : [])),
             sourcePath: $sourcePath,
         );
     }

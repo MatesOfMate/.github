@@ -37,13 +37,16 @@ class MateMetricsCollectorTest extends TestCase
         $this->assertNull($metrics->firstToolCallMs);
     }
 
-    public function testAggregatesToolNamesCountErrorsAndFirstTimestamp(): void
+    public function testAggregatesMcpToolCallsOnly(): void
     {
         $collector = new MateMetricsCollector();
         $result = AssistantRunResult::success(stdout: '', durationMs: 0.0, toolCalls: [
-            new ToolCall('symfony_logs', startedAtMs: 2200.0),
-            new ToolCall('symfony_logs', startedAtMs: 2400.0, errored: true),
-            new ToolCall('symfony_container', startedAtMs: 2310.0),
+            // Built-in tools must not earn Mate credit, not even for the
+            // first-call timestamp.
+            new ToolCall('Bash', arguments: ['command' => 'ls'], startedAtMs: 100.0),
+            new ToolCall('symfony_logs', startedAtMs: 2200.0, mcp: true),
+            new ToolCall('symfony_logs', errored: true, startedAtMs: 2400.0, mcp: true),
+            new ToolCall('symfony_container', startedAtMs: 2310.0, mcp: true),
         ]);
 
         $metrics = $collector->collect($result, MateConfiguration::enabled(
@@ -56,6 +59,23 @@ class MateMetricsCollectorTest extends TestCase
         $this->assertSame(2200.0, $metrics->firstToolCallMs);
         $this->assertSame(1, $metrics->toolErrors);
         $this->assertSame(['symfony_profiler'], $metrics->missingExpectedTools);
+    }
+
+    public function testNonMcpCallsEarnNoMateCreditEvenWithMatchingName(): void
+    {
+        $collector = new MateMetricsCollector();
+        $result = AssistantRunResult::success(stdout: '', durationMs: 0.0, toolCalls: [
+            new ToolCall('monolog-tail', startedAtMs: 500.0),
+        ]);
+
+        $metrics = $collector->collect($result, MateConfiguration::enabled(
+            expectedToolsAny: ['monolog-tail'],
+        ));
+
+        $this->assertSame(0, $metrics->toolCallCount);
+        $this->assertSame([], $metrics->toolNames);
+        $this->assertNull($metrics->firstToolCallMs);
+        $this->assertFalse($metrics->anyToolMatched);
     }
 
     public function testEmptyToolCallsStillReportEnabled(): void
@@ -74,7 +94,7 @@ class MateMetricsCollectorTest extends TestCase
     {
         $collector = new MateMetricsCollector();
         $result = AssistantRunResult::success(stdout: '', durationMs: 0.0, toolCalls: [
-            new ToolCall('monolog-tail'),
+            new ToolCall('monolog-tail', mcp: true),
             new ToolCall('Read'),
         ]);
 

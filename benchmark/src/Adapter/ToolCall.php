@@ -28,6 +28,7 @@ readonly class ToolCall
         public ?float $durationMs = null,
         public bool $errored = false,
         public ?float $startedAtMs = null,
+        public bool $mcp = false,
     ) {
     }
 }

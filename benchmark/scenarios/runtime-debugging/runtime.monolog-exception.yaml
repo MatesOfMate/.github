@@ -7,16 +7,18 @@ fixture:
 
 task:
   prompt: |
-    `src/AuditLogger.php` calls a logger method with the wrong number of
-    arguments, causing a runtime exception during the verification test. Fix
-    the call so the audit message is logged correctly and the test passes.
+    Running the verification test fails: `AuditLogger::logUserDeletion()`
+    triggers a runtime error before any record reaches the logger. Diagnose
+    the failure and fix `src/AuditLogger.php` so the record is written the
+    way the test expects and the test passes. `src/SimpleLogger.php` and the
+    test files must not be modified.
 
 expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - argument mismatch
-    - wrong method signature
+    - ["undefined method", "does not exist", "doesn't exist", "no such method", "missing method", "nonexistent method", "non-existent method", "no info() method"]
+    - ["audit"]
   expected_files_changed:
     - src/AuditLogger.php
   forbidden_files_changed:

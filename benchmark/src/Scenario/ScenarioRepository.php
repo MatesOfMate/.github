@@ -50,7 +50,7 @@ class ScenarioRepository
     {
         $scenario = $this->find($id);
 
-        if (null === $scenario) {
+        if (!$scenario instanceof Scenario) {
             throw new \InvalidArgumentException(\sprintf('Scenario "%s" was not found.', $id));
         }
 
@@ -120,12 +120,7 @@ class ScenarioRepository
             $scenario = Scenario::fromArray($data, $path);
 
             if (isset($scenarios[$scenario->id])) {
-                throw new \RuntimeException(\sprintf(
-                    'Duplicate scenario id "%s" found in "%s" and "%s".',
-                    $scenario->id,
-                    $scenarios[$scenario->id]->sourcePath,
-                    $path,
-                ));
+                throw new \RuntimeException(\sprintf('Duplicate scenario id "%s" found in "%s" and "%s".', $scenario->id, $scenarios[$scenario->id]->sourcePath, $path));
             }
 
             $scenarios[$scenario->id] = $scenario;

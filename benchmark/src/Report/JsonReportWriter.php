@@ -11,6 +11,7 @@
 
 namespace MatesOfMate\Benchmark\Report;
 
+use MatesOfMate\Benchmark\Runner\CommandResult;
 use MatesOfMate\Benchmark\Runner\RunOutcome;
 use MatesOfMate\Benchmark\Runner\RunStatus;
 use Symfony\Component\Filesystem\Filesystem;
@@ -23,6 +24,14 @@ use Symfony\Component\Filesystem\Filesystem;
 class JsonReportWriter implements ReportWriterInterface
 {
     public const FILENAME = 'results.json';
+
+    /**
+     * The excerpt keeps `results.json` reviewable; the full assistant stdout
+     * is persisted separately under `raw/` by the {@see ArtifactsWriter}.
+     */
+    private const int RESPONSE_EXCERPT_LENGTH = 2000;
+
+    private const int TOOL_CALL_LIMIT = 50;
 
     private readonly Filesystem $filesystem;
 
@@ -43,7 +52,7 @@ class JsonReportWriter implements ReportWriterInterface
             'finished_at' => $context->finishedAt->format(\DATE_ATOM),
             'duration_seconds' => $context->durationSeconds(),
             'summary' => $this->summary($context),
-            'scenarios' => array_map([$this, 'scenarioPayload'], $context->outcomes),
+            'scenarios' => array_map($this->scenarioPayload(...), $context->outcomes),
         ];
 
         $this->filesystem->mkdir($context->reportDirectory);
@@ -62,6 +71,7 @@ class JsonReportWriter implements ReportWriterInterface
         $passed = 0;
         $failed = 0;
         $errors = 0;
+        $invalid = 0;
         $sumScore = 0.0;
 
         foreach ($context->outcomes as $outcome) {
@@ -69,6 +79,7 @@ class JsonReportWriter implements ReportWriterInterface
                 RunStatus::Passed => ++$passed,
                 RunStatus::Failed => ++$failed,
                 RunStatus::AdapterError, RunStatus::SetupError => ++$errors,
+                RunStatus::InvalidScenario => ++$invalid,
             };
             $sumScore += $outcome->score->finalScore;
         }
@@ -78,6 +89,7 @@ class JsonReportWriter implements ReportWriterInterface
             'passed' => $passed,
             'failed' => $failed,
             'errors' => $errors,
+            'invalid_scenarios' => $invalid,
             'average_score' => 0 === $total ? 0.0 : round($sumScore / $total, 2),
         ];
     }
@@ -103,11 +115,13 @@ class JsonReportWriter implements ReportWriterInterface
                 'raw' => $outcome->score->rawScore,
                 'per_category' => $outcome->score->perCategory,
                 'weights' => $outcome->score->weights,
+                'effective_weights' => $outcome->score->effectiveWeights,
+                'not_applicable' => $outcome->score->notApplicable,
                 'missing_evaluators' => $outcome->score->missingEvaluators,
                 'gate_penalties' => $outcome->score->gatePenalties,
             ],
             'evaluations' => array_map(
-                static fn ($e) => [
+                static fn (\MatesOfMate\Benchmark\Evaluator\EvaluationResult $e): array => [
                     'name' => $e->name,
                     'score' => $e->score,
                     'passed' => $e->passed,
@@ -128,26 +142,47 @@ class JsonReportWriter implements ReportWriterInterface
                 'expected_tools_any' => $outcome->mateMetrics->expectedToolsAny,
                 'any_tool_matched' => $outcome->mateMetrics->anyToolMatched,
             ],
-            'diff' => null === $diff ? null : [
+            'baseline_red' => [
+                'commands' => \count($outcome->baselineRedResults),
+                'all_failed_as_expected' => $this->allFailedAsExpected($outcome->baselineRedResults),
+            ],
+            'diff' => $diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult ? [
                 'files_changed' => $diff->changedFiles,
                 'additions' => $diff->additions,
                 'deletions' => $diff->deletions,
-            ],
-            'assistant' => null === $assistant ? null : [
+            ] : null,
+            'assistant' => $assistant instanceof \MatesOfMate\Benchmark\Adapter\AssistantRunResult ? [
                 'successful' => $assistant->successful,
                 'exit_code' => $assistant->exitCode,
                 'duration_ms' => $assistant->durationMs,
                 'timed_out' => $assistant->timedOut,
                 'error_message' => $assistant->errorMessage,
+                'response_excerpt' => '' === $assistant->stdout ? null : mb_substr($assistant->stdout, 0, self::RESPONSE_EXCERPT_LENGTH),
                 'tool_calls' => array_map(
-                    static fn ($call) => [
+                    static fn (\MatesOfMate\Benchmark\Adapter\ToolCall $call): array => [
                         'name' => $call->name,
-                        'arguments' => $call->arguments,
-                        'errored' => $call->errored,
+                        'mcp' => $call->mcp,
                     ],
-                    $assistant->toolCalls,
+                    \array_slice($assistant->toolCalls, 0, self::TOOL_CALL_LIMIT),
                 ),
-            ],
+            ] : null,
         ];
+    }
+
+    /**
+     * A scenario is only valid when every pass command was still red before
+     * the assistant ran (see {@see RunStatus::InvalidScenario}).
+     *
+     * @param list<CommandResult> $results
+     */
+    private function allFailedAsExpected(array $results): bool
+    {
+        foreach ($results as $result) {
+            if ($result->successful()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

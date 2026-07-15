@@ -22,4 +22,5 @@ enum RunStatus: string
     case Failed = 'failed';
     case AdapterError = 'adapter_error';
     case SetupError = 'setup_error';
+    case InvalidScenario = 'invalid_scenario';
 }

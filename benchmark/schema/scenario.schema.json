@@ -77,8 +77,18 @@
                     "items": {"type": "string"}
                 },
                 "root_cause": {
+                    "description": "Keyword groups for root-cause matching. Each item is a single phrase or a list of synonymous phrases (a group matches when any synonym occurs).",
                     "type": "array",
-                    "items": {"type": "string"}
+                    "items": {
+                        "anyOf": [
+                            {"type": "string"},
+                            {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "minItems": 1
+                            }
+                        ]
+                    }
                 },
                 "expected_files_changed": {
                     "type": "array",

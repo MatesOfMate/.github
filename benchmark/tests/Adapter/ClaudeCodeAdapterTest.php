@@ -40,9 +40,7 @@ class ClaudeCodeAdapterTest extends TestCase
             ->with(
                 'sonnet',
                 'find the bug',
-                $this->callback(static function (array $options): bool {
-                    return '/tmp/workspace' === ($options['cwd'] ?? null);
-                }),
+                $this->callback(static fn (array $options): bool => '/tmp/workspace' === ($options['cwd'] ?? null)),
             )
             ->willReturn($this->stubDeferred(
                 text: 'patched',
@@ -178,6 +176,89 @@ class ClaudeCodeAdapterTest extends TestCase
         ));
     }
 
+    public function testForwardsStrictMcpConfigToShieldPersonalServers(): void
+    {
+        $platform = $this->createMock(PlatformInterface::class);
+        $platform->expects($this->once())
+            ->method('invoke')
+            ->with(
+                $this->anything(),
+                $this->anything(),
+                $this->callback(static fn (array $options): bool => true === ($options['strict_mcp_config'] ?? null)),
+            )
+            ->willReturn($this->stubDeferred(text: 'ok'));
+
+        (new ClaudeCodeAdapter($platform))->run(new AssistantRunInput(
+            workspacePath: '/tmp',
+            prompt: 'fix',
+        ));
+    }
+
+    public function testPlatformFactoryRebuildsPlatformWithInputTimeout(): void
+    {
+        $rebuilt = $this->createMock(PlatformInterface::class);
+        $rebuilt->expects($this->once())
+            ->method('invoke')
+            ->willReturn($this->stubDeferred(text: 'from rebuilt platform'));
+
+        // The initially injected platform must never run: the factory clone
+        // bounded by the scenario timeout takes over.
+        $initial = $this->createMock(PlatformInterface::class);
+        $initial->expects($this->never())->method('invoke');
+
+        $capturedTimeout = null;
+        $factory = static function (float $timeout) use ($rebuilt, &$capturedTimeout): PlatformInterface {
+            $capturedTimeout = $timeout;
+
+            return $rebuilt;
+        };
+
+        putenv(ClaudeCodeAdapter::ENV_BINARY.'=/usr/bin/true');
+
+        try {
+            $adapter = new ClaudeCodeAdapter($initial, platformFactory: $factory);
+            $result = $adapter->run(new AssistantRunInput(
+                workspacePath: '/tmp',
+                prompt: 'fix',
+                timeoutSeconds: 900,
+            ));
+        } finally {
+            putenv(ClaudeCodeAdapter::ENV_BINARY);
+        }
+
+        $this->assertSame(900.0, $capturedTimeout);
+        $this->assertTrue($result->successful);
+        $this->assertSame('from rebuilt platform', $result->stdout);
+    }
+
+    public function testPlatformFactoryTimeoutHasSixtySecondFloor(): void
+    {
+        $rebuilt = $this->createMock(PlatformInterface::class);
+        $rebuilt->method('invoke')->willReturn($this->stubDeferred(text: 'ok'));
+
+        $capturedTimeout = null;
+        $factory = static function (float $timeout) use ($rebuilt, &$capturedTimeout): PlatformInterface {
+            $capturedTimeout = $timeout;
+
+            return $rebuilt;
+        };
+
+        putenv(ClaudeCodeAdapter::ENV_BINARY.'=/usr/bin/true');
+
+        try {
+            $adapter = new ClaudeCodeAdapter($this->createMock(PlatformInterface::class), platformFactory: $factory);
+            $adapter->run(new AssistantRunInput(
+                workspacePath: '/tmp',
+                prompt: 'fix',
+                timeoutSeconds: 10,
+            ));
+        } finally {
+            putenv(ClaudeCodeAdapter::ENV_BINARY);
+        }
+
+        $this->assertSame(60.0, $capturedTimeout);
+    }
+
     public function testInputModelOverridesDefault(): void
     {
         $platform = $this->createMock(PlatformInterface::class);
@@ -222,9 +303,8 @@ class ClaudeCodeAdapterTest extends TestCase
         $this->assertNull($result->tokenUsage);
     }
 
-
     /**
-     * @param array<string, int>|null                   $usage
+     * @param array<string, int>|null                       $usage
      * @param list<array<string, mixed>>|array<int, object> $toolCallTraces
      */
     private function stubDeferred(string $text, ?array $usage = null, array $toolCallTraces = []): DeferredResult

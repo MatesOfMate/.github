@@ -16,8 +16,8 @@ expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - access control
-    - authorization bypass
+    - ["always returns true", "always returned true", "returns true for everyone", "returns true unconditionally", "hardcoded", "hard-coded", "unconditionally", "always allows", "allows everyone"]
+    - ["ownerid", "hasrole"]
   expected_files_changed:
     - src/AccessControl.php
   forbidden_files_changed:

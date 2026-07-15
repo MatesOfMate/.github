@@ -8,9 +8,9 @@ fixture:
 task:
   prompt: |
     A tiny router lives in `src/Router.php`. The route `GET /hello` is registered
-    but its `HelloController::index()` returns nothing. Implement the controller
-    so it returns the body "Welcome" with HTTP status 200, then make sure the
-    verification test passes.
+    but its `HelloController::index()` is not implemented yet. Implement the
+    controller so it returns the body "Welcome" with HTTP status 200, then make
+    sure the verification test passes.
 
 expected:
   pass_commands:

@@ -55,4 +55,19 @@ class NullAdapterTest extends TestCase
 
         $this->assertStringContainsString('mate: disabled', $result->stdout);
     }
+
+    public function testStdoutDoesNotEchoWorkspacePathOrPrompt(): void
+    {
+        // The workspace path embeds the scenario id and the prompt restates the
+        // problem; echoing either would hand keyword-based evaluators unearned
+        // credit for a no-op run.
+        $result = (new NullAdapter())->run(new AssistantRunInput(
+            workspacePath: '/tmp/run-1/bug.autowiring/workspace',
+            prompt: 'Fix the autowiring failure.',
+        ));
+
+        $this->assertStringNotContainsString('/tmp/run-1/bug.autowiring/workspace', $result->stdout);
+        $this->assertStringNotContainsString('autowiring', $result->stdout);
+        $this->assertStringNotContainsString('Fix the autowiring failure.', $result->stdout);
+    }
 }

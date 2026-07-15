@@ -41,7 +41,7 @@ class MateConfigurationFactory
             return MateConfiguration::disabled();
         }
 
-        if (null === $this->provisioner) {
+        if (!$this->provisioner instanceof MateProvisionerInterface) {
             throw new \LogicException('Mate is enabled for this run but no MateProvisioner was wired into MateConfigurationFactory.');
         }
 
@@ -61,8 +61,6 @@ class MateConfigurationFactory
     }
 
     /**
-     * @param mixed $raw
-     *
      * @return list<string>
      */
     private function extractStringList(mixed $raw): array

@@ -209,8 +209,9 @@ JSON);
         mkdir($home.'/.codex/sessions', 0777, true);
         chmod($home.'/.codex/sessions', 0000);
 
+        $previous = getenv('HOME');
+
         try {
-            $previous = getenv('HOME');
             putenv('HOME='.$home);
 
             $result = (new CodexAdapter($platform))->run(new AssistantRunInput(
@@ -259,7 +260,7 @@ JSON);
     }
 
     /**
-     * @param array<string, int>|null                        $usage
+     * @param array<string, int>|null                       $usage
      * @param list<array<string, mixed>>|array<int, object> $toolCallTraces
      */
     private function stubDeferred(string $text, ?array $usage = null, array $toolCallTraces = []): DeferredResult

@@ -25,12 +25,14 @@ class TokenUsageCollector implements MetricsCollectorInterface
     {
         $usage = $context->assistantResult?->tokenUsage;
 
-        if (null === $usage) {
+        if (!$usage instanceof \MatesOfMate\Benchmark\Adapter\TokenUsage) {
             return [
                 'input_tokens' => null,
                 'output_tokens' => null,
                 'cached_tokens' => null,
+                'fresh_tokens' => null,
                 'total_tokens' => null,
+                'cost_usd' => null,
             ];
         }
 
@@ -38,7 +40,9 @@ class TokenUsageCollector implements MetricsCollectorInterface
             'input_tokens' => $usage->inputTokens,
             'output_tokens' => $usage->outputTokens,
             'cached_tokens' => $usage->cachedTokens,
+            'fresh_tokens' => $usage->freshTokens(),
             'total_tokens' => $usage->totalTokens(),
+            'cost_usd' => $usage->costUsd,
         ];
     }
 }

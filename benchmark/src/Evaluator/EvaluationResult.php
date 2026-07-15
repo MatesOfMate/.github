@@ -30,9 +30,30 @@ readonly class EvaluationResult
         public bool $passed,
         public string $explanation,
         public array $evidence = [],
+        public bool $applicable = true,
     ) {
         if ($score < self::MIN_SCORE || $score > self::MAX_SCORE) {
             throw new \InvalidArgumentException(\sprintf('Evaluator score must be within [%.1f, %.1f], got %.2f.', self::MIN_SCORE, self::MAX_SCORE, $score));
         }
+    }
+
+    /**
+     * A category that cannot be judged for this run (e.g. Mate tool usage while
+     * Mate is disabled). The {@see \MatesOfMate\Benchmark\Scoring\ScoreCalculator}
+     * excludes it and renormalises the remaining weights instead of scoring 0,
+     * so runs stay comparable across configurations.
+     *
+     * @param array<string, mixed> $evidence
+     */
+    public static function notApplicable(string $name, string $explanation, array $evidence = []): self
+    {
+        return new self(
+            name: $name,
+            score: 0.0,
+            passed: false,
+            explanation: $explanation,
+            evidence: $evidence,
+            applicable: false,
+        );
     }
 }

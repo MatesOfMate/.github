@@ -30,6 +30,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class BenchmarkCompareCommand extends Command
 {
+    private const array SCORE_CATEGORIES = [
+        'functional',
+        'root_cause',
+        'mate_tool_usage',
+        'minimality',
+        'verification',
+        'efficiency',
+    ];
+
     public function __construct(
         private readonly ?string $reportsDirectory = null,
     ) {
@@ -103,7 +112,10 @@ class BenchmarkCompareCommand extends Command
         $entries = (array) scandir($this->reportsDirectory, \SCANDIR_SORT_DESCENDING);
         $candidates = [];
         foreach ($entries as $entry) {
-            if (!\is_string($entry) || \in_array($entry, ['.', '..'], true)) {
+            if (!\is_string($entry)) {
+                continue;
+            }
+            if (\in_array($entry, ['.', '..'], true)) {
                 continue;
             }
             $resultsPath = $this->reportsDirectory.'/'.$entry.'/results.json';
@@ -116,11 +128,7 @@ class BenchmarkCompareCommand extends Command
         }
 
         if (\count($candidates) < 2) {
-            throw new \RuntimeException(\sprintf(
-                'Need at least two reports under "%s" to compare; found %d.',
-                $this->reportsDirectory,
-                \count($candidates),
-            ));
+            throw new \RuntimeException(\sprintf('Need at least two reports under "%s" to compare; found %d.', $this->reportsDirectory, \count($candidates)));
         }
 
         // Newest goes on the right so the diff reads "previous → latest".
@@ -144,7 +152,7 @@ class BenchmarkCompareCommand extends Command
         try {
             $payload = json_decode($contents, true, 512, \JSON_THROW_ON_ERROR);
         } catch (\JsonException $exception) {
-            throw new \RuntimeException(\sprintf('Invalid JSON in "%s": %s', $path, $exception->getMessage()));
+            throw new \RuntimeException(\sprintf('Invalid JSON in "%s": %s', $path, $exception->getMessage()), $exception->getCode(), $exception);
         }
 
         if (!\is_array($payload) || !isset($payload['scenarios']) || !\is_array($payload['scenarios'])) {
@@ -176,32 +184,124 @@ class BenchmarkCompareCommand extends Command
      */
     private function renderScenarioTable(SymfonyStyle $io, array $left, array $right): void
     {
-        $byKey = [];
-        foreach ($this->extractScenarios($left) as $scenario) {
-            $byKey[$scenario['__key']] = ['left' => $scenario, 'right' => null];
+        $leftScenarios = $this->extractScenarios($left);
+        $rightScenarios = $this->extractScenarios($right);
+
+        $this->warnAboutDisjointIds($io, $leftScenarios, $rightScenarios);
+
+        $leftByKey = [];
+        foreach ($leftScenarios as $scenario) {
+            $leftByKey[$scenario['__key']] = $scenario;
         }
-        foreach ($this->extractScenarios($right) as $scenario) {
-            $byKey[$scenario['__key']]['right'] = $scenario;
-            $byKey[$scenario['__key']]['left'] ??= null;
+        $rightByKey = [];
+        foreach ($rightScenarios as $scenario) {
+            $rightByKey[$scenario['__key']] = $scenario;
         }
 
-        ksort($byKey);
+        $keys = array_values(array_intersect(array_keys($leftByKey), array_keys($rightByKey)));
+        sort($keys);
+
+        $io->section('Scenario diff');
+
+        if ([] === $keys) {
+            $io->writeln(' No overlapping scenarios to compare.');
+
+            return;
+        }
 
         $rows = [];
-        foreach ($byKey as $key => $pair) {
-            $l = $pair['left'];
-            $r = $pair['right'];
+        foreach ($keys as $key) {
+            $l = $leftByKey[$key];
+            $r = $rightByKey[$key];
             $rows[] = [
                 $key,
                 $this->formatScore($l, $r),
+                $this->formatCategoryDeltas($l, $r),
                 $this->formatTokens($l, $r),
                 $this->formatDuration($l, $r),
                 $this->formatMate($l, $r),
             ];
         }
 
-        $io->section('Scenario diff');
-        $io->table(['Scenario#attempt', 'Score (left → right)', 'Tokens', 'Duration', 'Mate calls'], $rows);
+        $io->table(['Scenario#attempt', 'Score (left → right)', 'Per-category Δ', 'Tokens', 'Duration', 'Mate calls'], $rows);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $leftScenarios
+     * @param list<array<string, mixed>> $rightScenarios
+     */
+    private function warnAboutDisjointIds(SymfonyStyle $io, array $leftScenarios, array $rightScenarios): void
+    {
+        $ids = static fn (array $scenarios): array => array_values(array_unique(array_map(
+            static fn (array $scenario): string => (string) ($scenario['id'] ?? '?'),
+            $scenarios,
+        )));
+
+        $leftIds = $ids($leftScenarios);
+        $rightIds = $ids($rightScenarios);
+
+        $leftOnly = array_values(array_diff($leftIds, $rightIds));
+        $rightOnly = array_values(array_diff($rightIds, $leftIds));
+
+        if ([] === $leftOnly && [] === $rightOnly) {
+            return;
+        }
+
+        sort($leftOnly);
+        sort($rightOnly);
+
+        $lines = ['The two reports cover different scenario id sets; only the intersection is compared.'];
+        if ([] !== $leftOnly) {
+            $lines[] = 'Only in left: '.implode(', ', $leftOnly);
+        }
+        if ([] !== $rightOnly) {
+            $lines[] = 'Only in right: '.implode(', ', $rightOnly);
+        }
+
+        $io->warning($lines);
+    }
+
+    /**
+     * @param array<string, mixed> $left
+     * @param array<string, mixed> $right
+     */
+    private function formatCategoryDeltas(array $left, array $right): string
+    {
+        $leftCategories = \is_array($left['score']['per_category'] ?? null) ? $left['score']['per_category'] : [];
+        $rightCategories = \is_array($right['score']['per_category'] ?? null) ? $right['score']['per_category'] : [];
+
+        $keys = self::SCORE_CATEGORIES;
+        foreach ([...array_keys($leftCategories), ...array_keys($rightCategories)] as $key) {
+            if (\is_string($key) && !\in_array($key, $keys, true)) {
+                $keys[] = $key;
+            }
+        }
+
+        $parts = [];
+        foreach ($keys as $key) {
+            $l = $leftCategories[$key] ?? null;
+            $r = $rightCategories[$key] ?? null;
+            $l = is_numeric($l) ? (float) $l : null;
+            $r = is_numeric($r) ? (float) $r : null;
+
+            if (null === $l && null === $r) {
+                continue;
+            }
+
+            if (null === $l || null === $r) {
+                $parts[] = \sprintf(
+                    '%s %s→%s',
+                    $key,
+                    null === $l ? '—' : \sprintf('%.2f', $l),
+                    null === $r ? '—' : \sprintf('%.2f', $r),
+                );
+                continue;
+            }
+
+            $parts[] = \sprintf('%s %+.2f', $key, $r - $l);
+        }
+
+        return [] === $parts ? '—' : implode(', ', $parts);
     }
 
     /**
@@ -216,7 +316,7 @@ class BenchmarkCompareCommand extends Command
             if (!\is_array($scenario)) {
                 continue;
             }
-            $key = (string) ($scenario['id'] ?? '?').'#'.(int) ($scenario['attempt'] ?? 1);
+            $key = ($scenario['id'] ?? '?').'#'.(int) ($scenario['attempt'] ?? 1);
             $scenario['__key'] = $key;
             $scenarios[] = $scenario;
         }
@@ -333,10 +433,68 @@ class BenchmarkCompareCommand extends Command
             (int) ($left['summary']['passed'] ?? 0),
             (int) ($right['summary']['passed'] ?? 0),
         ));
+
+        $leftRate = $this->passRate($left);
+        $rightRate = $this->passRate($right);
+        $io->writeln(\sprintf(
+            ' pass rate:       %.1f%% → %.1f%%  (%+.1f pp)',
+            $leftRate,
+            $rightRate,
+            $rightRate - $leftRate,
+        ));
+
         $io->writeln(\sprintf(
             ' failed/errors:   %d → %d',
             (int) ($left['summary']['failed'] ?? 0) + (int) ($left['summary']['errors'] ?? 0),
             (int) ($right['summary']['failed'] ?? 0) + (int) ($right['summary']['errors'] ?? 0),
         ));
+
+        $leftCost = $this->totalCost($left);
+        $rightCost = $this->totalCost($right);
+        if (null !== $leftCost && null !== $rightCost) {
+            $io->writeln(\sprintf(
+                ' cost:            $%.4f → $%.4f  (%+.4f USD)',
+                $leftCost,
+                $rightCost,
+                $rightCost - $leftCost,
+            ));
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $report
+     */
+    private function passRate(array $report): float
+    {
+        $total = (int) ($report['summary']['total'] ?? 0);
+        if ($total <= 0) {
+            return 0.0;
+        }
+
+        return 100.0 * (int) ($report['summary']['passed'] ?? 0) / $total;
+    }
+
+    /**
+     * Sum of per-scenario `metrics.cost_usd`; null when no scenario reported cost.
+     *
+     * @param array<string, mixed> $report
+     */
+    private function totalCost(array $report): ?float
+    {
+        $sum = 0.0;
+        $hasCost = false;
+
+        foreach ($report['scenarios'] as $scenario) {
+            if (!\is_array($scenario)) {
+                continue;
+            }
+            $cost = $scenario['metrics']['cost_usd'] ?? null;
+            if (is_numeric($cost)) {
+                $sum += (float) $cost;
+                $hasCost = true;
+            }
+        }
+
+        return $hasCost ? $sum : null;
     }
 }

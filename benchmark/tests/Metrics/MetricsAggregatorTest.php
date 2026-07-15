@@ -47,11 +47,11 @@ class MetricsAggregatorTest extends TestCase
             assistantResult: AssistantRunResult::success(
                 stdout: '',
                 durationMs: 800.0,
-                tokenUsage: new TokenUsage(120, 80),
+                tokenUsage: new TokenUsage(120, 80, cachedTokens: 1_000, costUsd: 0.42),
                 toolCalls: [
                     new ToolCall('symfony_logs', startedAtMs: 1500.0),
                     new ToolCall('symfony_logs', startedAtMs: 1700.0),
-                    new ToolCall('symfony_profiler', startedAtMs: 1900.0, errored: true),
+                    new ToolCall('symfony_profiler', errored: true, startedAtMs: 1900.0),
                 ],
             ),
             diff: new DiffResult(
@@ -78,7 +78,10 @@ class MetricsAggregatorTest extends TestCase
         $this->assertSame(1234.0, $bag->get('duration_ms'));
         $this->assertSame(120, $bag->get('input_tokens'));
         $this->assertSame(80, $bag->get('output_tokens'));
-        $this->assertSame(200, $bag->get('total_tokens'));
+        $this->assertSame(1_000, $bag->get('cached_tokens'));
+        $this->assertSame(200, $bag->get('fresh_tokens'));
+        $this->assertSame(1_200, $bag->get('total_tokens'));
+        $this->assertSame(0.42, $bag->get('cost_usd'));
         $this->assertSame(3, $bag->get('tool_call_count'));
         $this->assertSame(1, $bag->get('tool_error_count'));
         $this->assertSame(1500.0, $bag->get('time_to_first_tool_call_ms'));
@@ -102,6 +105,8 @@ class MetricsAggregatorTest extends TestCase
 
         $this->assertNull($bag->get('input_tokens'));
         $this->assertNull($bag->get('output_tokens'));
+        $this->assertNull($bag->get('fresh_tokens'));
+        $this->assertNull($bag->get('cost_usd'));
         $this->assertNull($bag->get('total_tokens'));
         $this->assertNull($bag->get('time_to_first_tool_call_ms'));
         $this->assertNull($bag->get('time_to_first_code_change_ms'));

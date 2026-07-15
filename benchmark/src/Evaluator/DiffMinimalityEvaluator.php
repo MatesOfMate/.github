@@ -32,58 +32,104 @@ class DiffMinimalityEvaluator implements EvaluatorInterface
     public function evaluate(EvaluationInput $input): EvaluationResult
     {
         $diff = $input->outcome->diff;
-        $expected = $input->scenario->expected['expected_files_changed'] ?? [];
-        $expectedCount = \is_array($expected) ? \count($expected) : 0;
+        $expectedFiles = $this->expectedFiles($input);
 
-        if (null === $diff) {
+        if (!$diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult) {
             return new EvaluationResult(
                 name: self::NAME,
                 score: 0.0,
                 passed: false,
                 explanation: 'No diff captured; cannot evaluate minimality.',
-                evidence: ['files_changed' => null, 'expected_files' => $expectedCount],
+                evidence: ['files_changed' => null, 'expected_files' => $expectedFiles],
             );
         }
 
-        $actual = \count($diff->changedFiles);
-        if (0 === $actual) {
+        $actualFiles = array_values(array_unique(array_map(
+            static fn (string $file): string => ltrim(trim($file), './'),
+            $diff->changedFiles,
+        )));
+
+        if ([] === $actualFiles) {
             return new EvaluationResult(
                 name: self::NAME,
                 score: 0.0,
                 passed: false,
                 explanation: 'Diff is empty; assistant did not change anything.',
-                evidence: ['files_changed' => 0, 'expected_files' => $expectedCount],
+                evidence: ['files_changed' => 0, 'expected_files' => $expectedFiles],
             );
         }
 
-        $baseline = max($expectedCount, 1);
-        $ratio = $actual / $baseline;
+        if ([] === $expectedFiles) {
+            // No declared expectation: reward focused diffs by file count only.
+            $score = match (true) {
+                \count($actualFiles) <= 1 => 5.0,
+                \count($actualFiles) <= 2 => 4.0,
+                \count($actualFiles) <= 4 => 3.0,
+                \count($actualFiles) <= 8 => 2.0,
+                default => 1.0,
+            };
 
-        if ($ratio <= 1.0) {
-            $score = 5.0;
-        } elseif ($ratio <= 1.5) {
-            $score = 4.0;
-        } elseif ($ratio <= 2.0) {
-            $score = 3.0;
-        } elseif ($ratio <= 3.0) {
-            $score = 2.0;
-        } elseif ($ratio <= 5.0) {
-            $score = 1.0;
-        } else {
-            $score = 0.5;
+            return new EvaluationResult(
+                name: self::NAME,
+                score: $score,
+                passed: $score >= 4.0,
+                explanation: \sprintf('Changed %d file(s); no expected file set declared.', \count($actualFiles)),
+                evidence: [
+                    'files_changed' => \count($actualFiles),
+                    'expected_files' => [],
+                    'additions' => $diff->additions,
+                    'deletions' => $diff->deletions,
+                ],
+            );
         }
+
+        // Compare the actual file set against the expected one: touching
+        // exactly the expected files is a 5; both extra files and missed
+        // expected files reduce the overlap (Jaccard similarity).
+        $intersection = array_values(array_intersect($expectedFiles, $actualFiles));
+        $union = array_values(array_unique([...$expectedFiles, ...$actualFiles]));
+        $missing = array_values(array_diff($expectedFiles, $actualFiles));
+        $extra = array_values(array_diff($actualFiles, $expectedFiles));
+
+        $similarity = \count($intersection) / max(\count($union), 1);
+        $score = round($similarity * EvaluationResult::MAX_SCORE, 2);
+        $passed = [] === $missing && [] === $extra;
 
         return new EvaluationResult(
             name: self::NAME,
             score: $score,
-            passed: $score >= 4.0,
-            explanation: \sprintf('Changed %d file(s) vs %d expected (ratio %.2f).', $actual, $expectedCount, $ratio),
+            passed: $passed,
+            explanation: \sprintf(
+                'Changed files overlap %d/%d with expectation (%d missing, %d extra).',
+                \count($intersection),
+                \count($union),
+                \count($missing),
+                \count($extra),
+            ),
             evidence: [
-                'files_changed' => $actual,
-                'expected_files' => $expectedCount,
+                'files_changed' => \count($actualFiles),
+                'expected_files' => $expectedFiles,
+                'missing_expected' => $missing,
+                'extra_files' => $extra,
                 'additions' => $diff->additions,
                 'deletions' => $diff->deletions,
             ],
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function expectedFiles(EvaluationInput $input): array
+    {
+        $raw = $input->scenario->expected['expected_files_changed'] ?? [];
+        if (!\is_array($raw)) {
+            return [];
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map(static fn ($file): string => \is_string($file) ? ltrim(trim($file), './') : '', $raw),
+            static fn (string $file): bool => '' !== $file,
+        )));
     }
 }

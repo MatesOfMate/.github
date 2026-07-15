@@ -7,17 +7,17 @@ fixture:
 
 task:
   prompt: |
-    The verification test fails because the container cannot autowire
-    `OrderService`. Find the root cause in the container or service
+    Requesting `OrderService` from the container fails with a runtime error
+    during the verification test. Find the root cause in the service
     configuration and fix it. Touch only the file(s) responsible for the
-    misconfiguration.
+    problem.
 
 expected:
   pass_commands:
     - php tests/test.php
   root_cause:
-    - autowiring
-    - missing dependency
+    - ["paymentgateway", "payment gateway"]
+    - ["not registered", "never registered", "was not registered", "isn't registered", "unregistered", "missing registration"]
   expected_files_changed:
     - src/services.php
   forbidden_files_changed:

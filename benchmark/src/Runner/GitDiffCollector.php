@@ -24,6 +24,7 @@ namespace MatesOfMate\Benchmark\Runner;
 class GitDiffCollector
 {
     public const BASELINE_MESSAGE = 'benchmark baseline';
+    public const BASELINE_REF = 'benchmark-baseline';
 
     public function __construct(
         private readonly CommandExecutor $executor,
@@ -51,16 +52,25 @@ class GitDiffCollector
             'git commit',
             env: $env,
         );
+        // Pin the baseline so the diff survives assistant-made commits: diffing
+        // a moving HEAD would let a stray `git commit` erase the whole change set.
+        $this->executor->mustExecute(
+            \sprintf('git tag -f %s', escapeshellarg(self::BASELINE_REF)),
+            $workspace->path,
+            'git tag',
+            env: $env,
+        );
     }
 
     public function collect(Workspace $workspace): DiffResult
     {
         $env = $this->gitEnv();
+        $baseline = escapeshellarg(self::BASELINE_REF);
 
         $this->executor->mustExecute('git add -A --intent-to-add', $workspace->path, 'git add', env: $env);
 
-        $diff = $this->executor->mustExecute('git diff HEAD', $workspace->path, 'git diff', env: $env);
-        $stat = $this->executor->mustExecute('git diff --numstat HEAD', $workspace->path, 'git diff --numstat', env: $env);
+        $diff = $this->executor->mustExecute(\sprintf('git diff %s', $baseline), $workspace->path, 'git diff', env: $env);
+        $stat = $this->executor->mustExecute(\sprintf('git diff --numstat %s', $baseline), $workspace->path, 'git diff --numstat', env: $env);
 
         [$files, $additions, $deletions] = $this->parseNumstat($stat->stdout);
 
@@ -71,6 +81,39 @@ class GitDiffCollector
             additions: $additions,
             deletions: $deletions,
         );
+    }
+
+    /**
+     * Restore the baseline version of the given files, discarding any changes
+     * the assistant made to them. Used to make verification cheat-proof: the
+     * pass commands always run against the original (protected) test files.
+     * Files that did not exist at baseline are deleted.
+     *
+     * @param list<string> $files
+     */
+    public function restoreFiles(Workspace $workspace, array $files): void
+    {
+        $env = $this->gitEnv();
+
+        foreach ($files as $file) {
+            if (!\is_string($file)) {
+                continue;
+            }
+            if ('' === trim($file)) {
+                continue;
+            }
+            $file = ltrim(trim($file), './');
+            $restore = $this->executor->execute(
+                \sprintf('git checkout %s -- %s', escapeshellarg(self::BASELINE_REF), escapeshellarg($file)),
+                $workspace->path,
+                env: $env,
+            );
+
+            if (!$restore->successful() && is_file($workspace->path.'/'.$file)) {
+                // Not part of the baseline: the assistant created it.
+                @unlink($workspace->path.'/'.$file);
+            }
+        }
     }
 
     /**
@@ -88,7 +131,10 @@ class GitDiffCollector
             }
 
             $parts = preg_split('/\s+/', $line, 3);
-            if (null === $parts || 3 !== \count($parts)) {
+            if (false === $parts) {
+                continue;
+            }
+            if (3 !== \count($parts)) {
                 continue;
             }
 

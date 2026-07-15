@@ -10,8 +10,6 @@ class Renderer
     public function render(string $template, array $data): string
     {
         return preg_replace_callback('/\{\{\s*(\w+)\s*\}\}/', static function (array $match) use ($data): string {
-            // BUG: this throws when the placeholder name isn't in $data.
-            // Expected behaviour: missing keys render as empty string.
             return $data[$match[1]];
         }, $template) ?? '';
     }

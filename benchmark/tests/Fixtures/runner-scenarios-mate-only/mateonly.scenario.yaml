@@ -1,0 +1,15 @@
+id: mateonly.scenario
+suite: tool-usage
+difficulty: easy
+tags:
+  - mate-only
+
+fixture:
+  path: tests/Fixtures/runner-fixture-tree
+
+task:
+  prompt: Use the Mate tools to inspect the app.
+
+expected:
+  pass_commands:
+    - 'php -r "exit(file_exists(''solution.txt'') ? 0 : 1);"'

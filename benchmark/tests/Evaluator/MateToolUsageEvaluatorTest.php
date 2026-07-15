@@ -22,12 +22,15 @@ use PHPUnit\Framework\TestCase;
  */
 class MateToolUsageEvaluatorTest extends TestCase
 {
-    public function testMateDisabledScoresZero(): void
+    public function testMateDisabledIsNotApplicable(): void
     {
         $outcome = RunOutcomeBuilder::build(mateMetrics: MateMetrics::disabled());
 
         $result = (new MateToolUsageEvaluator())->evaluate(new EvaluationInput($outcome->scenario, $outcome));
 
+        // A --mate=disabled run cannot be judged on Mate usage: the category is
+        // excluded (weights renormalised) instead of dragging the score to 0.
+        $this->assertFalse($result->applicable);
         $this->assertSame(0.0, $result->score);
         $this->assertFalse($result->passed);
     }
@@ -68,7 +71,7 @@ class MateToolUsageEvaluatorTest extends TestCase
         $this->assertFalse($result->passed);
     }
 
-    public function testNoExpectationButCallsObservedYieldsModerateScore(): void
+    public function testNoExpectationWithCallsIsNotApplicable(): void
     {
         $outcome = RunOutcomeBuilder::build(mateMetrics: new MateMetrics(
             enabled: true,
@@ -80,11 +83,13 @@ class MateToolUsageEvaluatorTest extends TestCase
 
         $result = (new MateToolUsageEvaluator())->evaluate(new EvaluationInput($outcome->scenario, $outcome));
 
-        $this->assertSame(4.0, $result->score);
-        $this->assertTrue($result->passed);
+        // The scenario declares no expected Mate tools, so Mate-tool usage is
+        // out of scope: the category is excluded rather than credited, keeping
+        // Mate-on and Mate-off scores comparable on non-Mate scenarios.
+        $this->assertFalse($result->applicable);
     }
 
-    public function testEnabledButNoToolCallsScoresLow(): void
+    public function testEnabledButNoToolCallsIsNotApplicableWithoutExpectation(): void
     {
         $outcome = RunOutcomeBuilder::build(mateMetrics: new MateMetrics(
             enabled: true,
@@ -96,8 +101,10 @@ class MateToolUsageEvaluatorTest extends TestCase
 
         $result = (new MateToolUsageEvaluator())->evaluate(new EvaluationInput($outcome->scenario, $outcome));
 
-        $this->assertSame(1.0, $result->score);
-        $this->assertFalse($result->passed);
+        // Mate provisioned but the scenario expects no tools: not a failure,
+        // just out of scope. Penalising it would make merely enabling Mate
+        // lower the score of every task native tooling already solves.
+        $this->assertFalse($result->applicable);
     }
 
     public function testAnyOfMatchScoresFive(): void

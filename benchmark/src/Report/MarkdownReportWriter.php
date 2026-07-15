@@ -18,11 +18,26 @@ use Symfony\Component\Filesystem\Filesystem;
 /**
  * Produces a human-readable `summary.md` covering all sections required by spec 09.
  *
+ * Permanently-degenerate metrics (`time_to_first_tool_call_ms`,
+ * `time_to_first_code_change_ms`, `redundant_tool_call_count`) are deliberately
+ * omitted from the Markdown; they remain available in `results.json`.
+ *
  * @author Johannes Wachter <johannes@sulu.io>
  */
 class MarkdownReportWriter implements ReportWriterInterface
 {
     public const FILENAME = 'summary.md';
+
+    private const array SCORE_CATEGORIES = [
+        'functional',
+        'root_cause',
+        'mate_tool_usage',
+        'minimality',
+        'verification',
+        'efficiency',
+    ];
+
+    private const string NOT_AVAILABLE = '–';
 
     private readonly Filesystem $filesystem;
 
@@ -75,32 +90,51 @@ class MarkdownReportWriter implements ReportWriterInterface
         $passed = 0;
         $failed = 0;
         $errors = 0;
-        $sumScore = 0.0;
+        $invalid = 0;
+        $scoredSum = 0.0;
+        $scoredCount = 0;
+        $passedSum = 0.0;
 
         foreach ($context->outcomes as $outcome) {
             match ($outcome->status) {
                 RunStatus::Passed => ++$passed,
                 RunStatus::Failed => ++$failed,
                 RunStatus::AdapterError, RunStatus::SetupError => ++$errors,
+                RunStatus::InvalidScenario => ++$invalid,
             };
-            $sumScore += $outcome->score->finalScore;
+
+            // Only genuinely scored attempts count towards the average —
+            // adapter/setup errors and invalid scenarios say nothing about
+            // the assistant's ability.
+            if (RunStatus::Passed === $outcome->status || RunStatus::Failed === $outcome->status) {
+                $scoredSum += $outcome->score->finalScore;
+                ++$scoredCount;
+            }
+            if (RunStatus::Passed === $outcome->status) {
+                $passedSum += $outcome->score->finalScore;
+            }
         }
 
-        $average = 0 === $total ? 0.0 : round($sumScore / $total, 2);
+        $passRate = 0 === $total ? 0.0 : 100.0 * $passed / $total;
+        $scoredAverage = 0 === $scoredCount ? self::NOT_AVAILABLE : \sprintf('%.2f', $scoredSum / $scoredCount);
+        $passedAverage = 0 === $passed ? self::NOT_AVAILABLE : \sprintf('%.2f', $passedSum / $passed);
 
         return \sprintf(
-            "## Summary\n\n| Total | Passed | Failed | Errors | Avg score |\n|---:|---:|---:|---:|---:|\n| %d | %d | %d | %d | %.2f |",
+            "## Summary\n\n| Total | Passed | Failed | Errors | Invalid scenarios | Pass rate | Avg score (scored runs) | Avg score (passed runs) |\n|---:|---:|---:|---:|---:|---:|---:|---:|\n| %d | %d | %d | %d | %d | %.1f%% | %s | %s |\n\n_Avg score (scored runs) covers passed + failed attempts only; adapter/setup errors and invalid scenarios are excluded._",
             $total,
             $passed,
             $failed,
             $errors,
-            $average,
+            $invalid,
+            $passRate,
+            $scoredAverage,
+            $passedAverage,
         );
     }
 
     private function adapterSection(ReportContext $context): string
     {
-        return "## Adapter comparison\n\nThis run only exercised `".$context->adapter."`. Compare runs across adapters by aggregating multiple `results.json` files.";
+        return "## Adapter comparison\n\nThis run only exercised `".$context->adapter.'`. Compare runs across adapters by aggregating multiple `results.json` files.';
     }
 
     private function mateSection(ReportContext $context): string
@@ -132,20 +166,85 @@ class MarkdownReportWriter implements ReportWriterInterface
             $key = $this->key($outcome);
             $diff = $outcome->diff;
             $files = null !== $diff ? \count($diff->changedFiles) : 0;
+
+            $categoryCells = [];
+            foreach (self::SCORE_CATEGORIES as $category) {
+                $categoryCells[] = $this->categoryCell($outcome, $category);
+            }
+
             $rows[] = \sprintf(
-                '| `%s` | %d | %s | %.2f | %.0fms | %d | [diff](diffs/%s.diff) · [log](logs/%s.log) |',
+                '| `%s` | %d | %s | %.2f | %s | %s | %.0fms | %d | %s | %s |',
                 $outcome->scenario->id,
                 $outcome->workspace->attempt,
-                $outcome->status->value,
+                $this->statusLabel($outcome->status),
                 $outcome->score->finalScore,
+                implode(' | ', $categoryCells),
+                $this->costCell($outcome),
                 $outcome->totalDurationMs,
                 $files,
-                $key,
-                $key,
+                $this->errorCell($outcome),
+                $this->artefactLinks($outcome, $key),
             );
         }
 
-        return "## Scenario results\n\n| Scenario | Attempt | Status | Score | Duration | Files | Artefacts |\n|---|---:|---|---:|---:|---:|---|\n".implode("\n", $rows);
+        return "## Scenario results\n\n"
+            ."| Scenario | Attempt | Status | Score | Functional | Root cause | Mate tools | Minimality | Verification | Efficiency | Cost | Duration | Files | Error | Artefacts |\n"
+            ."|---|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|\n"
+            .implode("\n", $rows);
+    }
+
+    private function categoryCell(RunOutcome $outcome, string $category): string
+    {
+        if (\in_array($category, $outcome->score->notApplicable, true)) {
+            return self::NOT_AVAILABLE;
+        }
+
+        $value = $outcome->score->perCategory[$category] ?? null;
+
+        return null === $value ? self::NOT_AVAILABLE : \sprintf('%.1f', $value);
+    }
+
+    private function costCell(RunOutcome $outcome): string
+    {
+        $cost = $outcome->metrics->get('cost_usd');
+        if (!\is_float($cost) && !\is_int($cost)) {
+            $cost = $outcome->assistantResult?->tokenUsage?->costUsd;
+        }
+
+        return null === $cost ? self::NOT_AVAILABLE : \sprintf('$%.4f', $cost);
+    }
+
+    private function errorCell(RunOutcome $outcome): string
+    {
+        if (RunStatus::Passed === $outcome->status || null === $outcome->errorMessage) {
+            return self::NOT_AVAILABLE;
+        }
+
+        return $this->inline($outcome->errorMessage, 80);
+    }
+
+    private function artefactLinks(RunOutcome $outcome, string $key): string
+    {
+        $links = [];
+        // The ArtifactsWriter only writes a .diff file for non-empty diffs;
+        // never link artefacts that do not exist.
+        if ($outcome->diff instanceof \MatesOfMate\Benchmark\Runner\DiffResult && '' !== $outcome->diff->diff) {
+            $links[] = \sprintf('[diff](diffs/%s.diff)', $key);
+        }
+        $links[] = \sprintf('[log](logs/%s.log)', $key);
+
+        return implode(' · ', $links);
+    }
+
+    private function statusLabel(RunStatus $status): string
+    {
+        return match ($status) {
+            RunStatus::Passed => 'passed',
+            RunStatus::Failed => 'failed',
+            RunStatus::AdapterError => 'adapter_error',
+            RunStatus::SetupError => 'setup_error',
+            RunStatus::InvalidScenario => 'invalid_scenario',
+        };
     }
 
     private function toolUsageSection(ReportContext $context): string
@@ -179,8 +278,10 @@ class MarkdownReportWriter implements ReportWriterInterface
     {
         $input = 0;
         $output = 0;
+        $fresh = 0;
         $cached = 0;
-        $total = 0;
+        $cost = 0.0;
+        $hasCost = false;
         $hasData = false;
 
         foreach ($context->outcomes as $outcome) {
@@ -191,21 +292,29 @@ class MarkdownReportWriter implements ReportWriterInterface
             $hasData = true;
             $input += $usage->inputTokens;
             $output += $usage->outputTokens;
+            $fresh += $usage->freshTokens();
             $cached += $usage->cachedTokens;
-            $total += $usage->totalTokens();
+            if (null !== $usage->costUsd) {
+                $hasCost = true;
+                $cost += $usage->costUsd;
+            }
         }
 
         if (!$hasData) {
             return "## Token usage\n\n_no token data reported_";
         }
 
-        return \sprintf(
-            "## Token usage\n\n| Metric | Total |\n|---|---:|\n| input_tokens | %d |\n| output_tokens | %d |\n| cached_tokens | %d |\n| total_tokens | %d |",
-            $input,
-            $output,
-            $cached,
-            $total,
-        );
+        $rows = [
+            \sprintf('| fresh input_tokens | %d |', $input),
+            \sprintf('| output_tokens | %d |', $output),
+            \sprintf('| fresh_tokens (input + output) | %d |', $fresh),
+            \sprintf('| cached_tokens (cache reads, billed at a fraction) | %d |', $cached),
+        ];
+        if ($hasCost) {
+            $rows[] = \sprintf('| cost_usd | $%.4f |', $cost);
+        }
+
+        return "## Token usage\n\nFresh tokens are the actual consumption; cache reads are how CLI agents are supposed to work and are reported separately, not counted as consumption.\n\n| Metric | Total |\n|---|---:|\n".implode("\n", $rows);
     }
 
     private function slowestSection(ReportContext $context): string
@@ -215,7 +324,7 @@ class MarkdownReportWriter implements ReportWriterInterface
         }
 
         $sorted = $context->outcomes;
-        usort($sorted, static fn (RunOutcome $a, RunOutcome $b) => $b->totalDurationMs <=> $a->totalDurationMs);
+        usort($sorted, static fn (RunOutcome $a, RunOutcome $b): int => $b->totalDurationMs <=> $a->totalDurationMs);
         $top = \array_slice($sorted, 0, 5);
 
         $rows = [];
@@ -230,7 +339,7 @@ class MarkdownReportWriter implements ReportWriterInterface
     {
         $failures = array_filter(
             $context->outcomes,
-            static fn (RunOutcome $o) => RunStatus::Passed !== $o->status,
+            static fn (RunOutcome $o): bool => RunStatus::Passed !== $o->status,
         );
 
         if ([] === $failures) {
@@ -240,15 +349,53 @@ class MarkdownReportWriter implements ReportWriterInterface
         $rows = [];
         foreach ($failures as $outcome) {
             $rows[] = \sprintf(
-                '| `%s` | attempt %d | %s | %s |',
+                '| `%s` | attempt %d | %s | %s | %s |',
                 $outcome->scenario->id,
                 $outcome->workspace->attempt,
-                $outcome->status->value,
-                null !== $outcome->errorMessage ? trim((string) preg_replace('/\s+/', ' ', $outcome->errorMessage)) : '—',
+                $this->statusLabel($outcome->status),
+                null !== $outcome->errorMessage ? $this->inline($outcome->errorMessage, 160) : self::NOT_AVAILABLE,
+                $this->failedCommandCell($outcome),
             );
         }
 
-        return "## Failed scenarios\n\n| Scenario | Attempt | Status | Error |\n|---|---:|---|---|\n".implode("\n", $rows);
+        return "## Failed scenarios\n\n| Scenario | Attempt | Status | Error | Failed pass command |\n|---|---:|---|---|---|\n".implode("\n", $rows);
+    }
+
+    private function failedCommandCell(RunOutcome $outcome): string
+    {
+        foreach ($outcome->verificationResults as $result) {
+            if ($result->successful()) {
+                continue;
+            }
+
+            $cell = \sprintf('`%s` (exit %d)', $this->inline($result->command, 60), $result->exitCode);
+            $output = '' !== trim($result->stderr) ? $result->stderr : $result->stdout;
+            if ('' !== trim($output)) {
+                $cell .= ': '.$this->inline($output, 120);
+            }
+
+            return $cell;
+        }
+
+        return self::NOT_AVAILABLE;
+    }
+
+    /**
+     * Collapses whitespace, truncates, and escapes pipes so arbitrary command
+     * output cannot break the Markdown table layout.
+     */
+    private function inline(string $text, int $maxLength): string
+    {
+        $collapsed = trim((string) preg_replace('/\s+/', ' ', $text));
+        if ('' === $collapsed) {
+            return self::NOT_AVAILABLE;
+        }
+
+        if (mb_strlen($collapsed) > $maxLength) {
+            $collapsed = mb_substr($collapsed, 0, $maxLength).'…';
+        }
+
+        return str_replace('|', '\\|', $collapsed);
     }
 
     private function mostChangedFilesSection(ReportContext $context): string

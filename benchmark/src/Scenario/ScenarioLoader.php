@@ -46,7 +46,7 @@ class ScenarioLoader
             throw new \RuntimeException(\sprintf('Scenario "%s" must contain a YAML mapping at the root.', $path));
         }
 
-        /** @var array<string, mixed> $parsed */
+        /* @var array<string, mixed> $parsed */
         return $parsed;
     }
 }

@@ -26,10 +26,11 @@ use MatesOfMate\Benchmark\Scoring\Score;
 readonly class RunOutcome
 {
     /**
-     * @param list<CommandResult>      $setupResults
-     * @param list<CommandResult>      $baselineResults
-     * @param list<CommandResult>      $verificationResults
-     * @param list<EvaluationResult>   $evaluations
+     * @param list<CommandResult>    $setupResults
+     * @param list<CommandResult>    $baselineResults
+     * @param list<CommandResult>    $verificationResults
+     * @param list<EvaluationResult> $evaluations
+     * @param list<CommandResult>    $baselineRedResults  pass_commands executed BEFORE the assistant ran (expected to fail)
      */
     public function __construct(
         public Scenario $scenario,
@@ -46,6 +47,7 @@ readonly class RunOutcome
         public ?string $errorMessage = null,
         public array $evaluations = [],
         public Score $score = new Score(0.0, 0.0, [], []),
+        public array $baselineRedResults = [],
     ) {
     }
 
@@ -69,6 +71,7 @@ readonly class RunOutcome
             errorMessage: $this->errorMessage,
             evaluations: $evaluations,
             score: $score,
+            baselineRedResults: $this->baselineRedResults,
         );
     }
 }

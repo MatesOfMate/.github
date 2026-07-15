@@ -19,8 +19,8 @@ benchmark suite.
 | Diffs are persisted | [`src/Report/ArtifactsWriter.php`](src/Report/ArtifactsWriter.php) writes `reports/<run-id>/diffs/<scenario>-attempt-N.diff`. |
 | Logs are persisted | Same writer emits `reports/<run-id>/logs/<scenario>-attempt-N.log` (setup, baseline and verify command output). |
 | Raw assistant output is persisted | Same writer emits `reports/<run-id>/raw/<scenario>-attempt-N.stdout.txt` and `.stderr.txt`. |
-| Tool calls are persisted | The JSON report stores every assistant tool call (name + arguments + errored flag) under `scenarios[].assistant.tool_calls`. |
-| Token usage is persisted when available | [`src/Metrics/Collector/TokenUsageCollector.php`](src/Metrics/Collector/TokenUsageCollector.php) emits `input_tokens`/`output_tokens`/`total_tokens` (or `null`); the JSON report carries them under `scenarios[].metrics`. |
+| Tool calls are persisted | The JSON report stores captured assistant tool calls as compact `{name, mcp}` entries (capped at 50) under `scenarios[].assistant.tool_calls`; full tool-call detail (arguments, errors, timing) feeds the Mate metrics and evaluators. |
+| Token usage is persisted when available | [`src/Metrics/Collector/TokenUsageCollector.php`](src/Metrics/Collector/TokenUsageCollector.php) emits `input_tokens`/`output_tokens`/`cached_tokens`/`fresh_tokens`/`total_tokens`/`cost_usd` (or `null`); the JSON report carries them under `scenarios[].metrics`. |
 | Baseline vs Mate comparison is possible | Run twice with `--mate=enabled` and `--mate=disabled`, then diff with [`src/Command/BenchmarkCompareCommand.php`](src/Command/BenchmarkCompareCommand.php). |
 | Scenario schema is documented | [`schema/scenario.schema.json`](schema/scenario.schema.json) plus the README scenario-format section. |
 | Fixture isolation prevents mutation of source fixtures | [`src/Runner/FixtureCopier.php`](src/Runner/FixtureCopier.php) mirrors fixtures into per-attempt workspaces (under `var/benchmark/runs/<run-id>/<scenario-id>/<attempt>/workspace/`) without ever writing back. |
@@ -43,7 +43,7 @@ Expected:
 
 - Two report directories under `reports/<run-id>/`.
 - Each contains `results.json`, `summary.md`, `diffs/`, `logs/` and `raw/`.
-- `benchmark:compare` prints a per-scenario diff (score, tokens, duration, Mate calls) plus a run-level summary, so the Mate-enabled vs Mate-disabled comparison required by the spec is reproducible end-to-end.
+- `benchmark:compare` prints a per-scenario diff (score, per-category deltas, tokens, duration, Mate calls) plus a run-level summary (average score, pass rate, cost when both runs report it), so the Mate-enabled vs Mate-disabled comparison required by the spec is reproducible end-to-end. Reports with different scenario id sets trigger an explicit warning and only the intersection is compared.
 
 For real-model checks, swap `--adapter=null` for `--adapter=codex` or `--adapter=claude` and ensure the corresponding CLI is installed and authenticated. Binary paths and extra arguments are configurable via `BENCHMARK_CODEX_BIN`/`BENCHMARK_CODEX_ARGS` and `BENCHMARK_CLAUDE_BIN`/`BENCHMARK_CLAUDE_ARGS`.
 

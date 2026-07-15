@@ -34,7 +34,7 @@ class EvaluationPipelineTest extends TestCase
         $results = $pipeline->evaluate(new EvaluationInput($outcome->scenario, $outcome));
 
         $this->assertCount(2, $results);
-        $this->assertSame(['a', 'b'], array_map(static fn ($r) => $r->name, $results));
+        $this->assertSame(['a', 'b'], array_map(static fn (EvaluationResult $r): string => $r->name, $results));
     }
 
     public function testWrapsEvaluatorExceptionsAsFailingResults(): void
@@ -56,7 +56,7 @@ class EvaluationPipelineTest extends TestCase
 
     public function testDefaultEvaluatorsCoverAllScoringCategories(): void
     {
-        $names = array_map(static fn ($e) => $e->name(), EvaluationPipeline::defaultEvaluators());
+        $names = array_map(static fn (EvaluatorInterface $e): string => $e->name(), EvaluationPipeline::defaultEvaluators());
 
         foreach (['functional', 'root_cause', 'mate_tool_usage', 'minimality', 'verification', 'efficiency'] as $expected) {
             $this->assertContains($expected, $names);
@@ -66,8 +66,8 @@ class EvaluationPipelineTest extends TestCase
 
     private function stubEvaluator(string $name, float $score): EvaluatorInterface
     {
-        return new class($name, $score) implements EvaluatorInterface {
-            public function __construct(private readonly string $name, private readonly float $score)
+        return new readonly class($name, $score) implements EvaluatorInterface {
+            public function __construct(private string $name, private float $score)
             {
             }
 
@@ -85,8 +85,8 @@ class EvaluationPipelineTest extends TestCase
 
     private function throwingEvaluator(string $message): EvaluatorInterface
     {
-        return new class($message) implements EvaluatorInterface {
-            public function __construct(private readonly string $message)
+        return new readonly class($message) implements EvaluatorInterface {
+            public function __construct(private string $message)
             {
             }
 

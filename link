@@ -6,9 +6,17 @@
  * Based on Symfony AI link script by Kévin Dunglas.
  */
 
-$targetProject = $argv[1] ?? getcwd();
-$copy = in_array('--copy', $argv, true);
-$rollback = in_array('--rollback', $argv, true);
+$args = array_slice($argv, 1);
+$targetProject = getcwd();
+$copy = in_array('--copy', $args, true);
+$rollback = in_array('--rollback', $args, true);
+
+foreach ($args as $arg) {
+    if (!str_starts_with($arg, '--')) {
+        $targetProject = $arg;
+        break;
+    }
+}
 
 if (!is_dir($targetProject)) {
     echo "Error: Project directory not found: $targetProject\n";
@@ -29,12 +37,15 @@ $packages = [
 ];
 
 if ($rollback) {
-    echo "Rolling back symlinks (run 'composer install' to restore)...\n";
+    echo "Rolling back linked packages (run 'composer install' to restore)...\n";
     foreach ($packages as $packageName => $_) {
         $vendorPath = $targetProject.'/vendor/'.$packageName;
         if (is_link($vendorPath)) {
             unlink($vendorPath);
             echo "✓ Removed symlink for $packageName\n";
+        } elseif (is_dir($vendorPath)) {
+            exec('rm -rf '.escapeshellarg($vendorPath));
+            echo "✓ Removed copied package for $packageName\n";
         }
     }
     exec('cd '.escapeshellarg($targetProject).' && composer install');

@@ -14,6 +14,8 @@ CHANGELOG
 0.1.0
 -----
 
+ * Report pending preview changes as success instead of failure
+ * Surface Rector parse errors and error counts in tool responses
  * Add Rector command tools (inspection, preview, and apply)
  * Add TOON formatter for token-efficient Rector output
  * Add multiple output modes: default, summary, detailed

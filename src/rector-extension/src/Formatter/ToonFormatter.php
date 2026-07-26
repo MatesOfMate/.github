@@ -13,6 +13,7 @@ namespace MatesOfMate\RectorExtension\Formatter;
 
 use MatesOfMate\RectorExtension\Discovery\ProjectContext;
 use MatesOfMate\RectorExtension\Parser\ParsedRectorResult;
+use MatesOfMate\RectorExtension\Runner\RunResult;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
@@ -24,6 +25,14 @@ use Symfony\AI\Mate\Encoding\ResponseEncoder;
  */
 class ToonFormatter
 {
+    private const EXIT_SUCCESS = 0;
+
+    /**
+     * Rector exits with this code when it found code to change, which is the
+     * successful outcome of a `--dry-run` preview.
+     */
+    private const EXIT_CHANGED_CODE = 2;
+
     public function formatInspection(ProjectContext $context): string
     {
         return ResponseEncoder::encode($context->toArray());
@@ -51,6 +60,10 @@ class ToonFormatter
             $data['rules'] = $result->rules;
         }
 
+        if ([] !== $result->errors) {
+            $data['errors'] = $result->errors;
+        }
+
         if ('' !== $result->errorOutput) {
             $data['error_output'] = $result->errorOutput;
         }
@@ -70,6 +83,10 @@ class ToonFormatter
     {
         $data = $this->summary($result);
 
+        if ([] !== $result->errors) {
+            $data['errors'] = $result->errors;
+        }
+
         if ([] !== $result->diagnostics) {
             $data['diagnostics'] = $result->diagnostics;
         }
@@ -87,12 +104,13 @@ class ToonFormatter
         $data['changed_files'] = $result->changedFiles;
         $data['rules'] = $result->rules;
         $data['diffs'] = $result->diffs;
+        $data['errors'] = $result->errors;
         $data['raw_output'] = $result->rawOutput;
         $data['error_output'] = $result->errorOutput;
         $data['diagnostics'] = $result->diagnostics;
         $data['rejected_input'] = $result->rejectedInput;
 
-        if ($result->runResult instanceof \MatesOfMate\RectorExtension\Runner\RunResult) {
+        if ($result->runResult instanceof RunResult) {
             $data['execution'] = [
                 'command' => $result->runResult->command,
                 'working_directory' => $result->runResult->workingDirectory,
@@ -108,13 +126,35 @@ class ToonFormatter
      */
     private function summary(ParsedRectorResult $result): array
     {
-        return [
+        $data = [
             'workflow' => $result->preview ? 'preview' : 'apply',
-            'status' => 0 === $result->exitCode ? 'SUCCESS' : 'FAILED',
+            'status' => $this->status($result),
             'exit_code' => $result->exitCode,
             'timed_out' => $result->timedOut,
             'changed_file_count' => $result->changedFileCount,
-            'change_count' => $result->changedFileCount,
         ];
+
+        if (0 !== $result->errorCount) {
+            $data['error_count'] = $result->errorCount;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Rector signals pending changes with a dedicated exit code, which is the expected
+     * outcome of a preview and must not be reported as a failure.
+     */
+    private function status(ParsedRectorResult $result): string
+    {
+        if ($result->timedOut) {
+            return 'TIMEOUT';
+        }
+
+        if (0 !== $result->errorCount) {
+            return 'FAILED';
+        }
+
+        return \in_array($result->exitCode, [self::EXIT_SUCCESS, self::EXIT_CHANGED_CODE], true) ? 'SUCCESS' : 'FAILED';
     }
 }

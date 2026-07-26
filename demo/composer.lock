@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3923bfc44e55d93b4387ea6922820ee1",
+    "content-hash": "a6ba77d5469c436cc403248ba25430a6",
     "packages": [
         {
             "name": "psr/cache",
@@ -2860,6 +2860,94 @@
                 "symfony",
                 "test-automation",
                 "testing",
+                "toon"
+            ],
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
+            "name": "matesofmate/rector-extension",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../src/rector-extension",
+                "reference": "5e3e2123e67506f4889bb8c7ed88fc351aad91ce"
+            },
+            "require": {
+                "matesofmate/common": "^0.3 || ^0.4@dev",
+                "php": ">=8.2",
+                "symfony/ai-mate": "^0.11 || dev-main",
+                "symfony/process": "^6.4|^7.0|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.0",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpunit/phpunit": "^10.0",
+                "rector/rector": "^2.0"
+            },
+            "suggest": {
+                "helgesverre/toon": "Install for TOON-encoded MCP responses; JSON remains the fallback when it is not available"
+            },
+            "type": "symfony-ai-mate",
+            "extra": {
+                "ai-mate": {
+                    "scan-dirs": [
+                        "src/Capability"
+                    ],
+                    "includes": [
+                        "config/config.php"
+                    ],
+                    "instructions": "INSTRUCTIONS.md"
+                },
+                "branch-alias": {
+                    "dev-main": "0.4.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "MatesOfMate\\RectorExtension\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "MatesOfMate\\RectorExtension\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "vendor/bin/phpunit"
+                ],
+                "lint": [
+                    "@composer validate --strict",
+                    "vendor/bin/rector process --dry-run",
+                    "vendor/bin/php-cs-fixer fix --dry-run --diff",
+                    "vendor/bin/phpstan analyse"
+                ],
+                "fix": [
+                    "vendor/bin/rector process",
+                    "vendor/bin/php-cs-fixer fix"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Johannes Wachter",
+                    "email": "johannes@sulu.io"
+                }
+            ],
+            "description": "Rector extension for Symfony AI Mate providing inspect, dry-run preview, and apply workflows",
+            "keywords": [
+                "ai",
+                "ai-mate",
+                "mcp",
+                "rector",
+                "refactoring",
+                "symfony",
                 "toon"
             ],
             "transport-options": {
@@ -6304,6 +6392,7 @@
         "matesofmate/composer-extension": 20,
         "matesofmate/phpstan-extension": 20,
         "matesofmate/phpunit-extension": 20,
+        "matesofmate/rector-extension": 20,
         "symfony/ai-monolog-mate-extension": 20,
         "symfony/ai-symfony-mate-extension": 20
     },

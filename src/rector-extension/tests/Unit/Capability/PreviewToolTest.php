@@ -12,12 +12,7 @@
 namespace MatesOfMate\RectorExtension\Tests\Unit\Capability;
 
 use MatesOfMate\RectorExtension\Capability\PreviewTool;
-use MatesOfMate\RectorExtension\Discovery\ProjectContext;
-use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
-use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
-use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
-use MatesOfMate\RectorExtension\Runner\RectorRunner;
-use MatesOfMate\RectorExtension\Validation\PathValidator;
+use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -25,75 +20,33 @@ use PHPUnit\Framework\TestCase;
  */
 class PreviewToolTest extends TestCase
 {
-    public function testExecuteReturnsStructuredFailureForInvalidPath(): void
+    public function testExecuteAlwaysRequestsThePreviewWorkflow(): void
     {
-        $context = ProjectContext::fromArray([
-            'projectRoot' => '/project',
-            'rectorInstalled' => true,
-            'configuration' => '/project/rector.php',
-            'preferredStrategy' => [
-                'type' => 'local-binary',
-                'command' => [\PHP_BINARY, '/project/vendor/bin/rector'],
-            ],
-        ]);
+        $workflow = $this->createMock(RectorWorkflow::class);
+        $workflow->expects($this->once())
+            ->method('run')
+            ->with(true, 'src', null, false, false, 'default')
+            ->willReturn('formatted');
 
-        $discovery = $this->createMock(RectorDiscovery::class);
-        $discovery->method('inspect')->willReturn($context);
-
-        $validator = $this->createMock(PathValidator::class);
-        $validator->expects($this->once())
-            ->method('validate')
-            ->with('../README.md')
-            ->willThrowException(new \InvalidArgumentException('Path must be inside the project root: ../README.md'));
-
-        $runner = $this->createMock(RectorRunner::class);
-        $runner->expects($this->never())->method('preview');
-
-        $tool = new PreviewTool(
-            $discovery,
-            $validator,
-            $runner,
-            $this->createMock(RectorOutputParser::class),
-            new ToonFormatter(),
-        );
-
-        $payload = json_decode($tool->execute(path: '../README.md'), true, 512, \JSON_THROW_ON_ERROR);
-
-        $this->assertSame('preview', $payload['workflow']);
-        $this->assertSame('FAILED', $payload['status']);
-        $this->assertSame(1, $payload['exit_code']);
-        $this->assertSame(['Path must be inside the project root: ../README.md'], $payload['diagnostics']);
-        $this->assertSame(['path' => '../README.md'], $payload['rejected_input']);
+        $this->assertSame('formatted', (new PreviewTool($workflow))->execute(path: 'src'));
     }
 
-    public function testExecuteRefusesMissingConfigurationBeforeRunningRector(): void
+    public function testExecuteForwardsAllOptions(): void
     {
-        $context = ProjectContext::fromArray([
-            'projectRoot' => '/project',
-            'rectorInstalled' => true,
-            'preferredStrategy' => [
-                'type' => 'local-binary',
-                'command' => [\PHP_BINARY, '/project/vendor/bin/rector'],
-            ],
-        ]);
+        $workflow = $this->createMock(RectorWorkflow::class);
+        $workflow->expects($this->once())
+            ->method('run')
+            ->with(true, 'src/Foo.php', 'rector-ci.php', true, true, 'detailed')
+            ->willReturn('formatted');
 
-        $discovery = $this->createMock(RectorDiscovery::class);
-        $discovery->method('inspect')->willReturn($context);
+        $tool = new PreviewTool($workflow);
 
-        $runner = $this->createMock(RectorRunner::class);
-        $runner->expects($this->never())->method('preview');
-
-        $tool = new PreviewTool(
-            $discovery,
-            $this->createMock(PathValidator::class),
-            $runner,
-            $this->createMock(RectorOutputParser::class),
-            $this->createMock(ToonFormatter::class),
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Rector configuration was not found.');
-
-        $tool->execute();
+        $this->assertSame('formatted', $tool->execute(
+            path: 'src/Foo.php',
+            configuration: 'rector-ci.php',
+            debug: true,
+            rulesSummary: true,
+            mode: 'detailed',
+        ));
     }
 }

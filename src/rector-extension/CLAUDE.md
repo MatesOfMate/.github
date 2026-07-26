@@ -17,6 +17,7 @@ This package provides Rector inspection, dry-run preview, and write-capable appl
 ## Structure
 
 - `src/Capability/` contains tools
+- `src/Workflow/` holds the shared preview/apply pipeline both write tools delegate to
 - `src/Discovery/` inspects project-local Rector setup
 - `src/Validation/` validates project-root path boundaries
 - `src/Runner/` builds and runs Rector process commands

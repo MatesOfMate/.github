@@ -17,6 +17,7 @@ use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
 use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
 use MatesOfMate\RectorExtension\Runner\RectorRunner;
 use MatesOfMate\RectorExtension\Validation\PathValidator;
+use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $container): void {
@@ -39,6 +40,7 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(RectorOutputParser::class);
     $services->set(ToonFormatter::class);
+    $services->set(RectorWorkflow::class);
 
     // Tools - automatically discovered by #[McpTool] attribute
     $services->set(InspectTool::class);

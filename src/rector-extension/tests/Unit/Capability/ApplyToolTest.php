@@ -12,13 +12,7 @@
 namespace MatesOfMate\RectorExtension\Tests\Unit\Capability;
 
 use MatesOfMate\RectorExtension\Capability\ApplyTool;
-use MatesOfMate\RectorExtension\Discovery\ProjectContext;
-use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
-use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
-use MatesOfMate\RectorExtension\Parser\ParsedRectorResult;
-use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
-use MatesOfMate\RectorExtension\Runner\RectorRunner;
-use MatesOfMate\RectorExtension\Validation\PathValidator;
+use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -26,40 +20,33 @@ use PHPUnit\Framework\TestCase;
  */
 class ApplyToolTest extends TestCase
 {
-    public function testExecutePassesApplyModeToRunnerWithoutAdditionalConfirmation(): void
+    public function testExecuteRequestsTheWriteWorkflowWithoutAdditionalConfirmation(): void
     {
-        $context = ProjectContext::fromArray([
-            'projectRoot' => '/project',
-            'rectorInstalled' => true,
-            'configuration' => '/project/rector.php',
-            'preferredStrategy' => [
-                'type' => 'local-binary',
-                'command' => [\PHP_BINARY, '/project/vendor/bin/rector'],
-            ],
-        ]);
+        $workflow = $this->createMock(RectorWorkflow::class);
+        $workflow->expects($this->once())
+            ->method('run')
+            ->with(false, 'src', null, false, false, 'default')
+            ->willReturn('formatted');
 
-        $discovery = $this->createMock(RectorDiscovery::class);
-        $discovery->method('inspect')->willReturn($context);
+        $this->assertSame('formatted', (new ApplyTool($workflow))->execute(path: 'src'));
+    }
 
-        $validator = $this->createMock(PathValidator::class);
-        $validator->expects($this->once())
-            ->method('validate')
-            ->with('src')
-            ->willReturn('src');
+    public function testExecuteForwardsAllOptions(): void
+    {
+        $workflow = $this->createMock(RectorWorkflow::class);
+        $workflow->expects($this->once())
+            ->method('run')
+            ->with(false, 'src/Foo.php', 'rector-ci.php', true, true, 'summary')
+            ->willReturn('formatted');
 
-        $runner = $this->createMock(RectorRunner::class);
-        $runner->expects($this->once())
-            ->method('apply')
-            ->with($context->preferredStrategy, '/project/rector.php', 'src', false, false);
+        $tool = new ApplyTool($workflow);
 
-        $parser = $this->createMock(RectorOutputParser::class);
-        $parser->method('parse')->willReturn(ParsedRectorResult::empty(false));
-
-        $formatter = $this->createMock(ToonFormatter::class);
-        $formatter->method('format')->willReturn('formatted');
-
-        $tool = new ApplyTool($discovery, $validator, $runner, $parser, $formatter);
-
-        $this->assertSame('formatted', $tool->execute(path: 'src'));
+        $this->assertSame('formatted', $tool->execute(
+            path: 'src/Foo.php',
+            configuration: 'rector-ci.php',
+            debug: true,
+            rulesSummary: true,
+            mode: 'summary',
+        ));
     }
 }

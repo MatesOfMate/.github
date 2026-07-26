@@ -35,6 +35,8 @@ class RectorOutputParser
                 changedFiles: [],
                 rules: [],
                 diffs: [],
+                errorCount: 0,
+                errors: [],
                 rawOutput: $runResult->output,
                 errorOutput: $runResult->errorOutput,
                 diagnostics: ['Could not parse Rector JSON output; raw output is included.'],
@@ -43,7 +45,21 @@ class RectorOutputParser
         }
 
         if (!\is_array($data)) {
-            return new ParsedRectorResult($preview, $runResult->exitCode, $runResult->timedOut, 0, [], [], [], $runResult->output, $runResult->errorOutput, ['Rector JSON output did not contain an object.'], $runResult);
+            return new ParsedRectorResult(
+                preview: $preview,
+                exitCode: $runResult->exitCode,
+                timedOut: $runResult->timedOut,
+                changedFileCount: 0,
+                changedFiles: [],
+                rules: [],
+                diffs: [],
+                errorCount: 0,
+                errors: [],
+                rawOutput: $runResult->output,
+                errorOutput: $runResult->errorOutput,
+                diagnostics: ['Rector JSON output did not contain an object.'],
+                runResult: $runResult,
+            );
         }
 
         $changedFiles = [];
@@ -77,6 +93,8 @@ class RectorOutputParser
         }
 
         $changedFileCount = (int) ($data['totals']['changed_files'] ?? \count(array_unique($changedFiles)));
+        $errors = $this->parseErrors($data);
+        $errorCount = (int) ($data['totals']['errors'] ?? \count($errors));
 
         return new ParsedRectorResult(
             preview: $preview,
@@ -86,10 +104,36 @@ class RectorOutputParser
             changedFiles: array_values(array_unique($changedFiles)),
             rules: array_values(array_unique($rules)),
             diffs: $diffs,
+            errorCount: $errorCount,
+            errors: $errors,
             rawOutput: $runResult->output,
             errorOutput: $runResult->errorOutput,
             diagnostics: [],
             runResult: $runResult,
         );
+    }
+
+    /**
+     * @param array<mixed> $data
+     *
+     * @return array<int, array{message: string, file: string, line: ?int}>
+     */
+    private function parseErrors(array $data): array
+    {
+        $errors = [];
+
+        foreach ($data['errors'] ?? [] as $error) {
+            if (!\is_array($error)) {
+                continue;
+            }
+
+            $errors[] = [
+                'message' => (string) ($error['message'] ?? ''),
+                'file' => (string) ($error['file'] ?? $error['relative_file_path'] ?? ''),
+                'line' => isset($error['line']) ? (int) $error['line'] : null,
+            ];
+        }
+
+        return $errors;
     }
 }

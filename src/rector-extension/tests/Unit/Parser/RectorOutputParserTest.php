@@ -73,4 +73,56 @@ class RectorOutputParserTest extends TestCase
         $this->assertSame('error', $result->errorOutput);
         $this->assertSame(['Could not parse Rector JSON output; raw output is included.'], $result->diagnostics);
     }
+
+    public function testParseExtractsRectorErrors(): void
+    {
+        $output = json_encode([
+            'totals' => [
+                'changed_files' => 0,
+                'errors' => 1,
+            ],
+            'file_diffs' => [],
+            'errors' => [
+                [
+                    'message' => "Syntax error, unexpected '{', expecting T_VARIABLE",
+                    'file' => 'src/Broken.php',
+                    'line' => 2,
+                ],
+            ],
+        ], \JSON_THROW_ON_ERROR);
+
+        $result = (new RectorOutputParser())->parse(new RunResult(
+            command: ['vendor/bin/rector', 'process', '--dry-run'],
+            strategy: 'local-binary',
+            workingDirectory: '/project',
+            exitCode: 0,
+            output: $output,
+            errorOutput: '',
+            timedOut: false,
+        ), true);
+
+        $this->assertSame(1, $result->errorCount);
+        $this->assertSame([[
+            'message' => "Syntax error, unexpected '{', expecting T_VARIABLE",
+            'file' => 'src/Broken.php',
+            'line' => 2,
+        ]], $result->errors);
+    }
+
+    public function testParseReportsNoErrorsForACleanRun(): void
+    {
+        $result = (new RectorOutputParser())->parse(new RunResult(
+            command: ['vendor/bin/rector', 'process'],
+            strategy: 'local-binary',
+            workingDirectory: '/project',
+            exitCode: 0,
+            output: '{"totals":{"changed_files":0,"errors":0},"file_diffs":[]}',
+            errorOutput: '',
+            timedOut: false,
+        ), false);
+
+        $this->assertSame(0, $result->errorCount);
+        $this->assertSame([], $result->errors);
+        $this->assertFalse($result->preview);
+    }
 }

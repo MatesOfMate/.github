@@ -23,11 +23,12 @@ use MatesOfMate\RectorExtension\Runner\RunResult;
 class ParsedRectorResult
 {
     /**
-     * @param array<int, string>        $changedFiles
-     * @param array<int, string>        $rules
-     * @param array<int, array<string>> $diffs
-     * @param array<int, string>        $diagnostics
-     * @param array<string, mixed>      $rejectedInput
+     * @param array<int, string>                                           $changedFiles
+     * @param array<int, string>                                           $rules
+     * @param array<int, array<string>>                                    $diffs
+     * @param array<int, array{message: string, file: string, line: ?int}> $errors
+     * @param array<int, string>                                           $diagnostics
+     * @param array<string, mixed>                                         $rejectedInput
      */
     public function __construct(
         public readonly bool $preview,
@@ -37,6 +38,8 @@ class ParsedRectorResult
         public readonly array $changedFiles,
         public readonly array $rules,
         public readonly array $diffs,
+        public readonly int $errorCount,
+        public readonly array $errors,
         public readonly string $rawOutput,
         public readonly string $errorOutput,
         public readonly array $diagnostics,
@@ -45,17 +48,26 @@ class ParsedRectorResult
     ) {
     }
 
-    public static function empty(bool $preview): self
-    {
-        return new self($preview, 0, false, 0, [], [], [], '', '', []);
-    }
-
     /**
      * @param array<int, string>   $diagnostics
      * @param array<string, mixed> $rejectedInput
      */
     public static function validationFailure(bool $preview, array $diagnostics, array $rejectedInput): self
     {
-        return new self($preview, 1, false, 0, [], [], [], '', '', $diagnostics, null, $rejectedInput);
+        return new self(
+            preview: $preview,
+            exitCode: 1,
+            timedOut: false,
+            changedFileCount: 0,
+            changedFiles: [],
+            rules: [],
+            diffs: [],
+            errorCount: 0,
+            errors: [],
+            rawOutput: '',
+            errorOutput: '',
+            diagnostics: $diagnostics,
+            rejectedInput: $rejectedInput,
+        );
     }
 }

@@ -19,6 +19,7 @@
         "matesofmate/composer-extension": "^0.3 || ^0.4@dev",
         "matesofmate/phpstan-extension": "^0.3 || ^0.4@dev",
         "matesofmate/phpunit-extension": "^0.3 || ^0.4@dev",
+        "matesofmate/rector-extension": "^0.3 || ^0.4@dev",
         "phpstan/phpstan": "^2.1.54",
         "phpunit/phpunit": "^12.5.24",
         "psr/log": "^3.0.2",
@@ -99,6 +100,13 @@
         {
             "type": "path",
             "url": "../src/phpunit-extension",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
+            "type": "path",
+            "url": "../src/rector-extension",
             "options": {
                 "symlink": true
             }

@@ -70,6 +70,11 @@ All tools return encoded strings through Mate's core `ResponseEncoder`. Install 
 - `summary`
 - `detailed`
 
+Every response reports a `status`. Rector uses a dedicated exit code to signal that it found
+code to change, so a preview that reports pending changes is a `SUCCESS` with a non-zero
+`changed_file_count`. `FAILED` means Rector itself could not process the code — parse errors
+and similar problems are listed under `errors` together with `error_count`.
+
 ## Safe Workflow
 
 1. Run `rector-inspect` to confirm the project has Rector and a configuration.

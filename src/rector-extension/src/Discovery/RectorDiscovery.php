@@ -11,6 +11,8 @@
 
 namespace MatesOfMate\RectorExtension\Discovery;
 
+use MatesOfMate\Common\Config\ConfigurationDetector;
+
 /**
  * Discovers Rector configuration and execution strategy for a project.
  *
@@ -25,6 +27,8 @@ class RectorDiscovery
         'rector.php.dist',
     ];
 
+    private readonly ConfigurationDetector $configurationDetector;
+
     /**
      * @param array<int, string> $customCommand
      */
@@ -32,13 +36,14 @@ class RectorDiscovery
         private readonly string $projectRoot,
         private readonly array $customCommand = [],
     ) {
+        $this->configurationDetector = new ConfigurationDetector(self::CONFIG_FILES);
     }
 
     public function inspect(): ProjectContext
     {
         $projectRoot = $this->normalizeRoot($this->projectRoot);
         $localBinary = $this->detectLocalBinary($projectRoot);
-        $configuration = $this->detectConfiguration($projectRoot);
+        $configuration = $this->configurationDetector->detect($projectRoot);
         $composerScripts = $this->detectComposerScripts($projectRoot);
         $preferredStrategy = $this->detectPreferredStrategy($localBinary);
         $rectorInstalled = $preferredStrategy instanceof ExecutionStrategy;
@@ -76,18 +81,6 @@ class RectorDiscovery
         $binary = $projectRoot.'/vendor/bin/rector';
 
         return file_exists($binary) ? $binary : null;
-    }
-
-    private function detectConfiguration(string $projectRoot): ?string
-    {
-        foreach (self::CONFIG_FILES as $configFile) {
-            $path = $projectRoot.'/'.$configFile;
-            if (file_exists($path)) {
-                return $path;
-            }
-        }
-
-        return null;
     }
 
     /**

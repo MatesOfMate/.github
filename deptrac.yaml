@@ -23,6 +23,11 @@ deptrac:
         - type: directory
           value: src/phpstan-extension/.*
 
+    - name: Rector Extension
+      collectors:
+        - type: directory
+          value: src/rector-extension/.*
+
     - name: Extension Template
       collectors:
         - type: directory
@@ -38,6 +43,9 @@ deptrac:
       - Common
 
     PHPStan Extension:
+      - Common
+
+    Rector Extension:
       - Common
 
     Extension Template:

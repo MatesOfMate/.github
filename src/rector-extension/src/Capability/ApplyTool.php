@@ -19,7 +19,7 @@ use Mcp\Schema\ToolAnnotations;
 /**
  * Applies Rector changes through the write-capable tool.
  *
- * @author Johannes Wachter <johannes@sulu.io>
+ * @author mdjdev <18183474+mdjdev@users.noreply.github.com>
  */
 class ApplyTool
 {

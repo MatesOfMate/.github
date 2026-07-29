@@ -22,7 +22,7 @@ use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @author Johannes Wachter <johannes@sulu.io>
+ * @author mdjdev <18183474+mdjdev@users.noreply.github.com>
  */
 class RectorWorkflowTest extends TestCase
 {

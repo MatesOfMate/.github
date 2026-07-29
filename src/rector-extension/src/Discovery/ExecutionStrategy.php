@@ -16,7 +16,7 @@ namespace MatesOfMate\RectorExtension\Discovery;
  *
  * @internal
  *
- * @author Johannes Wachter <johannes@sulu.io>
+ * @author mdjdev <18183474+mdjdev@users.noreply.github.com>
  */
 class ExecutionStrategy
 {

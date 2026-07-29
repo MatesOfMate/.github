@@ -19,7 +19,7 @@ use Mcp\Schema\ToolAnnotations;
 /**
  * Inspects Rector availability and configuration for the current project.
  *
- * @author Johannes Wachter <johannes@sulu.io>
+ * @author mdjdev <18183474+mdjdev@users.noreply.github.com>
  */
 class InspectTool
 {

@@ -19,7 +19,7 @@ use Mcp\Schema\ToolAnnotations;
 /**
  * Runs Rector in mandatory dry-run mode and returns structured preview output.
  *
- * @author Johannes Wachter <johannes@sulu.io>
+ * @author mdjdev <18183474+mdjdev@users.noreply.github.com>
  */
 class PreviewTool
 {

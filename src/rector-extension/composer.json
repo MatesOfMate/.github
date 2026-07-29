@@ -16,6 +16,10 @@
         {
             "name": "mdjdev",
             "email": "18183474+mdjdev@users.noreply.github.com"
+        },
+        {
+            "name": "Johannes Wachter",
+            "email": "johannes@sulu.io"
         }
     ],
     "require": {

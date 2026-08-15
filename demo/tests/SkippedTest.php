@@ -7,9 +7,7 @@ use PHPUnit\Framework\TestCase;
 class SkippedTest extends TestCase
 {
     // This test will be skipped
-    /**
-     * @requires PHP >= 9.0
-     */
+    #[\PHPUnit\Framework\Attributes\RequiresPhp('>= 9.0')]
     public function testSkippedDueToPHPVersion(): void
     {
         $this->assertTrue(true);

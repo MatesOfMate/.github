@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a6ba77d5469c436cc403248ba25430a6",
+    "content-hash": "ce94e8697c021bfdaa702571ada5655d",
     "packages": [
         {
             "name": "psr/cache",
@@ -2873,7 +2873,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/rector-extension",
-                "reference": "5e3e2123e67506f4889bb8c7ed88fc351aad91ce"
+                "reference": "9afd142c10e33e5988319c9bc24437f58c04e9f7"
             },
             "require": {
                 "matesofmate/common": "^0.3 || ^0.4@dev",
@@ -2935,6 +2935,10 @@
                 "MIT"
             ],
             "authors": [
+                {
+                    "name": "mdjdev",
+                    "email": "18183474+mdjdev@users.noreply.github.com"
+                },
                 {
                     "name": "Johannes Wachter",
                     "email": "johannes@sulu.io"
@@ -4689,6 +4693,66 @@
                 "source": "https://github.com/php-fig/http-server-middleware/tree/1.0.2"
             },
             "time": "2023-04-11T06:14:47+00:00"
+        },
+        {
+            "name": "rector/rector",
+            "version": "2.5.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/rectorphp/rector.git",
+                "reference": "ba22f8c087848278fed6b4910d4cf1108096d8d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/ba22f8c087848278fed6b4910d4cf1108096d8d3",
+                "reference": "ba22f8c087848278fed6b4910d4cf1108096d8d3",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4|^8.0",
+                "phpstan/phpstan": "^2.2.2"
+            },
+            "conflict": {
+                "rector/rector-doctrine": "*",
+                "rector/rector-downgrade-php": "*",
+                "rector/rector-phpunit": "*",
+                "rector/rector-symfony": "*"
+            },
+            "suggest": {
+                "ext-dom": "To manipulate phpunit.xml via the custom-rule command"
+            },
+            "bin": [
+                "bin/rector"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Instant Upgrade and Automated Refactoring of any PHP code",
+            "homepage": "https://getrector.com/",
+            "keywords": [
+                "automation",
+                "dev",
+                "migration",
+                "refactoring"
+            ],
+            "support": {
+                "issues": "https://github.com/rectorphp/rector/issues",
+                "source": "https://github.com/rectorphp/rector/tree/2.5.7"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/tomasvotruba",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-07-13T15:24:18+00:00"
         },
         {
             "name": "sebastian/cli-parser",

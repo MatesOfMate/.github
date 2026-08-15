@@ -17,16 +17,18 @@ use Rector\TypeDeclaration\Rector\StmtsAwareInterface\SafeDeclareStrictTypesRect
 
 return RectorConfig::configure()
     ->withPaths([
+        __DIR__.'/mate/src',
         __DIR__.'/src',
         __DIR__.'/tests',
     ])
     ->withoutParallel()
     ->withSkip([
         __DIR__.'/vendor',
+        __DIR__.'/var',
         SafeDeclareStrictTypesRector::class,
     ])
     ->withSets([
-        LevelSetList::UP_TO_PHP_82,
+        LevelSetList::UP_TO_PHP_84,
         SetList::CODE_QUALITY,
         SetList::DEAD_CODE,
         SetList::EARLY_RETURN,

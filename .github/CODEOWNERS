@@ -2,3 +2,6 @@
 
 # Default owners for everything
 * @wachterjohannes
+
+# Package maintainers - later rules win, so the default owner is repeated
+/src/rector-extension/ @wachterjohannes @mdjdev

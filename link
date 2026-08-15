@@ -34,6 +34,7 @@ $packages = [
     'matesofmate/composer-extension' => 'src/composer-extension',
     'matesofmate/phpstan-extension' => 'src/phpstan-extension',
     'matesofmate/phpunit-extension' => 'src/phpunit-extension',
+    'matesofmate/rector-extension' => 'src/rector-extension',
 ];
 
 if ($rollback) {

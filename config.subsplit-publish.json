@@ -29,6 +29,11 @@
             "name": "composer-extension",
             "directory": "src/composer-extension",
             "target": "git@github.com:MatesOfMate/composer-extension.git"
+        },
+        {
+            "name": "rector-extension",
+            "directory": "src/rector-extension",
+            "target": "git@github.com:MatesOfMate/rector-extension.git"
         }
     ]
 }

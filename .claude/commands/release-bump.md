@@ -16,8 +16,8 @@ Prepare and tag a new release for the MatesOfMate monorepo.
 5. Runs `composer update --lock` to sync lock files
 6. Runs `composer lint && composer test` on every `src/` package to verify quality
 7. Commits all changes with a release message
-8. Creates an annotated git tag `v<version>`
-9. Reminds you to push: `git push origin main && git push origin v<version>`
+8. Creates an annotated git tag `<version>`
+9. Reminds you to push: `git push origin main && git push origin <version>`
 
 ## Steps to Execute
 
@@ -106,17 +106,17 @@ git commit -m "Release <version>
 ### 8. Create the tag
 
 ```bash
-git tag -a v<version> -m "Release version <version>"
+git tag -a <version> -m "Release version <version>"
 ```
 
 ### 9. Remind user to push
 
 Output:
 ```
-Release v<version> is ready. To publish:
+Release <version> is ready. To publish:
 
   git push origin main
-  git push origin v<version>
+  git push origin <version>
 
 The tag push will trigger .github/workflows/split.yml to publish all 7 sub-splits automatically.
 ```

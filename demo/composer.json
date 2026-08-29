@@ -9,7 +9,7 @@
         "ext-iconv": "*",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
-        "symfony/flex": "^2.10",
+        "symfony/flex": "^2.11",
         "symfony/framework-bundle": "8.0.*",
         "symfony/runtime": "8.0.*",
         "symfony/yaml": "8.0.*"
@@ -20,13 +20,13 @@
         "matesofmate/phpstan-extension": "^0.3 || ^0.4@dev",
         "matesofmate/phpunit-extension": "^0.3 || ^0.4@dev",
         "matesofmate/rector-extension": "^0.3 || ^0.4@dev",
-        "phpstan/phpstan": "^2.1.54",
-        "phpunit/phpunit": "^12.5.24",
+        "phpstan/phpstan": "^2.2.9",
+        "phpunit/phpunit": "^12.5.34",
         "psr/log": "^3.0.2",
-        "rector/rector": "^2.5.7",
-        "symfony/ai-mate": "^0.11",
-        "symfony/ai-monolog-mate-extension": "^0.11@dev",
-        "symfony/ai-symfony-mate-extension": "^0.11@dev"
+        "rector/rector": "^2.6.4",
+        "symfony/ai-mate": "^0.12",
+        "symfony/ai-monolog-mate-extension": "^0.12@dev",
+        "symfony/ai-symfony-mate-extension": "^0.12@dev"
     },
     "config": {
         "allow-plugins": {

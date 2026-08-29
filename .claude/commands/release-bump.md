@@ -49,6 +49,7 @@ Check each `src/*/CHANGELOG.md` (except `extension-template` — it stays at 0.1
 - `src/phpunit-extension/CHANGELOG.md`
 - `src/phpstan-extension/CHANGELOG.md`
 - `src/composer-extension/CHANGELOG.md`
+- `src/rector-extension/CHANGELOG.md`
 
 Each must have an entry for `<version>`. If any are missing, add them now and ask the user to confirm the bullet points, or draft them from recent git log:
 
@@ -58,7 +59,7 @@ git log --oneline <previous-tag>..HEAD -- src/<package>/
 
 ### 4. Update composer.json files
 
-**Extension packages** (`src/phpunit-extension`, `src/phpstan-extension`, `src/composer-extension`):
+**Extension packages** (`src/phpunit-extension`, `src/phpstan-extension`, `src/composer-extension`, `src/rector-extension`):
 - Change `"matesofmate/common": "^<current>@dev"` → `"matesofmate/common": "^<version_major.minor>"`
 - Ensure `"minimum-stability": "dev"` and `"prefer-stable": true` are present
 - Change `"dev-main": "<current>.x-dev"` → `"dev-main": "<next_minor>.x-dev"`
@@ -76,7 +77,7 @@ git log --oneline <previous-tag>..HEAD -- src/<package>/
 ### 5. Update lock files
 
 ```bash
-for pkg in common phpunit-extension phpstan-extension composer-extension extension-template; do
+for pkg in common phpunit-extension phpstan-extension composer-extension rector-extension extension-template; do
   cd src/$pkg && composer update --lock --quiet && cd ../..
 done
 ```
@@ -84,7 +85,7 @@ done
 ### 6. Run quality checks
 
 ```bash
-for pkg in common phpunit-extension phpstan-extension composer-extension extension-template; do
+for pkg in common phpunit-extension phpstan-extension composer-extension rector-extension extension-template; do
   cd src/$pkg && composer lint && composer test && cd ../..
 done
 ```
@@ -117,7 +118,7 @@ Release v<version> is ready. To publish:
   git push origin main
   git push origin v<version>
 
-The tag push will trigger .github/workflows/split.yml to publish all 6 sub-splits automatically.
+The tag push will trigger .github/workflows/split.yml to publish all 7 sub-splits automatically.
 ```
 
 ## Notes

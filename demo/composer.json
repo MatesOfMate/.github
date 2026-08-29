@@ -15,11 +15,11 @@
         "symfony/yaml": "8.0.*"
     },
     "require-dev": {
-        "matesofmate/common": "^0.3 || ^0.4@dev",
-        "matesofmate/composer-extension": "^0.3 || ^0.4@dev",
-        "matesofmate/phpstan-extension": "^0.3 || ^0.4@dev",
-        "matesofmate/phpunit-extension": "^0.3 || ^0.4@dev",
-        "matesofmate/rector-extension": "^0.3 || ^0.4@dev",
+        "matesofmate/common": "^0.4 || ^0.6",
+        "matesofmate/composer-extension": "^0.4 || ^0.6",
+        "matesofmate/phpstan-extension": "^0.4 || ^0.6",
+        "matesofmate/phpunit-extension": "^0.4 || ^0.6",
+        "matesofmate/rector-extension": "^0.4 || ^0.6",
         "phpstan/phpstan": "^2.2.9",
         "phpunit/phpunit": "^12.5.34",
         "psr/log": "^3.0.2",

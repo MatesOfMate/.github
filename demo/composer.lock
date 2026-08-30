@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b888df4e67c8687b8a323df7a925793b",
+    "content-hash": "92f427804e15daeac9a8bf5a01155b16",
     "packages": [
         {
             "name": "psr/cache",
@@ -2534,7 +2534,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/common",
-                "reference": "9aa8cc6ae7986a3fdbb8d5925c7e01d69de0028b"
+                "reference": "2805dfb0e9911f6d4c46328824ee347e6e80000a"
             },
             "require": {
                 "ext-simplexml": "*",
@@ -2552,7 +2552,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -2607,10 +2607,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/composer-extension",
-                "reference": "62f24d00f34c18cef9bea056081b09602f2493d9"
+                "reference": "34e4b1e07752639da4f7eca3b2898b0fc6b28ee8"
             },
             "require": {
-                "matesofmate/common": "^0.4 || ^0.6",
+                "matesofmate/common": "^0.6 || ^0.7@dev",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.12 || dev-main",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2638,7 +2638,7 @@
                     "instructions": "INSTRUCTIONS.md"
                 },
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -2696,10 +2696,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpstan-extension",
-                "reference": "981d23ba7641129cb8cea10979c618895fb80792"
+                "reference": "f537d6fcec596321d3272801e88880ee898eab79"
             },
             "require": {
-                "matesofmate/common": "^0.4 || ^0.6",
+                "matesofmate/common": "^0.6 || ^0.7@dev",
                 "php": ">=8.2",
                 "phpstan/phpstan": "^2.0",
                 "symfony/ai-mate": "^0.12 || dev-main",
@@ -2726,7 +2726,7 @@
                     "instructions": "INSTRUCTIONS.md"
                 },
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -2784,10 +2784,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpunit-extension",
-                "reference": "9eb9ce004a7aaefed102e1c5308888cb25cade8a"
+                "reference": "53ff91eb4b65125c4ba02bbccf124acc6f65eb7b"
             },
             "require": {
-                "matesofmate/common": "^0.4 || ^0.6",
+                "matesofmate/common": "^0.6 || ^0.7@dev",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.12 || dev-main",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2815,7 +2815,7 @@
                     "instructions": "INSTRUCTIONS.md"
                 },
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -2874,10 +2874,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/rector-extension",
-                "reference": "50dcad41ab4c1308b8b46e4cf5eec69a24c41261"
+                "reference": "6774b69cfc776611762347c5fc3fc9eb6eff19a2"
             },
             "require": {
-                "matesofmate/common": "^0.4 || ^0.6",
+                "matesofmate/common": "^0.6 || ^0.7@dev",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.12 || dev-main",
                 "symfony/process": "^6.4|^7.0|^8.0"
@@ -2904,7 +2904,7 @@
                     "instructions": "INSTRUCTIONS.md"
                 },
                 "branch-alias": {
-                    "dev-main": "0.6.x-dev"
+                    "dev-main": "0.7.x-dev"
                 }
             },
             "autoload": {
@@ -6480,6 +6480,11 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "matesofmate/common": 20,
+        "matesofmate/composer-extension": 20,
+        "matesofmate/phpstan-extension": 20,
+        "matesofmate/phpunit-extension": 20,
+        "matesofmate/rector-extension": 20,
         "symfony/ai-monolog-mate-extension": 20,
         "symfony/ai-symfony-mate-extension": 20
     },

@@ -13,6 +13,7 @@ use MatesOfMate\Common\Process\ProcessExecutor;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
 use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
+use MatesOfMate\PhpStanExtension\Capability\GenerateBaselineTool;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
 use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
@@ -47,6 +48,7 @@ return static function (ContainerConfigurator $container): void {
     // Tools - automatically discovered by #[McpTool] attribute
     $services->set(AnalyseTool::class);
     $services->set(ClearCacheTool::class);
+    $services->set(GenerateBaselineTool::class);
 
     // Resources - automatically discovered by #[McpResource] attribute
     $services->set(ConfigResource::class);

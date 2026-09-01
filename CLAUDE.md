@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem - a collection of community-driven extensions for Symfony AI Mate that provide MCP (Model Context Protocol) tools and resources to AI assistants.
+This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem - a collection of community-driven extensions for Symfony AI Mate that provide tools and resources to AI assistants through the Mate CLI.
 
 **Key Projects:**
 - `src/common/` - Shared functionality for all extensions
@@ -198,8 +198,8 @@ cd src/new-framework-extension/
 - Update `.github/CODEOWNERS`
 
 3. **Implement capabilities**:
-- Create tools in `src/Capability/`
-- Register services in `config/services.php`
+- Create tools in `src/Capability/` with `#[MateTool]` / `#[MateResource]`
+- Register services in `config/config.php`
 - Write tests in `tests/Capability/`
 
 4. **Ensure quality**:
@@ -394,10 +394,20 @@ All extensions use the `extra.ai-mate` section in `composer.json`:
     "extra": {
         "ai-mate": {
             "scan-dirs": ["src/Capability"],
-            "includes": ["config/services.php"]
+            "includes": ["config/config.php"],
+            "instructions": "INSTRUCTIONS.md"
         }
     }
 }
 ```
 
-Symfony AI Mate auto-discovers tools and resources via this configuration.
+Mate scans `scan-dirs` by reflection for methods carrying `#[MateTool]`,
+`#[MateResource]`, or `#[MateResourceTemplate]`, and loads `includes` into its
+service container. Agents then reach the capabilities through the CLI:
+
+```bash
+vendor/bin/mate tools:list
+vendor/bin/mate tools:inspect <tool>
+vendor/bin/mate tools:call <tool> --<param>=<value>
+vendor/bin/mate resources:read <uri>
+```

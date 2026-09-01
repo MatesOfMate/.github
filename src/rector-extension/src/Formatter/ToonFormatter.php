@@ -17,7 +17,7 @@ use MatesOfMate\RectorExtension\Runner\RunResult;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Formats Rector workflow results for compact MCP responses.
+ * Formats Rector workflow results for compact tool responses.
  *
  * @internal
  *

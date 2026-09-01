@@ -20,13 +20,13 @@
         "matesofmate/phpstan-extension": "^0.6 || ^0.7@dev",
         "matesofmate/phpunit-extension": "^0.6 || ^0.7@dev",
         "matesofmate/rector-extension": "^0.6 || ^0.7@dev",
-        "phpstan/phpstan": "^2.2.9",
+        "phpstan/phpstan": "^2.2.12",
         "phpunit/phpunit": "^12.5.34",
         "psr/log": "^3.0.2",
-        "rector/rector": "^2.6.4",
-        "symfony/ai-mate": "^0.12",
-        "symfony/ai-monolog-mate-extension": "^0.12@dev",
-        "symfony/ai-symfony-mate-extension": "^0.12@dev"
+        "rector/rector": "^2.6.5",
+        "symfony/ai-mate": "^0.13",
+        "symfony/ai-monolog-mate-extension": "^0.13@dev",
+        "symfony/ai-symfony-mate-extension": "^0.13@dev"
     },
     "config": {
         "allow-plugins": {

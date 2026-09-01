@@ -51,7 +51,7 @@ composer fix
 ### Naming Conventions
 
 - **Package name**: `matesofmate/{framework}-extension`
-- **Namespace**: `MatesOfMate\{Framework}\`
+- **Namespace**: `MatesOfMate\{Framework}Extension\`
 - **Tool names**: `{framework}-{action}` (e.g., `sulu-content-types`, `sulu-webspaces`)
 
 ### Required Files
@@ -60,9 +60,10 @@ composer fix
 your-extension/
 ├── composer.json          # With extra.ai-mate config
 ├── README.md              # Installation & usage
+├── INSTRUCTIONS.md        # Agent guidance: when to reach for your tools
 ├── LICENSE                # MIT recommended
 ├── src/
-│   └── Capability/        # Your MCP tools
+│   └── Capability/        # Your Mate tools
 ├── config/
 │   └── config.php         # Service definitions
 └── tests/
@@ -77,7 +78,7 @@ your-extension/
     "type": "symfony-ai-mate",
     "require": {
         "php": ">=8.2",
-        "symfony/ai-mate": "^0.8"
+        "symfony/ai-mate": "^0.13"
     },
     "autoload": {
         "psr-4": {
@@ -87,32 +88,37 @@ your-extension/
     "extra": {
         "ai-mate": {
             "scan-dirs": ["src/Capability"],
-            "includes": ["config/config.php"]
+            "includes": ["config/config.php"],
+            "instructions": "INSTRUCTIONS.md"
         }
     }
 }
 ```
 
+Mate scans `scan-dirs` for methods carrying `#[MateTool]`, `#[MateResource]`, or
+`#[MateResourceTemplate]`, and loads `includes` into its service container.
+
 ### Tool Best Practices
 
 1. **Prefer flexible tools**: Merge closely related actions into one tool when the difference is just scope or a simple parameter
 2. **Clear descriptions**: The AI reads these to decide when to use the tool
-3. **Helpful output**: Return structured, actionable information
-4. **Error handling**: Graceful failures with useful error messages
+3. **Document every parameter**: Mate builds the input schema from the parameter types and their `@param` docblocks, so an undocumented parameter reaches the AI without a description
+4. **Helpful output**: Return structured, actionable information
+5. **Error handling**: Graceful failures with useful error messages
 
 ```php
 <?php
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Attribute\MateTool;
 
 class ListThingsTool
 {
     /**
      * @param string|null $scope Optional scope used to narrow the returned things.
      */
-    #[McpTool(
+    #[MateTool(
         name: 'example-list-things',
         description: 'List configured things. Use this when the user asks what exists or needs names to reference.'
     )]
@@ -141,12 +147,12 @@ Resources provide static context or configuration data to the AI. They're useful
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Attribute\MateResource;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 class ConfigurationResource
 {
-    #[McpResource(
+    #[MateResource(
         uri: 'example://config',
         name: 'example_config',
         mimeType: 'text/plain'

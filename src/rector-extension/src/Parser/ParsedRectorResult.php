@@ -14,7 +14,7 @@ namespace MatesOfMate\RectorExtension\Parser;
 use MatesOfMate\RectorExtension\Runner\RunResult;
 
 /**
- * Structured Rector execution result for MCP responses.
+ * Structured Rector execution result for tool responses.
  *
  * @internal
  *

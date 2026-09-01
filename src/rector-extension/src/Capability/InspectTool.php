@@ -13,8 +13,7 @@ namespace MatesOfMate\RectorExtension\Capability;
 
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Schema\ToolAnnotations;
+use Symfony\AI\Mate\Attribute\MateTool;
 
 /**
  * Inspects Rector availability and configuration for the current project.
@@ -29,11 +28,10 @@ class InspectTool
     ) {
     }
 
-    #[McpTool(
+    #[MateTool(
         name: 'rector-inspect',
         title: 'Rector Inspect',
-        description: 'Inspect project-local Rector installation, configuration, Composer scripts, and safe execution strategy without running Rector.',
-        annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false)
+        description: 'Inspect project-local Rector installation, configuration, Composer scripts, and safe execution strategy without running Rector.'
     )]
     public function execute(): string
     {

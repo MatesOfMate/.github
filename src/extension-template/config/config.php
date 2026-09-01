@@ -19,10 +19,10 @@ return static function (ContainerConfigurator $container): void {
         ->autowire()
         ->autoconfigure();
 
-    // Register your tools - automatically discovered by #[McpTool] attribute
+    // Register your tools - automatically discovered by #[MateTool] attribute
     $services->set(ExampleTool::class);
 
-    // Register your resources - automatically discovered by #[McpResource] attribute
+    // Register your resources - automatically discovered by #[MateResource] attribute
     $services->set(ExampleResource::class);
 
     // Example with constructor dependencies:

@@ -11,7 +11,7 @@ This package provides Rector inspection, dry-run preview, and write-capable appl
 - initialize projects with `vendor/bin/mate init`
 - current Mate setups auto-discover extensions after install and update
 - `vendor/bin/mate discover` refreshes discovery and generated instruction artifacts
-- use `./bin/codex` for Codex sessions
+- run tools from the CLI with `vendor/bin/mate tools:call <tool> --<param>=<value>`
 - use `vendor/bin/mate debug:extensions` and `vendor/bin/mate debug:capabilities` to troubleshoot loading problems
 
 ## Structure
@@ -22,7 +22,7 @@ This package provides Rector inspection, dry-run preview, and write-capable appl
 - `src/Validation/` validates project-root path boundaries
 - `src/Runner/` builds and runs Rector process commands
 - `src/Parser/` parses Rector JSON output and preserves raw fallback output
-- `src/Formatter/` emits encoded MCP output
+- `src/Formatter/` emits encoded tool output
 - `config/config.php` registers services
 
 ## Safety Model
@@ -40,7 +40,7 @@ composer install
 composer test
 composer lint
 composer fix
-vendor/bin/mate mcp:tools:list --extension=matesofmate/rector-extension
+vendor/bin/mate tools:list --extension=matesofmate/rector-extension
 ```
 
 ## Standards

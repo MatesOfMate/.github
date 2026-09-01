@@ -68,7 +68,7 @@ When updating standards here, remind users to also update:
 - **Professional but friendly** - "mate" culture
 - **Specific over generic** - Concrete examples and steps
 - **Action-oriented** - Focus on what developers need to do
-- **Beginner-friendly** - Assume users are new to MCP/AI Mate
+- **Beginner-friendly** - Assume users are new to AI Mate
 
 ## Common Tasks
 
@@ -110,7 +110,7 @@ Improve extension documentation clarity
 
 - Simplify installation instructions
 - Add troubleshooting section
-- Clarify MCP tool usage examples
+- Clarify Mate tool usage examples
 ```
 
 ```

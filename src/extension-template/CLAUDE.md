@@ -10,7 +10,7 @@ This package is the starter template for MatesOfMate extensions. It should model
 
 The template should stay aligned with:
 
-- released `symfony/ai-mate` `0.8.x`
+- released `symfony/ai-mate` `0.13.x`
 - current Mate response encoding conventions as shipped in core
 
 Current workflow assumptions:
@@ -18,8 +18,8 @@ Current workflow assumptions:
 - projects are initialized with `vendor/bin/mate init`
 - Composer install and update handle extension discovery in current Mate setups
 - `vendor/bin/mate discover` refreshes discovery state and regenerates `mate/AGENT_INSTRUCTIONS.md`
-- Codex should be started through `./bin/codex` or `bin/codex.bat`
-- debugging commands include `mate debug:capabilities`, `mate debug:extensions`, and `mate mcp:tools:*`
+- tools are invoked from the CLI with `mate tools:call <tool> --<param>=<value>`
+- debugging commands include `mate debug:capabilities`, `mate debug:extensions`, and `mate tools:*`
 
 ## Common Commands
 

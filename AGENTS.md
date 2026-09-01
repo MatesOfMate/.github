@@ -68,7 +68,7 @@ When updating standards here, remind users to also update:
 - **Professional but friendly** - "mate" culture
 - **Specific over generic** - Concrete examples and steps
 - **Action-oriented** - Focus on what developers need to do
-- **Beginner-friendly** - Assume users are new to AI Mate
+- **Beginner-friendly** - Assume users are new to Mate
 
 ## Common Tasks
 

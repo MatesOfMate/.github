@@ -15,7 +15,7 @@ use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Example tool demonstrating the basic structure of an AI Mate tool.
+ * Example tool demonstrating the basic structure of a Mate tool.
  *
  * Replace this with your actual implementation.
  *

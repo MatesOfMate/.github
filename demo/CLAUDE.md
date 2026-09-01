@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-This is a **Symfony 8.0 demo application** that showcases integration with the MatesOfMate ecosystem of AI Mate extensions. It serves as both a testing ground and reference implementation for MatesOfMate extensions.
+This is a **Symfony 8.0 demo application** that showcases integration with the MatesOfMate ecosystem of Mate extensions. It serves as both a testing ground and reference implementation for MatesOfMate extensions.
 
-**Purpose**: Demonstrate and test the Mate tools from composer-extension, phpunit-extension, phpstan-extension, rector-extension, and Symfony AI Mate.
+**Purpose**: Demonstrate and test the Mate tools from composer-extension, phpunit-extension, phpstan-extension, rector-extension, and Symfony Mate.
 
 ## Commands
 

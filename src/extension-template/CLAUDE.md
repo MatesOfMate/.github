@@ -4,7 +4,7 @@ This file provides guidance when working on the MatesOfMate extension template.
 
 ## Project Overview
 
-This package is the starter template for MatesOfMate extensions. It should model current Symfony AI Mate conventions, not outdated bootstrap steps.
+This package is the starter template for MatesOfMate extensions. It should model current Symfony Mate conventions, not outdated bootstrap steps.
 
 ## Current Mate Baseline
 
@@ -60,7 +60,7 @@ MatesOfMate house style:
 - no `final` classes in examples
 - file headers stay consistent with the org
 
-Current AI Mate platform capability:
+Current Mate platform capability:
 
 - tools may return strings, arrays, or scalars
 - encoded string payloads should use Mate's built-in `ResponseEncoder`

@@ -1,6 +1,6 @@
 {
     "name": "matesofmate/rector-extension",
-    "description": "Rector extension for Symfony AI Mate providing inspect, dry-run preview, and apply workflows",
+    "description": "Rector extension for Symfony Mate providing inspect, dry-run preview, and apply workflows",
     "type": "symfony-ai-mate",
     "license": "MIT",
     "keywords": [

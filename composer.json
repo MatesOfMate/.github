@@ -1,6 +1,6 @@
 {
     "name": "matesofmate/monorepo",
-    "description": "MatesOfMate Monorepo - Community extensions for Symfony AI Mate",
+    "description": "MatesOfMate Monorepo - Community extensions for Symfony Mate",
     "type": "library",
     "license": "MIT",
     "authors": [

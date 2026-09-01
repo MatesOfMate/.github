@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem - a collection of community-driven extensions for Symfony AI Mate that provide tools and resources to AI assistants through the Mate CLI.
+This is the **MatesOfMate Monorepo** containing the entire MatesOfMate ecosystem - a collection of community-driven extensions for Symfony Mate that provide tools and resources to AI assistants through the Mate CLI.
 
 **Key Projects:**
 - `src/common/` - Shared functionality for all extensions

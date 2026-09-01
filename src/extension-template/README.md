@@ -1,6 +1,6 @@
-# Extension Template for Symfony AI Mate
+# Extension Template for Symfony Mate
 
-A starter template for building [MatesOfMate](https://github.com/matesofmate) extensions that follow the current Symfony AI Mate workflow.
+A starter template for building [MatesOfMate](https://github.com/matesofmate) extensions that follow the current Symfony Mate workflow.
 
 ## Quick Start
 
@@ -10,7 +10,7 @@ A starter template for building [MatesOfMate](https://github.com/matesofmate) ex
 4. Add your tools and resources in `src/Capability/`.
 5. Run `composer test` and `composer lint`.
 
-## Current AI Mate Flow
+## Current Mate Flow
 
 This template is aligned with the current `symfony/ai-mate` `0.13.x` workflow and the current core Mate response encoding behavior:
 
@@ -61,7 +61,7 @@ composer require --dev matesofmate/your-extension
 vendor/bin/mate init
 ```
 
-In current AI Mate setups, extension discovery is handled automatically after install and update. Run `vendor/bin/mate discover` when you want to refresh generated instruction artifacts or re-scan the project manually.
+In current Mate setups, extension discovery is handled automatically after install and update. Run `vendor/bin/mate discover` when you want to refresh generated instruction artifacts or re-scan the project manually.
 
 Coding agents call the tools through the `vendor/bin/mate` CLI:
 
@@ -120,7 +120,7 @@ Tool guidance:
 - Write descriptions that say when the AI should call the tool.
 - Add `@param` docblocks for every parameter; Mate builds the input schema from the parameter types and those descriptions.
 - For encoded string payloads, use Mate's built-in `ResponseEncoder` so TOON is used when available and JSON is used as a fallback.
-- Current AI Mate also supports array and scalar tool returns. Use encoded strings when you want stable structured output across environments.
+- Current Mate also supports array and scalar tool returns. Use encoded strings when you want stable structured output across environments.
 - Register tool classes in `config/config.php`.
 
 ## Creating Resources
@@ -192,7 +192,7 @@ return static function (ContainerConfigurator $container): void {
 
 `INSTRUCTIONS.md` should help AI agents map common user intents to your capabilities. Keep it short, concrete, and focused on when to use your tools instead of CLI commands.
 
-Current Mate workflows also materialize aggregated instructions into `mate/AGENT_INSTRUCTIONS.md` and maintain a managed AI Mate block in the project `AGENTS.md` when discovery is refreshed.
+Current Mate workflows also materialize aggregated instructions into `mate/AGENT_INSTRUCTIONS.md` and maintain a managed Mate block in the project `AGENTS.md` when discovery is refreshed.
 
 ## Testing and Quality
 
@@ -225,7 +225,7 @@ vendor/bin/php-cs-fixer fix --dry-run --diff
 
 ## Resources
 
-- [Symfony AI Mate docs](https://symfony.com/doc/current/ai/components/mate.html)
+- [Symfony Mate docs](https://symfony.com/doc/current/ai/components/mate.html)
 - [Creating Mate extensions](https://symfony.com/doc/current/ai/components/mate/creating-extensions.html)
 - [MatesOfMate contributing guide](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md)
 

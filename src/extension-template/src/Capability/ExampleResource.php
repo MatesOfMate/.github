@@ -15,7 +15,7 @@ use Symfony\AI\Mate\Attribute\MateResource;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Example resource demonstrating the basic structure of an AI Mate resource.
+ * Example resource demonstrating the basic structure of a Mate resource.
  *
  * Resources provide static context or configuration data to the AI.
  * Replace this with your actual implementation.

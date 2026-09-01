@@ -1,4 +1,4 @@
-# Rector Extension for Symfony AI Mate
+# Rector Extension for Symfony Mate
 
 Rector refactoring tools for AI assistants. This package inspects project-local Rector setup, previews changes in dry-run mode, and applies refactors through a dedicated write-capable tool.
 
@@ -17,7 +17,7 @@ composer require --dev matesofmate/rector-extension
 vendor/bin/mate init
 ```
 
-In current AI Mate setups, extension discovery is handled automatically after Composer install and update. Run `vendor/bin/mate discover` when you want to refresh discovery artifacts such as `mate/AGENT_INSTRUCTIONS.md`.
+In current Mate setups, extension discovery is handled automatically after Composer install and update. Run `vendor/bin/mate discover` when you want to refresh discovery artifacts such as `mate/AGENT_INSTRUCTIONS.md`.
 
 Useful Mate commands:
 
@@ -50,7 +50,7 @@ return static function (ContainerConfigurator $container): void {
 ## Requirements
 
 - PHP 8.2+
-- Symfony AI Mate 0.13+ required
+- Symfony Mate 0.13+ required
 - Rector installed in the target project, or `matesofmate_rector.custom_command` configured
 - A Rector configuration such as `rector.php`
 

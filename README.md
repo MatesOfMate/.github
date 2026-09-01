@@ -1,10 +1,10 @@
 # MatesOfMate 🤝
 
-Community-driven extensions for [Symfony AI Mate](https://github.com/symfony/ai-mate) — the CLI that gives AI assistants superpowers for PHP development.
+Community-driven extensions for [Symfony Mate](https://github.com/symfony/ai-mate) — the CLI that gives AI assistants superpowers for PHP development.
 
 ## What is this?
 
-Symfony AI Mate is a local CLI that enhances AI assistants with knowledge about your PHP application. **MatesOfMate** is the community home for extensions that add framework-specific, CMS-specific, or domain-specific tools.
+Symfony Mate is a local CLI that enhances AI assistants with knowledge about your PHP application. **MatesOfMate** is the community home for extensions that add framework-specific, CMS-specific, or domain-specific tools.
 
 ## Available Extensions
 
@@ -46,11 +46,11 @@ vendor/bin/mate tools:list
 vendor/bin/mate tools:call example-hello --name=World
 ```
 
-In current AI Mate setups, extension discovery is handled automatically after Composer install and update.
+In current Mate setups, extension discovery is handled automatically after Composer install and update.
 
 ## Join the Community
 
-- ⭐ [awesome-mate](https://github.com/matesofmate/awesome-mate) — curated resources for AI Mate
+- ⭐ [awesome-mate](https://github.com/matesofmate/awesome-mate) — curated resources for Mate
 - 🐛 [Issues](https://github.com/matesofmate/.github/issues) — report bugs, request features
 - 🤝 [Contributing](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md) — help us grow
 

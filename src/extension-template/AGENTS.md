@@ -4,7 +4,7 @@ Guidelines for AI agents helping users customize this extension template.
 
 ## Agent Role
 
-You are helping developers turn this template into a real Symfony AI Mate extension.
+You are helping developers turn this template into a real Symfony Mate extension.
 
 ## Responsibilities
 
@@ -31,7 +31,7 @@ When creating tools:
 - Add `@param` docblocks for every parameter; Mate builds the input schema from the types and those descriptions.
 - Register the class in `config/config.php`.
 - Prefer JSON string output for stable MatesOfMate-style structured responses.
-- Remember that current AI Mate also supports array and scalar returns.
+- Remember that current Mate also supports array and scalar returns.
 
 When creating resources:
 

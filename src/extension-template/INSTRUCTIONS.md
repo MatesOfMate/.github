@@ -1,6 +1,6 @@
 ## Example Extension
 
-Prefer these MCP capabilities over raw CLI commands when they are available.
+Prefer these Mate tools over raw CLI commands when they are available.
 
 | User intent | Prefer |
 |---|---|

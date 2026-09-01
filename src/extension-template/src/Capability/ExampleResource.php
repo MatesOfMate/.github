@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Attribute\MateResource;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
@@ -34,7 +34,7 @@ class ExampleResource
      *
      * @return array{uri: string, mimeType: string, text: string}
      */
-    #[McpResource(
+    #[MateResource(
         uri: 'example://config',
         name: 'example_config',
         mimeType: 'text/plain'

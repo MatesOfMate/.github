@@ -12,21 +12,21 @@ A starter template for building [MatesOfMate](https://github.com/matesofmate) ex
 
 ## Current AI Mate Flow
 
-This template is aligned with the current `symfony/ai-mate` `0.8.x` workflow and the current core Mate response encoding behavior:
+This template is aligned with the current `symfony/ai-mate` `0.13.x` workflow and the current core Mate response encoding behavior:
 
 - initialize projects with `vendor/bin/mate init`
 - extension discovery is handled automatically on Composer install and update in current Mate setups
 - `mate/extensions.php` controls which discovered extensions are enabled
 - `vendor/bin/mate discover` still refreshes discovery state and regenerates agent instruction artifacts
-- Codex should be started via `./bin/codex` or `bin/codex.bat`
+- tools and resources are invoked through the `vendor/bin/mate` CLI, not an MCP server
 
 Useful Mate commands while developing:
 
 ```bash
 vendor/bin/mate debug:capabilities
 vendor/bin/mate debug:extensions
-vendor/bin/mate mcp:tools:list
-vendor/bin/mate mcp:tools:inspect example-hello
+vendor/bin/mate tools:list
+vendor/bin/mate tools:inspect example-hello
 ```
 
 ## Structure
@@ -63,22 +63,23 @@ vendor/bin/mate init
 
 In current AI Mate setups, extension discovery is handled automatically after install and update. Run `vendor/bin/mate discover` when you want to refresh generated instruction artifacts or re-scan the project manually.
 
-For Codex, use the generated wrapper instead of relying on `mcp.json` alone:
+Coding agents call the tools through the `vendor/bin/mate` CLI:
 
 ```bash
-./bin/codex
+vendor/bin/mate tools:call example-hello --name=World
+vendor/bin/mate resources:read example://config
 ```
 
 ## Creating Tools
 
-Tools are PHP classes with methods marked with `#[McpTool]`.
+Tools are PHP classes with methods marked with `#[MateTool]`.
 
 ```php
 <?php
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
@@ -96,7 +97,7 @@ class ListEntitiesTool
     /**
      * @param string|null $scope Optional scope used to narrow the entities that are returned.
      */
-    #[McpTool(
+    #[MateTool(
         name: 'example-list-entities',
         description: 'List available entities. Use when the user asks which entities, models, or tables exist.'
     )]
@@ -117,7 +118,7 @@ Tool guidance:
 - Use `{framework}-{action}` for tool names.
 - Prefer one flexible tool with clear parameters over several near-duplicate tool names.
 - Write descriptions that say when the AI should call the tool.
-- Add `@param` docblocks so generated schemas include parameter descriptions.
+- Add `@param` docblocks for every parameter; Mate builds the input schema from the parameter types and those descriptions.
 - For encoded string payloads, use Mate's built-in `ResponseEncoder` so TOON is used when available and JSON is used as a fallback.
 - Current AI Mate also supports array and scalar tool returns. Use encoded strings when you want stable structured output across environments.
 - Register tool classes in `config/config.php`.
@@ -131,7 +132,7 @@ Resources provide static or semi-static context to the AI.
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Attribute\MateResource;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
@@ -141,7 +142,7 @@ use Symfony\AI\Mate\Encoding\ResponseEncoder;
  */
 class ConfigurationResource
 {
-    #[McpResource(
+    #[MateResource(
         uri: 'example://config',
         name: 'example_config',
         mimeType: 'text/plain'
@@ -189,7 +190,7 @@ return static function (ContainerConfigurator $container): void {
 
 ## Agent Instructions
 
-`INSTRUCTIONS.md` should help AI agents map common user intents to your MCP capabilities. Keep it short, concrete, and focused on when to use your tools instead of CLI commands.
+`INSTRUCTIONS.md` should help AI agents map common user intents to your capabilities. Keep it short, concrete, and focused on when to use your tools instead of CLI commands.
 
 Current Mate workflows also materialize aggregated instructions into `mate/AGENT_INSTRUCTIONS.md` and maintain a managed AI Mate block in the project `AGENTS.md` when discovery is refreshed.
 
@@ -225,7 +226,7 @@ vendor/bin/php-cs-fixer fix --dry-run --diff
 ## Resources
 
 - [Symfony AI Mate docs](https://symfony.com/doc/current/ai/components/mate.html)
-- [Creating MCP extensions](https://symfony.com/doc/current/ai/components/mate/creating-extensions.html)
+- [Creating Mate extensions](https://symfony.com/doc/current/ai/components/mate/creating-extensions.html)
 - [MatesOfMate contributing guide](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md)
 
 ---

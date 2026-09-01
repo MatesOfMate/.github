@@ -42,7 +42,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set(ToonFormatter::class);
     $services->set(RectorWorkflow::class);
 
-    // Tools - automatically discovered by #[McpTool] attribute
+    // Tools - automatically discovered by #[MateTool] attribute
     $services->set(InspectTool::class);
     $services->set(PreviewTool::class);
     $services->set(ApplyTool::class);

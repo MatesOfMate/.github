@@ -12,7 +12,7 @@ You are helping developers turn this template into a real Symfony AI Mate extens
 - Keep docs aligned with the actual file layout
 - Register capabilities in `config/config.php`
 - Keep examples consistent with MatesOfMate house style
-- Explain the current Mate workflow: `mate init`, automatic discovery, generated agent instructions, and Codex wrappers
+- Explain the current Mate workflow: `mate init`, automatic discovery, generated agent instructions, and the `tools:call` CLI
 
 ## Template Standards
 
@@ -25,10 +25,10 @@ You are helping developers turn this template into a real Symfony AI Mate extens
 
 When creating tools:
 
-- Use a clear `#[McpTool]` name in `{framework}-{action}` form.
+- Use a clear `#[MateTool]` name in `{framework}-{action}` form.
 - Prefer a flexible tool with parameters over several narrowly scoped tool names when the underlying action is the same.
 - Write the description so the AI knows when to call the tool.
-- Add `@param` docblocks so schema descriptions stay useful.
+- Add `@param` docblocks for every parameter; Mate builds the input schema from the types and those descriptions.
 - Register the class in `config/config.php`.
 - Prefer JSON string output for stable MatesOfMate-style structured responses.
 - Remember that current AI Mate also supports array and scalar returns.
@@ -55,7 +55,7 @@ When helping users:
 - `vendor/bin/mate init` prepares project-local Mate files
 - current Mate workflows auto-discover extensions after Composer install and update
 - `vendor/bin/mate discover` refreshes discovery and regenerates `mate/AGENT_INSTRUCTIONS.md`
-- Codex should be launched with `./bin/codex` or `bin/codex.bat`
+- run tools with `mate tools:call <tool> --<param>=<value>` and read resources with `mate resources:read <uri>`
 - use `mate debug:capabilities` and `mate debug:extensions` when capabilities do not show up
 
 ## Commit Messages

@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\ExampleExtension\Capability;
 
-use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
@@ -26,15 +26,14 @@ class ExampleTool
     /**
      * Tools are invoked as callables.
      *
-     * You can accept parameters that the AI will provide:
-     * public function execute(string $name): string
+     * Parameters become the tool input schema. Their types and `@param` descriptions
+     * are what the AI sees, so describe every one of them.
      *
      * Use constructor injection for dependencies.
-     */
-    /**
+     *
      * @param string|null $name optional name to personalize the greeting
      */
-    #[McpTool(name: 'example-hello', title: 'Example Hello', description: 'Return a greeting so the AI can verify the extension is wired correctly.')]
+    #[MateTool(name: 'example-hello', title: 'Example Hello', description: 'Return a greeting so the AI can verify the extension is wired correctly.')]
     public function execute(?string $name = null): string
     {
         return ResponseEncoder::encode([

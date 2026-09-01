@@ -4,7 +4,7 @@ Guidelines for agents working on the Rector extension.
 
 ## Focus
 
-Maintain a safe, project-aware MCP extension for Rector workflows. Keep package docs, output descriptions, and troubleshooting guidance aligned with the actual implementation.
+Maintain a safe, project-aware Mate extension for Rector workflows. Keep package docs, output descriptions, and troubleshooting guidance aligned with the actual implementation.
 
 ## Important Rules
 
@@ -12,7 +12,7 @@ Maintain a safe, project-aware MCP extension for Rector workflows. Keep package 
 - Keep `rector-preview` read-only and always dry-run.
 - Keep `rector-apply` as the dedicated write-capable Rector tool.
 - Do not install Rector, generate `rector.php`, edit Rector configuration, run tests, stage files, or commit from extension tools.
-- This package uses Mate's core `ResponseEncoder` for MCP-facing payloads.
+- This package uses Mate's core `ResponseEncoder` for tool payloads.
 - Describe TOON as optional runtime behavior provided by Mate, with JSON fallback.
 
 ## When Updating Behavior

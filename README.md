@@ -1,10 +1,10 @@
 # MatesOfMate 🤝
 
-Community-driven extensions for [Symfony AI Mate](https://github.com/symfony/ai-mate) — the MCP server that gives AI assistants superpowers for PHP development.
+Community-driven extensions for [Symfony AI Mate](https://github.com/symfony/ai-mate) — the CLI that gives AI assistants superpowers for PHP development.
 
 ## What is this?
 
-Symfony AI Mate creates a local MCP (Model Context Protocol) server that enhances AI assistants with knowledge about your PHP application. **MatesOfMate** is the community home for extensions that add framework-specific, CMS-specific, or domain-specific tools.
+Symfony AI Mate is a local CLI that enhances AI assistants with knowledge about your PHP application. **MatesOfMate** is the community home for extensions that add framework-specific, CMS-specific, or domain-specific tools.
 
 ## Available Extensions
 
@@ -23,8 +23,7 @@ Check out our [extension-template](https://github.com/matesofmate/extension-temp
 
 Extensions can provide:
 - **Tools** — callable functions for the AI (e.g., `sulu-content-types`, `doctrine-schema`)
-- **Resources** — static context about your framework/CMS
-- **Prompts** — pre-built prompt templates for common tasks
+- **Resources** — static context about your framework/CMS, addressed by URI
 
 ## Quick Start
 
@@ -41,9 +40,13 @@ vendor/bin/mate discover
 # Verify it's loaded
 vendor/bin/mate debug:extensions
 vendor/bin/mate debug:capabilities
+
+# Call a tool
+vendor/bin/mate tools:list
+vendor/bin/mate tools:call example-hello --name=World
 ```
 
-In current AI Mate setups, extension discovery is handled automatically after Composer install and update. For Codex, use the generated `./bin/codex` wrapper.
+In current AI Mate setups, extension discovery is handled automatically after Composer install and update.
 
 ## Join the Community
 
@@ -53,7 +56,7 @@ In current AI Mate setups, extension discovery is handled automatically after Co
 
 ## Related Projects
 
-- [symfony/ai-mate](https://github.com/symfony/ai-mate) — the core MCP server
+- [symfony/ai-mate](https://github.com/symfony/ai-mate) — the core Mate CLI
 - [symfony/ai](https://github.com/symfony/ai) — full Symfony AI component suite
 
 ---

@@ -24,13 +24,13 @@ Useful Mate commands:
 ```bash
 vendor/bin/mate debug:extensions
 vendor/bin/mate debug:capabilities
-vendor/bin/mate mcp:tools:list --extension=matesofmate/rector-extension
+vendor/bin/mate tools:list --extension=matesofmate/rector-extension
 ```
 
-Use the generated wrapper for Codex:
+Run a tool directly:
 
 ```bash
-./bin/codex
+vendor/bin/mate tools:call rector-preview --mode=summary
 ```
 
 ## Custom Command Configuration
@@ -50,7 +50,7 @@ return static function (ContainerConfigurator $container): void {
 ## Requirements
 
 - PHP 8.2+
-- Symfony AI Mate 0.11+ required
+- Symfony AI Mate 0.13+ required
 - Rector installed in the target project, or `matesofmate_rector.custom_command` configured
 - A Rector configuration such as `rector.php`
 

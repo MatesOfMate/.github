@@ -1,6 +1,6 @@
 ## Rector Extension
 
-Prefer these MCP tools over raw Rector CLI commands when the user is refactoring with Rector.
+Prefer these Mate tools over raw Rector CLI commands when the user is refactoring with Rector.
 
 | User intent | Prefer |
 |---|---|

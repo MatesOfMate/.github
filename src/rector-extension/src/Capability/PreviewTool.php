@@ -12,9 +12,7 @@
 namespace MatesOfMate\RectorExtension\Capability;
 
 use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
-use Mcp\Capability\Attribute\McpTool;
-use Mcp\Capability\Attribute\Schema;
-use Mcp\Schema\ToolAnnotations;
+use Symfony\AI\Mate\Attribute\MateTool;
 
 /**
  * Runs Rector in mandatory dry-run mode and returns structured preview output.
@@ -35,18 +33,16 @@ class PreviewTool
      * @param bool        $rulesSummary  Include Rector rules summary. Disabled by default.
      * @param string      $mode          output detail level: default, summary, or detailed
      */
-    #[McpTool(
+    #[MateTool(
         name: 'rector-preview',
         title: 'Rector Preview',
-        description: 'Preview Rector refactors with --dry-run. This tool never applies source-code changes.',
-        annotations: new ToolAnnotations(readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false)
+        description: 'Preview Rector refactors with --dry-run. This tool never applies source-code changes.'
     )]
     public function execute(
         ?string $path = null,
         ?string $configuration = null,
         bool $debug = false,
         bool $rulesSummary = false,
-        #[Schema(description: 'Output detail level', enum: ['default', 'summary', 'detailed'])]
         string $mode = 'default',
     ): string {
         return $this->workflow->run(true, $path, $configuration, $debug, $rulesSummary, $mode);

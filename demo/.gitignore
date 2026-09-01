@@ -13,3 +13,8 @@
 /phpunit.xml
 /.phpunit.cache/
 ###< phpunit/phpunit ###
+
+###> symfony/ai-mate ###
+/.agents/skills/mate-*
+/.claude/skills/mate-*
+###< symfony/ai-mate ###

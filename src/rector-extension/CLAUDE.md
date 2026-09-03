@@ -24,6 +24,7 @@ This package provides Rector inspection, dry-run preview, and write-capable appl
 - `src/Parser/` parses Rector JSON output and preserves raw fallback output
 - `src/Formatter/` emits encoded tool output
 - `config/config.php` registers services
+- `skills/` ships the Agent Skills declared through `extra.ai-mate.skills`
 
 ## Safety Model
 

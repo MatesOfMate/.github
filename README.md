@@ -24,6 +24,8 @@ Check out our [extension-template](https://github.com/matesofmate/extension-temp
 Extensions can provide:
 - **Tools** — callable functions for the AI (e.g., `sulu-content-types`, `doctrine-schema`)
 - **Resources** — static context about your framework/CMS, addressed by URI
+- **Skills** — Agent Skills that tell the AI when to reach for those tools, how to read the
+  result, and which calls write; Mate installs them into the project as `mate-<name>`
 
 ## Quick Start
 
@@ -44,6 +46,9 @@ vendor/bin/mate debug:capabilities
 # Call a tool
 vendor/bin/mate tools:list
 vendor/bin/mate tools:call example-hello --name=World
+
+# See the skills the installed extensions ship
+vendor/bin/mate skills:list
 ```
 
 In current Mate setups, extension discovery is handled automatically after Composer install and update.

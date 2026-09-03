@@ -64,6 +64,16 @@ This extension does not install Rector, generate `rector.php`, or modify Rector 
 
 All tools return encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
+## Agent Skills
+
+The extension ships Agent Skills that Mate installs into the project as `mate-<name>`:
+
+- `rector-refactoring`: the inspect, preview, apply order and how to read the result
+
+```bash
+vendor/bin/mate skills:list
+```
+
 ## Output Modes
 
 - `default`

@@ -13,3 +13,4 @@ Prefer these Mate tools over raw CLI commands when they are available.
 - Use resources when the user needs reference context that is relatively stable.
 - Prefer the extension capability over shell commands when it gives structured, framework-aware output.
 - If your package later supports multiple encodings, treat the returned payload as structured extension output rather than assuming raw JSON.
+- An `mate-example-workflow` skill demonstrates how to ship judgment alongside the capabilities.

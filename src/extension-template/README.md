@@ -48,6 +48,9 @@ extension-template/
 │       └── ExampleResource.php
 ├── config/
 │   └── config.php
+├── skills/
+│   └── example-workflow/
+│       └── SKILL.md
 └── tests/
     └── Capability/
         ├── ExampleToolTest.php
@@ -194,6 +197,31 @@ return static function (ContainerConfigurator $container): void {
 
 Current Mate workflows also materialize aggregated instructions into `mate/AGENT_INSTRUCTIONS.md` and maintain a managed Mate block in the project `AGENTS.md` when discovery is refreshed.
 
+## Agent Skills
+
+`skills/<name>/SKILL.md` holds the skills your extension ships. Declare the directory once:
+
+```json
+{
+    "extra": {
+        "ai-mate": {
+            "skills": ["skills"]
+        }
+    }
+}
+```
+
+Mate installs each skill into the consuming project as `mate-<name>`, so prefix the name with your framework to keep it unique. The front matter `name` must match the directory name, and the `description` must say when the skill applies, because that is all an agent reads before deciding to open it.
+
+`INSTRUCTIONS.md` maps intents to tools. A skill goes further: which tool comes first, how to read the payload, what a specific error means, and what not to do. Write down the judgment the tool schema cannot carry.
+
+Follow the shape the Symfony Mate skills use: the tool list first, then `## Workflow`, `## Reading`, `## Failure paths`, and `## Rules` where it earns its place. Commands go inline in backticks rather than in fenced blocks.
+
+```bash
+vendor/bin/mate skills:list
+vendor/bin/mate skills:validate
+```
+
 ## Testing and Quality
 
 ```bash
@@ -218,6 +246,7 @@ vendor/bin/php-cs-fixer fix --dry-run --diff
 - [ ] Update `.github/CODEOWNERS`
 - [ ] Update `LICENSE`
 - [ ] Replace example tool and resource names, URIs, and descriptions
+- [ ] Replace `skills/example-workflow/` with a skill for your framework
 - [ ] Update README install and usage docs for your framework
 - [ ] Make sure `composer test` passes
 - [ ] Make sure `composer lint` passes

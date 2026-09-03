@@ -38,6 +38,17 @@ vendor/bin/mate debug:extensions
 - `src/Capability/ExampleResource.php` demonstrates a resource
 - `config/config.php` registers services
 - `INSTRUCTIONS.md` demonstrates concise agent guidance
+- `skills/example-workflow/SKILL.md` demonstrates an Agent Skill
+
+## Skills
+
+Skills live in `skills/<name>/SKILL.md` and are declared through `extra.ai-mate.skills`. Mate copies them into the consuming project as `mate-<name>`.
+
+- the front matter `name` must equal the directory name, and the `description` must say when the skill applies
+- prefix the name with the framework so it stays unique across installed extensions
+- a skill carries judgment, not a tool list: when to reach for the tools, in which order, how to read the payload, which failure paths mean what
+- follow the house shape of the Symfony Mate skills: tool list, then `## Workflow`, `## Reading`, `## Failure paths`, `## Rules`; inline commands, no fenced blocks
+- check the result with `vendor/bin/mate skills:list` and `vendor/bin/mate skills:validate`
 
 ## Service Registration
 

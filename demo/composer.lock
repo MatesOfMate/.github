@@ -2559,7 +2559,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/composer-extension",
-                "reference": "8f8c08b0b1b59a6fc360526bb97431c9531d89c9"
+                "reference": "5fc3e2e0f0166919a9b0c8fc6d4b5fe987838734"
             },
             "require": {
                 "matesofmate/common": "^0.6 || ^0.7@dev",
@@ -2587,7 +2587,10 @@
                     "includes": [
                         "config/config.php"
                     ],
-                    "instructions": "INSTRUCTIONS.md"
+                    "instructions": "INSTRUCTIONS.md",
+                    "skills": [
+                        "skills"
+                    ]
                 },
                 "branch-alias": {
                     "dev-main": "0.7.x-dev"
@@ -2648,7 +2651,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpstan-extension",
-                "reference": "55e99d0f0756a5aa10e57f4e9d0bb2cc6fc922e8"
+                "reference": "d1a30d9c30145ceb961a6c5f7c0c3ab9d8a23871"
             },
             "require": {
                 "matesofmate/common": "^0.6 || ^0.7@dev",
@@ -2675,7 +2678,10 @@
                     "includes": [
                         "config/config.php"
                     ],
-                    "instructions": "INSTRUCTIONS.md"
+                    "instructions": "INSTRUCTIONS.md",
+                    "skills": [
+                        "skills"
+                    ]
                 },
                 "branch-alias": {
                     "dev-main": "0.7.x-dev"
@@ -2715,7 +2721,7 @@
                     "email": "johannes@sulu.io"
                 }
             ],
-            "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
+            "description": "PHPStan extension for Symfony Mate providing AI assistants with efficient static analysis tools",
             "keywords": [
                 "ai",
                 "ai-assistant",
@@ -2736,7 +2742,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpunit-extension",
-                "reference": "8aa4b9aa1f45a9b5d4c49f4b0669fcc59d78eb98"
+                "reference": "b9af736a901e78267a5e754f814902066fff1865"
             },
             "require": {
                 "matesofmate/common": "^0.6 || ^0.7@dev",
@@ -2764,7 +2770,10 @@
                     "includes": [
                         "config/config.php"
                     ],
-                    "instructions": "INSTRUCTIONS.md"
+                    "instructions": "INSTRUCTIONS.md",
+                    "skills": [
+                        "skills"
+                    ]
                 },
                 "branch-alias": {
                     "dev-main": "0.7.x-dev"
@@ -2826,7 +2835,7 @@
             "dist": {
                 "type": "path",
                 "url": "../src/rector-extension",
-                "reference": "672daa4cb5c710c505d44256404729fc63dc9d41"
+                "reference": "c3ccb734c3556fc9fe13770e85f6a49e8112d85f"
             },
             "require": {
                 "matesofmate/common": "^0.6 || ^0.7@dev",
@@ -2853,7 +2862,10 @@
                     "includes": [
                         "config/config.php"
                     ],
-                    "instructions": "INSTRUCTIONS.md"
+                    "instructions": "INSTRUCTIONS.md",
+                    "skills": [
+                        "skills"
+                    ]
                 },
                 "branch-alias": {
                     "dev-main": "0.7.x-dev"
@@ -2897,7 +2909,7 @@
                     "email": "johannes@sulu.io"
                 }
             ],
-            "description": "Rector extension for Symfony AI Mate providing inspect, dry-run preview, and apply workflows",
+            "description": "Rector extension for Symfony Mate providing inspect, dry-run preview, and apply workflows",
             "keywords": [
                 "ai",
                 "ai-mate",

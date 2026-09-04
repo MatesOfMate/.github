@@ -9,3 +9,4 @@ CHANGELOG
  * Add quality tools configuration (PHPStan level 8, PHP CS Fixer, Rector)
  * Add CI/CD workflow templates
  * Add INSTRUCTIONS.md for AI agent guidance
+ * Add an example Agent Skill under `skills/` with authoring guidance

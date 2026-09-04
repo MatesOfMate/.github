@@ -5,10 +5,86 @@
 // every other key is overwritten by Mate.
 
 return [
-    'matesofmate/composer-extension' => ['enabled' => true],
-    'matesofmate/phpstan-extension' => ['enabled' => true],
-    'matesofmate/phpunit-extension' => ['enabled' => true],
-    'matesofmate/rector-extension' => ['enabled' => true],
+    'matesofmate/composer-extension' => [
+        'enabled' => true,
+        'skills' => [
+            'composer-dependency-changes' => [
+                'enabled' => true,
+                'mode' => 'managed',
+                'state' => 'managed',
+                'source' => 'vendor/matesofmate/composer-extension/skills/composer-dependency-changes',
+                'source_hash' => 'sha256:a606582cc5c83bea9ed812e4ccd3f1f1d34cc275efbbd45130844b60a3f15662',
+                'hash' => 'sha256:d5fbd0ff8a3905ad7bdf96ddb0ddc7d2eb18c6759b9d64ed90004da268094fa8',
+                'targets' => [
+                    '.agents/skills/mate-composer-dependency-changes',
+                    '.claude/skills/mate-composer-dependency-changes',
+                ],
+            ],
+            'composer-dependency-conflicts' => [
+                'enabled' => true,
+                'mode' => 'managed',
+                'state' => 'managed',
+                'source' => 'vendor/matesofmate/composer-extension/skills/composer-dependency-conflicts',
+                'source_hash' => 'sha256:5c04957aa53caf766a4f26ec70aae5f8bebd771cad9ef0439231a0f53599f368',
+                'hash' => 'sha256:c192c289d2a9cc739d5bb849fd1c83d1f9c4adb5aa7f2fff76fcb0f7b690154d',
+                'targets' => [
+                    '.agents/skills/mate-composer-dependency-conflicts',
+                    '.claude/skills/mate-composer-dependency-conflicts',
+                ],
+            ],
+        ],
+    ],
+    'matesofmate/phpstan-extension' => [
+        'enabled' => true,
+        'skills' => [
+            'phpstan-static-analysis' => [
+                'enabled' => true,
+                'mode' => 'managed',
+                'state' => 'managed',
+                'source' => 'vendor/matesofmate/phpstan-extension/skills/phpstan-static-analysis',
+                'source_hash' => 'sha256:d0e4ca34edcd363c67b8b8e36bbc0f171c08c96a9669febdb06dcda44763d04e',
+                'hash' => 'sha256:aecc4c0a5345cc0171ff856e413046dcc071cfe6173729836c58b5237f1134e8',
+                'targets' => [
+                    '.agents/skills/mate-phpstan-static-analysis',
+                    '.claude/skills/mate-phpstan-static-analysis',
+                ],
+            ],
+        ],
+    ],
+    'matesofmate/phpunit-extension' => [
+        'enabled' => true,
+        'skills' => [
+            'phpunit-test-run' => [
+                'enabled' => true,
+                'mode' => 'managed',
+                'state' => 'managed',
+                'source' => 'vendor/matesofmate/phpunit-extension/skills/phpunit-test-run',
+                'source_hash' => 'sha256:05ebe56eaed94f4d06e6877d9ee85a8f299f0a2981cb0146125a2c724b28037f',
+                'hash' => 'sha256:7d1e2f079406261f5ac46d318b1af068db13d50ed7e4f54c7e7d8a6a71f854fd',
+                'targets' => [
+                    '.agents/skills/mate-phpunit-test-run',
+                    '.claude/skills/mate-phpunit-test-run',
+                ],
+            ],
+        ],
+    ],
+    'matesofmate/rector-extension' => [
+        'enabled' => true,
+        'skills' => [
+            'rector-refactoring' => [
+                'enabled' => true,
+                'mode' => 'managed',
+                'state' => 'managed',
+                'source' => 'vendor/matesofmate/rector-extension/skills/rector-refactoring',
+                'source_hash' => 'sha256:e86618bb1bb08e493a9c64486508cacccaf1c928b8f08a187a4eb968e63fbfe3',
+                'hash' => 'sha256:878a593593d840b153d0b2d32fc1efbb3185838bf80e0d80b1a0769c4ab18076',
+                'targets' => [
+                    '.agents/skills/mate-rector-refactoring',
+                    '.claude/skills/mate-rector-refactoring',
+                ],
+            ],
+        ],
+    ],
     'symfony/ai-mate' => [
         'enabled' => true,
         'skills' => [

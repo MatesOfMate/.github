@@ -66,6 +66,9 @@ your-extension/
 │   └── Capability/        # Your Mate tools
 ├── config/
 │   └── config.php         # Service definitions
+├── skills/
+│   └── {framework}-*/     # Agent Skills, one directory per skill
+│       └── SKILL.md
 └── tests/
     └── ...
 ```
@@ -89,7 +92,8 @@ your-extension/
         "ai-mate": {
             "scan-dirs": ["src/Capability"],
             "includes": ["config/config.php"],
-            "instructions": "INSTRUCTIONS.md"
+            "instructions": "INSTRUCTIONS.md",
+            "skills": ["skills"]
         }
     }
 }
@@ -97,6 +101,24 @@ your-extension/
 
 Mate scans `scan-dirs` for methods carrying `#[MateTool]`, `#[MateResource]`, or
 `#[MateResourceTemplate]`, and loads `includes` into its service container.
+
+### Agent Skills
+
+Every extension ships at least one skill. `INSTRUCTIONS.md` maps user intents to tool
+names; a skill carries the judgment the tool schema cannot: which tool comes first, how to
+read the payload, which values look like errors but are not, which calls write, and what to
+do instead of retrying a failed call.
+
+- one directory per skill under `skills/`, holding a `SKILL.md`
+- the front matter `name` must equal the directory name, and the `description` must name the
+  situation the skill applies to; it is all an agent reads before opening the skill
+- prefix the name with the framework (`phpunit-test-run`), because Mate installs it into the
+  project as `mate-<name>` next to every other extension's skills
+- follow the house shape used by the Symfony Mate skills: the tool list first (name, parameters,
+  one line each), then `## Workflow`, `## Reading`, `## Failure paths`, and `## Rules` only where
+  it earns its place; commands go inline in backticks, not in fenced blocks
+- one skill per coherent workflow, and keep a read-only diagnosis apart from a write operation
+- verify with `vendor/bin/mate skills:list` and `vendor/bin/mate skills:validate`
 
 ### Tool Best Practices
 

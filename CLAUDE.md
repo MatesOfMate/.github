@@ -395,7 +395,8 @@ All extensions use the `extra.ai-mate` section in `composer.json`:
         "ai-mate": {
             "scan-dirs": ["src/Capability"],
             "includes": ["config/config.php"],
-            "instructions": "INSTRUCTIONS.md"
+            "instructions": "INSTRUCTIONS.md",
+            "skills": ["skills"]
         }
     }
 }
@@ -411,3 +412,18 @@ vendor/bin/mate tools:inspect <tool>
 vendor/bin/mate tools:call <tool> --<param>=<value>
 vendor/bin/mate resources:read <uri>
 ```
+
+`skills` points at the directory holding the extension's Agent Skills, one subdirectory per
+skill with a `SKILL.md`. Mate installs them into the consuming project as `mate-<name>`
+under `.agents/skills/`, mirrored into `.claude/skills/`, so the skill name must be prefixed
+with the framework and the front matter `name` must equal the directory name.
+
+```bash
+vendor/bin/mate skills:list
+vendor/bin/mate skills:validate
+vendor/bin/mate skills:install
+```
+
+Where `INSTRUCTIONS.md` maps user intents to tool names, a skill carries the judgment the
+tool schema cannot: call order, how to read the payload, which values look like errors but
+are not, which calls write, and what to do instead of retrying a failed call.

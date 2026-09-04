@@ -40,6 +40,16 @@ When creating resources:
 - Register the class in `config/config.php`.
 - Keep MIME types aligned with the actual encoding strategy.
 
+When creating skills:
+
+- Put each skill in `skills/<name>/SKILL.md` and declare the directory in `extra.ai-mate.skills`.
+- Make the front matter `name` equal the directory name, and prefix it with the framework (`phpunit-test-run`, not `test-run`); Mate installs it as `mate-<name>`.
+- Write a `description` that names the situation the skill applies to; it is the only thing an agent reads before opening the skill.
+- Cover what the tool schema cannot: the order to call things in, how to read the payload, which values look like errors but are not, and which calls write.
+- Keep one skill per coherent workflow, and split a read-only diagnosis from a write operation.
+- Follow the house shape of the Symfony Mate skills: tool list, then `## Workflow`, `## Reading`, `## Failure paths`, `## Rules`; commands inline in backticks, no fenced blocks.
+- Verify with `vendor/bin/mate skills:list` and `vendor/bin/mate skills:validate`.
+
 ## Workflow Guidance
 
 When helping users:
@@ -47,8 +57,9 @@ When helping users:
 1. update package name, namespace, CODEOWNERS, and license placeholders
 2. replace example tool and resource names, URIs, and descriptions
 3. update README and `INSTRUCTIONS.md` with framework-specific guidance
-4. run `composer test`
-5. run `composer lint`
+4. replace `skills/example-workflow/` with skills for the framework
+5. run `composer test`
+6. run `composer lint`
 
 ## Current Mate Notes
 

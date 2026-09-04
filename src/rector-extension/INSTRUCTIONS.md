@@ -14,3 +14,4 @@ Prefer these Mate tools over raw Rector CLI commands when the user is refactorin
 - Use `rector-preview` for review; it always runs Rector with `--dry-run`.
 - Use `rector-apply` when Rector changes should be written.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- A `mate-rector-refactoring` skill covers the inspect, preview, apply order; consult it before running Rector.

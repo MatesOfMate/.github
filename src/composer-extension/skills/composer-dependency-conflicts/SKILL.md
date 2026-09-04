@@ -1,6 +1,6 @@
 ---
 name: composer-dependency-conflicts
-description: Find out why a Composer package is installed, or why a version cannot be installed, with composer-explain. Use when an install or update is refused by a constraint, a package appears in vendor that nobody required directly, or an upgrade has to be planned before it is attempted. Read-only; to perform the change use composer dependency changes.
+description: Find out why a Composer package is installed, or why a version cannot be installed, with composer-explain. Use when an install or update is refused by a constraint, a package appears in vendor that nobody required directly, or an upgrade has to be planned before it is attempted, in a project that already has a composer.json and an installed vendor/. Read-only; to perform the change use composer dependency changes. Not for a standalone script or algorithm task with no Composer project in scope, and not for "which version is installed" (system-information covers that).
 ---
 
 # Composer conflict diagnosis

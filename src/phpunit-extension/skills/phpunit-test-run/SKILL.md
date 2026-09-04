@@ -1,6 +1,6 @@
 ---
 name: phpunit-test-run
-description: Run PHPUnit through Mate and read the result, for the whole suite, one file, one class, or a single method. Use whenever tests should be executed, a failing test has to be narrowed down, or the test covering a class has to be found. Not for static analysis (phpstan static analysis) or refactoring (rector refactoring).
+description: Run PHPUnit through Mate and read the result, for the whole suite, one file, one class, or a single method. Use whenever tests should be executed, a failing test has to be narrowed down, or the test covering a class has to be found, in a project that already has a PHPUnit configuration or test suite. Not for static analysis (phpstan static analysis), refactoring (rector refactoring), or a standalone script/algorithm task with no test suite to run.
 ---
 
 # PHPUnit test runs

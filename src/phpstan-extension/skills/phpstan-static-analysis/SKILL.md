@@ -1,6 +1,6 @@
 ---
 name: phpstan-static-analysis
-description: Run PHPStan through Mate and interpret its findings, for the whole project, one directory, or a single file. Use when static analysis should be run, a type error has to be chased down, or a change must be shown not to have introduced new errors. Not for running tests (phpunit test runs) or applying refactors (rector refactoring).
+description: Run PHPStan through Mate and interpret its findings, for the whole project, one directory, or a single file. Use when static analysis should be run, a type error has to be chased down, or a change must be shown not to have introduced new errors, in a project that already has a PHPStan configuration. Not for running tests (phpunit test runs), applying refactors (rector refactoring), or a standalone script/algorithm task with no PHPStan setup.
 ---
 
 # PHPStan analysis

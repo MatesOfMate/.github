@@ -1,6 +1,6 @@
 ---
 name: rector-refactoring
-description: Run Rector through Mate, inspecting the setup, previewing the refactors, then applying them. Use when automated refactoring, a PHP version upgrade, or a rule-driven modernization is asked for, and before touching a project whose Rector setup you do not know yet. Not for static analysis findings (phpstan static analysis) or running tests (phpunit test runs).
+description: Run Rector through Mate, inspecting the setup, previewing the refactors, then applying them. Use when automated refactoring, a PHP version upgrade, or a rule-driven modernization is explicitly asked for in a project that already requires rector/rector. Not for static analysis findings (phpstan static analysis), running tests (phpunit test runs), or a standalone script/algorithm task with no Rector setup.
 ---
 
 # Rector refactoring

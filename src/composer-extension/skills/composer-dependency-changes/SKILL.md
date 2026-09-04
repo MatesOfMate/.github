@@ -1,6 +1,6 @@
 ---
 name: composer-dependency-changes
-description: Add, remove, update, or install Composer dependencies through Mate, and read what the run actually changed. Use when a package should be required or dropped, dependencies refreshed after a branch switch, or a vendor directory rebuilt. For diagnosing why a package is present or why a version will not install, use composer dependency conflicts instead.
+description: Add, remove, update, or install Composer dependencies through Mate, and read what the run actually changed. Use when a package should be required or dropped, dependencies refreshed after a branch switch, or a vendor directory rebuilt, in a project that already has a composer.json. For diagnosing why a package is present or why a version will not install, use composer dependency conflicts instead. Not for a standalone script or algorithm task with no Composer project in scope.
 ---
 
 # Composer dependency changes

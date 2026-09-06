@@ -61,6 +61,7 @@ This extension does not install Rector, generate `rector.php`, or modify Rector 
 - `rector-inspect`
 - `rector-preview`
 - `rector-apply`
+- `rector-run-detail`
 
 All tools return encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 

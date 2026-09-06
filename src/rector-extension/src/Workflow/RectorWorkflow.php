@@ -11,9 +11,11 @@
 
 namespace MatesOfMate\RectorExtension\Workflow;
 
+use MatesOfMate\RectorExtension\Cache\RunCache;
 use MatesOfMate\RectorExtension\Discovery\ExecutionStrategy;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
+use MatesOfMate\RectorExtension\Grouping\RuleGrouper;
 use MatesOfMate\RectorExtension\Parser\ParsedRectorResult;
 use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
 use MatesOfMate\RectorExtension\Runner\RectorRunner;
@@ -34,6 +36,8 @@ class RectorWorkflow
         private readonly RectorRunner $runner,
         private readonly RectorOutputParser $parser,
         private readonly ToonFormatter $formatter,
+        private readonly RuleGrouper $grouper,
+        private readonly RunCache $cache,
     ) {
     }
 
@@ -70,7 +74,9 @@ class RectorWorkflow
             ? $this->runner->preview($strategy, $config, $validatedPath, $debug, $rulesSummary)
             : $this->runner->apply($strategy, $config, $validatedPath, $debug, $rulesSummary);
 
-        return $this->formatter->format($this->parser->parse($runResult, $preview), $mode);
+        $parsed = $this->parser->parse($runResult, $preview);
+
+        return $this->formatter->format($parsed, $mode, $this->remember($parsed));
     }
 
     /**
@@ -107,5 +113,25 @@ class RectorWorkflow
         }
 
         return $detectedConfiguration;
+    }
+
+    /**
+     * Caching is a convenience. A cache that cannot be written costs the run id
+     * and nothing else.
+     */
+    private function remember(ParsedRectorResult $parsed): ?string
+    {
+        if ([] === $parsed->diffs) {
+            return null;
+        }
+
+        try {
+            return $this->cache->store([
+                'groups' => $this->grouper->group($parsed->ruleFiles),
+                'diffs' => $parsed->diffs,
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

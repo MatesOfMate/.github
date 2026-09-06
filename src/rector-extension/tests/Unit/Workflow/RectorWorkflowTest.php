@@ -11,9 +11,11 @@
 
 namespace MatesOfMate\RectorExtension\Tests\Unit\Workflow;
 
+use MatesOfMate\RectorExtension\Cache\RunCache;
 use MatesOfMate\RectorExtension\Discovery\ProjectContext;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
+use MatesOfMate\RectorExtension\Grouping\RuleGrouper;
 use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
 use MatesOfMate\RectorExtension\Runner\RectorRunner;
 use MatesOfMate\RectorExtension\Runner\RunResult;
@@ -43,6 +45,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             $this->createMock(RectorOutputParser::class),
             new ToonFormatter(),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $payload = json_decode($workflow->run(true, '../README.md', null, false, false, 'default'), true, 512, \JSON_THROW_ON_ERROR);
@@ -65,6 +69,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             $this->createMock(RectorOutputParser::class),
             $this->createMock(ToonFormatter::class),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $this->expectException(\RuntimeException::class);
@@ -84,6 +90,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             $this->createMock(RectorOutputParser::class),
             $this->createMock(ToonFormatter::class),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $this->expectException(\RuntimeException::class);
@@ -112,6 +120,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             new RectorOutputParser(),
             new ToonFormatter(),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $payload = json_decode($workflow->run(true, 'src', null, false, false, 'summary'), true, 512, \JSON_THROW_ON_ERROR);
@@ -139,6 +149,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             new RectorOutputParser(),
             new ToonFormatter(),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $payload = json_decode($workflow->run(false, 'src', null, false, false, 'summary'), true, 512, \JSON_THROW_ON_ERROR);
@@ -168,6 +180,8 @@ class RectorWorkflowTest extends TestCase
             $runner,
             new RectorOutputParser(),
             new ToonFormatter(),
+            new RuleGrouper(),
+            $this->createMock(RunCache::class),
         );
 
         $workflow->run(true, null, 'rector-ci.php', false, false, 'summary');

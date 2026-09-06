@@ -61,8 +61,11 @@ class ToonFormatterTest extends TestCase
         $decoded = ResponseEncoder::decode($this->formatter->format($result, 'default'));
 
         $this->assertSame(1, $decoded['summary']['total_errors']);
-        $this->assertSame('Test.php', $decoded['errors'][0]['file']);
-        $this->assertSame('Error message', $decoded['errors'][0]['message']);
+        // Errors are reported as groups: one entry per rule, with the number of
+        // places it fired, instead of one entry per error.
+        $this->assertSame(1, $decoded['groups'][0]['count']);
+        $this->assertSame('Error message', $decoded['groups'][0]['example']);
+        $this->assertSame('Test.php', $decoded['groups'][0]['files']);
     }
 
     public function testFormatSummaryMode(): void
@@ -100,8 +103,8 @@ class ToonFormatterTest extends TestCase
 
         $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
 
-        $this->assertSame('/full/path/to/Test.php', $decoded['errors'][0]['file']);
-        $this->assertSame('Property has no type', $decoded['errors'][0]['message']);
+        $this->assertSame('Property has no type', $decoded['groups'][0]['example']);
+        $this->assertSame(['Test.php' => 1], $decoded['groups'][0]['files']);
     }
 
     public function testFormatThrowsExceptionForInvalidMode(): void

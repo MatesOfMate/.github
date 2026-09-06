@@ -10,11 +10,14 @@
  */
 
 use MatesOfMate\Common\Process\ProcessExecutor;
+use MatesOfMate\PhpStanExtension\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
+use MatesOfMate\PhpStanExtension\Capability\AnalysisDetailTool;
 use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
 use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
 use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
 use MatesOfMate\PhpStanExtension\Parser\NeonParser;
 use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
@@ -39,6 +42,11 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$customCommand', '%matesofmate_phpstan.custom_command%');
 
     $services->set(JsonOutputParser::class);
+    $services->set(ErrorGrouper::class);
+    $services->set(RunCache::class)
+        ->arg('$cacheDir', '%mate.cache_dir%')
+        ->arg('$namespace', 'phpstan-runs')
+        ->arg('$keep', 20);
     $services->set(ConfigurationDetector::class);
     $services->set(NeonParser::class);
 
@@ -46,6 +54,7 @@ return static function (ContainerConfigurator $container): void {
 
     // Tools - automatically discovered by #[MateTool] attribute
     $services->set(AnalyseTool::class);
+    $services->set(AnalysisDetailTool::class);
     $services->set(ClearCacheTool::class);
 
     // Resources - automatically discovered by #[MateResource] attribute

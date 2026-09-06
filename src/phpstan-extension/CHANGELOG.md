@@ -4,6 +4,11 @@ CHANGELOG
 0.7.0
 -----
 
+ * Group reported errors by PHPStan's own rule identifier instead of listing every error
+ * Add `phpstan-analysis-detail` to read the individual errors of a run by its id
+ * Keep the last 20 analyses under Mate's cache directory
+ * Keep the `identifier` field PHPStan reports for every error
+ * Stop truncating error messages to 200 characters
  * Add a `phpstan-static-analysis` skill covering run scoping, error interpretation, and cache handling
  * Support symfony/ai-mate 0.13
  * Replace the `#[McpTool]` and `#[McpResource]` attributes with Mate's native `#[MateTool]` and `#[MateResource]`

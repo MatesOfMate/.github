@@ -15,10 +15,10 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 
 ## Workflow
 
-1. Run the narrowest scope that answers the question, then widen.
+1. Open with the default mode, not `--mode=summary`. The default already carries the failure groups and a worked example for each of the first few, so one call usually tells you both that the suite is red and why. `summary` answers only the first of those, and finding out why then costs a second call.
    - What you just changed: `vendor/bin/mate tools:call phpunit-run --file=tests/Service/InvoiceTest.php`
    - One known failure: `--class='App\Tests\Service\InvoiceTest' --method=testTotalIsRounded --mode=detailed`
-   - Confirming a suite is green: no scope parameters, `--mode=summary`.
+   - Re-checking a suite you have already read: `--mode=summary` is right here, where counts are all you need.
 2. When you only know the class under test, find the test first: `vendor/bin/mate tools:call phpunit-list-tests --directory=tests/Service`, then run the class it names.
 3. When a group needs more than its summary, read it with `phpunit-run-detail --id=<run> --group=g1` rather than re-running the suite.
 4. After a fix, re-run the narrow scope, then the full suite once.
@@ -32,7 +32,7 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 - `groups` collapse failures that share a cause. One broken method fails every test that touches it, so twelve failing tests are usually one problem: `count` is how many tests a group accounts for, `example` names one of them. Fix causes, not entries.
 - A group's `type` separates assertion failures from exceptions. An exception usually means the test never really ran, which makes it the more serious of the two.
 - `run` is the id of the cached run and `next` spells out the call that reads it. Reach for `phpunit-run-detail --id=<run> --group=g1` instead of re-running the suite in a more verbose mode: the messages are already stored, and running again costs a second suite execution.
-- `mode` decides the detail. `summary`: counts only. `default`: the groups with a one-line summary each. `detailed`: adds one worked example per group with the fully-qualified class and full path, which is what you need before opening a file. A group lists at most five member tests; `phpunit-run-detail` has the rest.
+- `mode` decides the detail. `summary`: counts only, for confirming a result you have already diagnosed. `default`: the groups, plus a worked example of the actual failure for the largest few, which is normally enough to start fixing. `detailed`: adds one worked example per group with the fully-qualified class and full path, which is what you need before opening a file. A group lists at most five member tests; `phpunit-run-detail` has the rest.
 - Messages come back with unchanged diff context and vendor stack frames removed, and say so where that happened. Pass `raw` to `phpunit-run-detail` for the untouched text.
 - `phpunit-list-tests` is an index, not the authority on what runs. It matches `*Test.php`, a class declared with `extends`, and `public function test…` methods, so tests using the `#[Test]` attribute or inherited from a base class are absent yet run fine. Never conclude from it that a test does not exist.
 

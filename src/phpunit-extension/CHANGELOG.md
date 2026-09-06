@@ -4,6 +4,11 @@ CHANGELOG
 0.7.0
 -----
 
+ * Group reported failures by cause instead of listing every failing test
+ * Carry a worked example of the failure for the largest groups in the default response
+ * Add `phpunit-run-detail` to read the full messages of a run by its id
+ * Keep the last 20 runs under Mate's cache directory
+ * Shorten failure messages by removing unchanged diff context and vendor stack frames instead of cutting at a byte offset
  * Add a `phpunit-test-run` skill covering run scoping, result reading, and the limits of test discovery
  * Support symfony/ai-mate 0.13
  * Replace the `#[McpTool]` attribute with Mate's native `#[MateTool]`

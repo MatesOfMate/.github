@@ -45,6 +45,13 @@ class ParsedRectorResult
         public readonly array $diagnostics,
         public readonly ?RunResult $runResult = null,
         public readonly array $rejectedInput = [],
+        /**
+         * Which rules changed which files. Rector reports this per file diff;
+         * the flat $rules list above is what is left after discarding it.
+         *
+         * @var array<string, array<int, string>> rule class => files it changed
+         */
+        public readonly array $ruleFiles = [],
     ) {
     }
 

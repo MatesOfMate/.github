@@ -77,6 +77,70 @@ class ToonFormatterTest extends TestCase
     }
 
     /**
+     * raw_output is Rector's own JSON, which is what changed_files, rules and
+     * diffs were parsed from. Including it repeated the entire response inside
+     * itself, and being multi-line it cost several times its own size again
+     * once rendered.
+     */
+    public function testDetailedDoesNotEchoRectorsOwnOutputBack(): void
+    {
+        $rawOutput = json_encode(['totals' => ['changed_files' => 2], 'file_diffs' => array_fill(0, 2, ['file' => '/a.php', 'diff' => str_repeat('- x
++ y
+', 40)])], \JSON_THROW_ON_ERROR);
+
+        $result = new ParsedRectorResult(
+            preview: true,
+            exitCode: 0,
+            timedOut: false,
+            changedFileCount: 2,
+            changedFiles: ['/app/src/Invoice.php', '/app/src/Cart.php'],
+            rules: [\Rector\Php54\Rector\Array_\LongArrayToShortArrayRector::class],
+            diffs: [['file' => '/app/src/Invoice.php', 'diff' => '- old
++ new']],
+            errorCount: 0,
+            errors: [],
+            rawOutput: $rawOutput,
+            errorOutput: '',
+            diagnostics: [],
+            ruleFiles: [\Rector\Php54\Rector\Array_\LongArrayToShortArrayRector::class => ['/app/src/Invoice.php', '/app/src/Cart.php']],
+        );
+
+        $output = (new ToonFormatter())->format($result, 'detailed', 'run-1');
+
+        $this->assertStringNotContainsString('file_diffs', $output);
+        $this->assertLessThan(\strlen($rawOutput), \strlen($output));
+        $this->assertStringContainsString('LongArrayToShortArrayRector', $output);
+        $this->assertStringContainsString('rector-run-detail --id=run-1', $output);
+    }
+
+    public function testRulesAreReportedAsGroupsWithTheirFileCount(): void
+    {
+        $result = new ParsedRectorResult(
+            preview: true,
+            exitCode: 0,
+            timedOut: false,
+            changedFileCount: 2,
+            changedFiles: ['/a.php', '/b.php'],
+            rules: [\Rector\Php54\Rector\Array_\LongArrayToShortArrayRector::class],
+            diffs: [],
+            errorCount: 0,
+            errors: [],
+            rawOutput: '',
+            errorOutput: '',
+            diagnostics: [],
+            ruleFiles: [\Rector\Php54\Rector\Array_\LongArrayToShortArrayRector::class => ['/a.php', '/b.php']],
+        );
+
+        $decoded = json_decode((new ToonFormatter())->format($result, 'default'), true, 512, \JSON_THROW_ON_ERROR);
+
+        $this->assertSame('LongArrayToShortArrayRector', $decoded['rules'][0]['short']);
+        $this->assertSame(2, $decoded['rules'][0]['files_changed']);
+        // default lists changed_files once already; the per-rule file lists
+        // belong to detailed.
+        $this->assertArrayNotHasKey('files', $decoded['rules'][0]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function format(ParsedRectorResult $result, string $mode = 'default'): array

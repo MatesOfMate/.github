@@ -9,11 +9,14 @@
  * file that was distributed with this source code.
  */
 
+use MatesOfMate\RectorExtension\Cache\RunCache;
 use MatesOfMate\RectorExtension\Capability\ApplyTool;
 use MatesOfMate\RectorExtension\Capability\InspectTool;
+use MatesOfMate\RectorExtension\Capability\PreviewDetailTool;
 use MatesOfMate\RectorExtension\Capability\PreviewTool;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
+use MatesOfMate\RectorExtension\Grouping\RuleGrouper;
 use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
 use MatesOfMate\RectorExtension\Runner\RectorRunner;
 use MatesOfMate\RectorExtension\Validation\PathValidator;
@@ -39,6 +42,12 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$projectRoot', '%mate.root_dir%');
 
     $services->set(RectorOutputParser::class);
+    $services->set(RuleGrouper::class);
+    $services->set(RunCache::class)
+        ->arg('$cacheDir', '%mate.cache_dir%')
+        ->arg('$namespace', 'rector-runs')
+        ->arg('$keep', 20);
+    $services->set(PreviewDetailTool::class);
     $services->set(ToonFormatter::class);
     $services->set(RectorWorkflow::class);
 

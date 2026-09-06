@@ -75,7 +75,10 @@ class ToonFormatterTest extends TestCase
         $output = $this->formatter->format($testResult, 'default');
 
         $this->assertStringContainsString('FAILED', $output);
-        $this->assertStringContainsString('failures', $output);
+        // Failures are reported as groups now: one entry per cause, with the
+        // number of tests that hit it, instead of one entry per failing test.
+        $this->assertStringContainsString('groups', $output);
+        $this->assertStringContainsString('g1', $output);
     }
 
     public function testFormatSummaryModeReturnsCompactOutput(): void
@@ -165,6 +168,66 @@ class ToonFormatterTest extends TestCase
         $output = $this->formatter->format($testResult, 'default');
 
         $this->assertStringContainsString('5.568', $output); // Rounded to 3 decimals
+    }
+
+    public function testALargeGroupDoesNotPrintEveryMemberName(): void
+    {
+        $failures = [];
+        for ($i = 0; $i < 200; ++$i) {
+            $failures[] = [
+                'class' => 'App\\Tests\\InvoiceTest',
+                'method' => 'testThing'.$i,
+                'type' => \PHPUnit\Framework\ExpectationFailedException::class,
+                'file' => '/app/tests/InvoiceTest.php',
+                'line' => 42,
+                'message' => 'Failed asserting that two arrays are identical.',
+            ];
+        }
+
+        $output = $this->formatter->format(
+            new TestResult(
+                ['tests' => 200, 'failures' => 200, 'errors' => 0, 'warnings' => 0, 'skipped' => 0, 'time' => 1.0],
+                $failures,
+                []
+            ),
+            'detailed'
+        );
+
+        // A group exists because its members are interchangeable. Listing all
+        // two hundred puts back the cost the grouping just removed.
+        $this->assertStringContainsString('and 195 more', $output);
+        $this->assertLessThan(2000, \strlen($output));
+    }
+
+    public function testTheDetailPointerIsOmittedWithoutARunId(): void
+    {
+        $output = $this->formatter->format($this->createFailingResult(), 'default');
+
+        $this->assertStringNotContainsString('phpunit-run-detail', $output);
+        $this->assertStringNotContainsString('"run"', $output);
+    }
+
+    public function testTheDetailPointerCarriesTheRunId(): void
+    {
+        $output = $this->formatter->format($this->createFailingResult(), 'default', 'run-42');
+
+        $this->assertStringContainsString('phpunit-run-detail --id=run-42', $output);
+    }
+
+    private function createFailingResult(): TestResult
+    {
+        return new TestResult(
+            ['tests' => 2, 'failures' => 1, 'errors' => 0, 'warnings' => 0, 'skipped' => 0, 'time' => 1.0],
+            [[
+                'class' => 'App\\Tests\\InvoiceTest',
+                'method' => 'testOne',
+                'type' => \PHPUnit\Framework\ExpectationFailedException::class,
+                'file' => '/app/tests/InvoiceTest.php',
+                'line' => 42,
+                'message' => 'Failed asserting that two arrays are identical.',
+            ]],
+            []
+        );
     }
 
     private function createSuccessfulResult(): TestResult

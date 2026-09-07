@@ -9,8 +9,8 @@
  * file that was distributed with this source code.
  */
 
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\Common\Process\ProcessExecutor;
-use MatesOfMate\PHPUnitExtension\Cache\RunCache;
 use MatesOfMate\PHPUnitExtension\Capability\ListTestsTool;
 use MatesOfMate\PHPUnitExtension\Capability\RunDetailTool;
 use MatesOfMate\PHPUnitExtension\Capability\RunTool;

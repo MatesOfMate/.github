@@ -106,13 +106,17 @@ class ToonFormatter
                     'id' => $g['id'],
                     'count' => $g['count'],
                     'type' => $g['type'],
-                    'summary' => $this->firstLine((string) $g['summary']),
+                    // The headline is normally one short assertion sentence, but
+                    // a single-line message (no newline for headline() to cut
+                    // on, e.g. assertStringContainsString against one large
+                    // value) has no other bound, so it is capped here too.
+                    'summary' => $this->stripper->truncate($this->firstLine((string) $g['summary']), self::EXAMPLE_LENGTH),
                     'example' => $g['tests'][0] ?? '',
                 ];
 
                 if ($index < self::GROUPS_WITH_EXAMPLE) {
                     $rep = $g['representative'];
-                    $entry['message'] = $this->cut(
+                    $entry['message'] = $this->stripper->truncate(
                         $this->stripper->strip((string) ($rep['message'] ?? '')),
                         self::EXAMPLE_LENGTH
                     );
@@ -181,7 +185,10 @@ class ToonFormatter
                     // distinction predates grouping and is why the mode exists.
                     'file' => (string) ($rep['file'] ?? ''),
                     'line' => $rep['line'] ?? null,
-                    'message' => $this->stripper->strip((string) ($rep['message'] ?? '')),
+                    'message' => $this->stripper->truncate(
+                        $this->stripper->strip((string) ($rep['message'] ?? '')),
+                        self::EXAMPLE_LENGTH
+                    ),
                     'tests' => $this->sampleTests($g['tests']),
                 ];
             },
@@ -248,14 +255,5 @@ class ToonFormatter
     private function groupsOf(TestResult $result): array
     {
         return $this->grouper->group(array_merge($result->failures, $result->errors));
-    }
-
-    private function cut(string $message, int $max): string
-    {
-        if (\strlen($message) <= $max) {
-            return $message;
-        }
-
-        return substr($message, 0, $max - 3).'...';
     }
 }

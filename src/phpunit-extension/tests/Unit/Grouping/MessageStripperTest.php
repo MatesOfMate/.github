@@ -26,6 +26,21 @@ class MessageStripperTest extends TestCase
         $this->stripper = new MessageStripper();
     }
 
+    public function testTruncateLeavesAShortMessageAlone(): void
+    {
+        $message = 'Failed asserting that false is true.';
+
+        $this->assertSame($message, $this->stripper->truncate($message, 800));
+    }
+
+    public function testTruncateCutsALongMessageWithAMarker(): void
+    {
+        $truncated = $this->stripper->truncate(str_repeat('x', 1000), 800);
+
+        $this->assertSame(800, \strlen($truncated));
+        $this->assertStringEndsWith('...', $truncated);
+    }
+
     public function testAShortMessageIsLeftAlone(): void
     {
         $message = 'Failed asserting that false is true.';
@@ -75,6 +90,45 @@ class MessageStripperTest extends TestCase
 
         $this->assertStringContainsString("'second' => 2,", $stripped);
         $this->assertStringContainsString("-    'third' => 3,", $stripped);
+    }
+
+    /**
+     * Indentation alone does not make a line diff context. A message with no
+     * diff markers anywhere (an indented SQL statement inside an exception,
+     * a var_export dump) must survive intact, not get replaced by a
+     * "[stripped: N unchanged diff lines]" note that claims a safe removal
+     * that never happened.
+     */
+    public function testIndentedContentWithNoDiffIsNotTreatedAsContext(): void
+    {
+        $message = "Doctrine\\DBAL\\Exception\\SyntaxErrorException: An exception occurred while executing:\n"
+            ."    SELECT * FROM invoice WHERE id = ?\n"
+            ."    with params [17]\n"
+            .'/app/src/Repository/InvoiceRepository.php:88';
+
+        $stripped = $this->stripper->strip($message);
+
+        $this->assertStringContainsString('SELECT * FROM invoice WHERE id = ?', $stripped);
+        $this->assertStringContainsString('with params [17]', $stripped);
+        $this->assertStringNotContainsString('unchanged diff lines', $stripped);
+    }
+
+    /**
+     * A message that does contain a real diff further down still gets its
+     * indented context dropped as before; the fix only concerns messages with
+     * no diff markers at all.
+     */
+    public function testIndentedContentBeforeARealDiffIsStillTreatedAsContext(): void
+    {
+        $message = "Failed asserting that two arrays are identical.\n"
+            ."--- Expected\n+++ Actual\n@@ @@\n"
+            .str_repeat("     'padding' => 'unchanged context line',\n", 10)
+            ."-    'subtotal' => 1,\n"
+            ."+    'subtotal' => 2,\n";
+
+        $stripped = $this->stripper->strip($message);
+
+        $this->assertStringContainsString('unchanged diff lines', $stripped);
     }
 
     /**

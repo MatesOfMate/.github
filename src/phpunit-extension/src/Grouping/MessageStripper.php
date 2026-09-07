@@ -24,16 +24,46 @@ namespace MatesOfMate\PHPUnitExtension\Grouping;
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-final readonly class MessageStripper
+readonly class MessageStripper
 {
     public function __construct(
         private int $contextLines = 2,
     ) {
     }
 
+    /**
+     * Cuts a message to a maximum length, shared by every surface that emits a
+     * message: a single bound applied inconsistently is no bound at all, since
+     * whichever surface is left uncapped can still carry an arbitrarily large
+     * value (a single-line assertion diff against a large value has no
+     * newline for a "first line" cut to act on).
+     */
+    public function truncate(string $message, int $max): string
+    {
+        if (\strlen($message) <= $max) {
+            return $message;
+        }
+
+        return substr($message, 0, $max - 3).'...';
+    }
+
     public function strip(string $message): string
     {
         $lines = explode("\n", $message);
+
+        // An indented line only means "diff context" inside an actual diff. A
+        // message with no diff markers anywhere (an indented SQL statement in
+        // an exception message, a var_export dump) is not a diff, and treating
+        // its indentation as droppable context would silently delete real
+        // content while claiming it was safe, unchanged noise.
+        $hasDiffMarker = false;
+        foreach ($lines as $line) {
+            if ($this->isDiffChange($line)) {
+                $hasDiffMarker = true;
+                break;
+            }
+        }
+
         $kept = [];
         $droppedContext = 0;
         $droppedFrames = 0;
@@ -56,7 +86,7 @@ final readonly class MessageStripper
                 continue;
             }
 
-            if ($this->isDiffContext($line)) {
+            if ($hasDiffMarker && $this->isDiffContext($line)) {
                 $pendingContext[] = $line;
                 ++$droppedContext;
                 continue;

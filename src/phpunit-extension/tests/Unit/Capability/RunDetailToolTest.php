@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PHPUnitExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PHPUnitExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PHPUnitExtension\Capability\RunDetailTool;
 use MatesOfMate\PHPUnitExtension\Grouping\FailureGrouper;
 use MatesOfMate\PHPUnitExtension\Grouping\MessageStripper;
@@ -99,6 +99,40 @@ class RunDetailToolTest extends TestCase
         $this->assertStringContainsString('unchanged diff lines', (string) $stripped);
         $this->assertStringNotContainsString('unchanged diff lines', (string) $raw);
         $this->assertLessThan(\strlen((string) $raw), \strlen((string) $stripped));
+    }
+
+    /**
+     * A message with no newline (a single long assertStringContainsString
+     * value, say) has no diff or headline for anything else to bound, so
+     * without its own cap it would pass straight through.
+     */
+    public function testALongMessageIsCappedWhenNoSingleTestIsRequested(): void
+    {
+        $groups = (new FailureGrouper())->group([
+            $this->failure('testOne', str_repeat('x', 5000)),
+        ]);
+        $id = $this->cache->store(['groups' => $groups]);
+
+        $decoded = $this->decode($this->tool->execute($id));
+
+        $this->assertLessThan(1000, \strlen((string) $decoded['entries'][0]['message']));
+    }
+
+    /**
+     * "return one test in full" is the documented contract for the test
+     * argument, so the same long message must survive uncapped there.
+     */
+    public function testALongMessageIsReturnedInFullForOneNamedTest(): void
+    {
+        $long = str_repeat('x', 5000);
+        $groups = (new FailureGrouper())->group([
+            $this->failure('testOne', $long),
+        ]);
+        $id = $this->cache->store(['groups' => $groups]);
+
+        $decoded = $this->decode($this->tool->execute($id, test: 'InvoiceTest::testOne'));
+
+        $this->assertSame($long, $decoded['entries'][0]['message']);
     }
 
     public function testAGroupThatDoesNotExistIsReportedWithTheOnesThatDo(): void

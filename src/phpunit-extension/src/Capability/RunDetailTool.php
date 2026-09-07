@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PHPUnitExtension\Capability;
 
-use MatesOfMate\PHPUnitExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PHPUnitExtension\Grouping\MessageStripper;
 use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
@@ -24,6 +24,14 @@ use Symfony\AI\Mate\Encoding\ResponseEncoder;
  */
 class RunDetailTool
 {
+    /**
+     * A single named test is returned in full, as documented. Anything wider
+     * (no filter, or a whole group) has no such promise and needs the same
+     * bound every other message surface has, or a large message on just one
+     * member could still balloon the response.
+     */
+    private const MAX_MESSAGE_LENGTH = 800;
+
     public function __construct(
         private readonly RunCache $cache,
         private readonly MessageStripper $stripper,
@@ -36,7 +44,7 @@ class RunDetailTool
      * @param string|null $test  return one test in full, for example InvoiceFormatterTest::testFormatsInvoice
      * @param bool        $raw   keep the noise: unchanged diff context and vendor stack frames
      */
-    #[MateTool(name: 'phpunit-run-detail', title: 'PHPUnit Run Detail', description: 'Show the full failure messages behind a grouped phpunit-run result, by run id. Use the group or test argument to narrow it down.')]
+    #[MateTool(name: 'phpunit-run-detail', title: 'PHPUnit Run Detail', description: 'Show the failure messages behind a grouped phpunit-run result, by run id. Use the test argument for one test in full; without it, or with only group, each message is capped to keep a wide result small.')]
     public function execute(
         string $id,
         ?string $group = null,
@@ -68,7 +76,6 @@ class RunDetailTool
 
         return ResponseEncoder::encode([
             'run' => $id,
-            'command' => $run['command'] ?? null,
             'entries' => $this->entries($matched, $test, $raw),
         ]);
     }
@@ -112,12 +119,22 @@ class RunDetailTool
                 }
 
                 $message = (string) ($member['message'] ?? '');
+                if (!$raw) {
+                    $message = $this->stripper->strip($message);
+                }
+                // A single named test is returned in full: that is the point
+                // of asking for one. Anything wider is not that promise and
+                // needs the same bound every other message surface has.
+                if (null === $test) {
+                    $message = $this->stripper->truncate($message, self::MAX_MESSAGE_LENGTH);
+                }
+
                 $entries[] = [
                     'group' => $g['id'],
                     'test' => $name,
                     'file' => $member['file'] ?? null,
                     'line' => $member['line'] ?? null,
-                    'message' => $raw ? $message : $this->stripper->strip($message),
+                    'message' => $message,
                 ];
             }
         }

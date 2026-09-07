@@ -25,7 +25,7 @@ namespace MatesOfMate\PHPUnitExtension\Grouping;
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-final class FailureGrouper
+class FailureGrouper
 {
     /**
      * @param array<int, array<string, mixed>> $entries

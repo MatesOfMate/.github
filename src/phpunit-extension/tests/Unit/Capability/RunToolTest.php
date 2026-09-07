@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PHPUnitExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PHPUnitExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PHPUnitExtension\Capability\RunTool;
 use MatesOfMate\PHPUnitExtension\Config\ConfigurationDetector;
 use MatesOfMate\PHPUnitExtension\Formatter\ToonFormatter;
@@ -221,6 +221,47 @@ class RunToolTest extends TestCase
 
         $this->assertSame('formatted output', $result);
         $this->assertStringNotContainsString('PHPUnit output', $result);
+    }
+
+    /**
+     * The mock above proves RunTool degrades when store() throws, but that
+     * only holds if RunCache actually throws on a real write failure. This
+     * exercises a genuine one, a cache directory that exists but is not
+     * writable, through RunTool's own catch, not RunCache in isolation.
+     */
+    public function testARealUnwritableCacheDirectoryDegradesTheSameWay(): void
+    {
+        [$runner, $parser, $formatter, $configDetector, $grouper, , $runResult] = $this->createDependencies(output: 'PHPUnit output');
+        $testResult = $this->createFailingResult();
+
+        $runner->method('run')->willReturn($runResult);
+        $parser->method('parse')->willReturn($testResult);
+
+        $formatter->expects($this->once())
+            ->method('format')
+            ->with($testResult, 'default', null, $this->anything())
+            ->willReturn('formatted output');
+
+        $dir = sys_get_temp_dir().'/phpunit-run-tool-test-'.bin2hex(random_bytes(4));
+        mkdir($dir.'/phpunit-runs', 0o700, true);
+        chmod($dir.'/phpunit-runs', 0o500);
+        $cache = new RunCache($dir, 'phpunit-runs', 20);
+
+        try {
+            if (is_writable($dir.'/phpunit-runs')) {
+                $this->markTestSkipped('the directory is still writable despite the permission change, likely running as root.');
+            }
+
+            $tool = new RunTool($runner, $parser, $formatter, $configDetector, $grouper, $cache);
+            $result = $tool->execute();
+
+            $this->assertSame('formatted output', $result);
+            $this->assertStringNotContainsString('PHPUnit output', $result);
+        } finally {
+            chmod($dir.'/phpunit-runs', 0o700);
+            @rmdir($dir.'/phpunit-runs');
+            @rmdir($dir);
+        }
     }
 
     private function createFailingResult(): TestResult

@@ -260,6 +260,63 @@ class ToonFormatterTest extends TestCase
         $this->assertLessThan(29000, $rendered);
     }
 
+    /**
+     * A single-line message (no newline, the shape of an assertStringContainsString
+     * failure against a large value) has no diff and no second line for
+     * headline()/firstLine() to cut on, so without its own bound it passes
+     * through whole, in every group, not only the ones with a worked example.
+     */
+    public function testALongSingleLineMessageIsCappedEvenInTheTail(): void
+    {
+        $failures = [];
+        foreach (range(1, 5) as $i) {
+            $failures[] = [
+                'class' => 'App\\Tests\\T'.$i,
+                'method' => 't',
+                'type' => \PHPUnit\Framework\ExpectationFailedException::class,
+                'file' => '/app/tests/T'.$i.'.php',
+                'line' => 42,
+                // No newline: distinct per group (so each lands in its own
+                // group) but no second line for anything to cut on.
+                'message' => str_repeat('x'.$i, 20000),
+            ];
+        }
+
+        $decoded = json_decode(
+            $this->formatter->format(
+                new TestResult(['tests' => 5, 'failures' => 5, 'errors' => 0, 'warnings' => 0, 'skipped' => 0, 'time' => 1.0], $failures, []),
+                'default',
+                'run-1'
+            ),
+            true,
+            512,
+            \JSON_THROW_ON_ERROR
+        );
+
+        foreach ($decoded['groups'] as $group) {
+            $this->assertLessThan(1000, \strlen((string) $group['summary']));
+        }
+    }
+
+    public function testALongMessageIsCappedInDetailedMode(): void
+    {
+        $testResult = new TestResult(
+            summary: ['tests' => 1, 'failures' => 1, 'errors' => 0, 'warnings' => 0, 'skipped' => 0, 'time' => 1.0],
+            failures: [[
+                'class' => 'App\\Tests\\UserTest',
+                'method' => 'testCreate',
+                'message' => str_repeat('x', 5000),
+                'file' => '/path/to/UserTest.php',
+                'line' => 45,
+            ]],
+            errors: []
+        );
+
+        $decoded = json_decode($this->formatter->format($testResult, 'detailed'), true, 512, \JSON_THROW_ON_ERROR);
+
+        $this->assertLessThan(1000, \strlen((string) $decoded['groups'][0]['message']));
+    }
+
     public function testSummaryStaysCountsOnly(): void
     {
         $output = $this->formatter->format($this->manyCauses(5), 'summary');

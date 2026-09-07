@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PHPUnitExtension\Capability;
 
-use MatesOfMate\PHPUnitExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PHPUnitExtension\Config\ConfigurationDetector;
 use MatesOfMate\PHPUnitExtension\Formatter\ToonFormatter;
 use MatesOfMate\PHPUnitExtension\Grouping\FailureGrouper;

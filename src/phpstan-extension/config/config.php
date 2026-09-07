@@ -43,7 +43,7 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(JsonOutputParser::class);
     $services->set(ErrorGrouper::class);
-    $services->set(RunCache::class)
+    $services->set('matesofmate_phpstan.run_cache', RunCache::class)
         ->arg('$cacheDir', '%mate.cache_dir%')
         ->arg('$namespace', 'phpstan-runs')
         ->arg('$keep', 20);
@@ -53,8 +53,10 @@ return static function (ContainerConfigurator $container): void {
     $services->set(ToonFormatter::class);
 
     // Tools - automatically discovered by #[MateTool] attribute
-    $services->set(AnalyseTool::class);
-    $services->set(AnalysisDetailTool::class);
+    $services->set(AnalyseTool::class)
+        ->arg('$cache', service('matesofmate_phpstan.run_cache'));
+    $services->set(AnalysisDetailTool::class)
+        ->arg('$cache', service('matesofmate_phpstan.run_cache'));
     $services->set(ClearCacheTool::class);
 
     // Resources - automatically discovered by #[MateResource] attribute

@@ -5,6 +5,7 @@ CHANGELOG
 -----
 
  * Move development branch to 0.7.x-dev for the 0.13 release line
+ * Add `Cache\RunCache`, a small on-disk store keyed by a generated run id, so a tool can hand back a compact grouped response while keeping the full detail readable through a follow-up call; a failed write now throws instead of returning an id that can never be loaded back
 
 0.6.0
 -----

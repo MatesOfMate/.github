@@ -44,7 +44,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set(JunitXmlParser::class);
     $services->set(FailureGrouper::class);
     $services->set(MessageStripper::class);
-    $services->set(RunCache::class)
+    $services->set('matesofmate_phpunit.run_cache', RunCache::class)
         ->arg('$cacheDir', '%mate.cache_dir%')
         ->arg('$namespace', 'phpunit-runs')
         ->arg('$keep', 20);
@@ -57,7 +57,9 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$projectRoot', '%mate.root_dir%');
 
     // Tools - automatically discovered by #[MateTool] attribute
-    $services->set(RunTool::class);
+    $services->set(RunTool::class)
+        ->arg('$cache', service('matesofmate_phpunit.run_cache'));
     $services->set(ListTestsTool::class);
-    $services->set(RunDetailTool::class);
+    $services->set(RunDetailTool::class)
+        ->arg('$cache', service('matesofmate_phpunit.run_cache'));
 };

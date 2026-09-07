@@ -122,9 +122,6 @@ class RunDetailTool
                 if (!$raw) {
                     $message = $this->stripper->strip($message);
                 }
-                // A single named test is returned in full: that is the point
-                // of asking for one. Anything wider is not that promise and
-                // needs the same bound every other message surface has.
                 if (null === $test) {
                     $message = $this->stripper->truncate($message, self::MAX_MESSAGE_LENGTH);
                 }

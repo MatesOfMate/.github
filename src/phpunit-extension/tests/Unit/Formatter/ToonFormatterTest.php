@@ -260,12 +260,6 @@ class ToonFormatterTest extends TestCase
         $this->assertLessThan(29000, $rendered);
     }
 
-    /**
-     * A single-line message (no newline, the shape of an assertStringContainsString
-     * failure against a large value) has no diff and no second line for
-     * headline()/firstLine() to cut on, so without its own bound it passes
-     * through whole, in every group, not only the ones with a worked example.
-     */
     public function testALongSingleLineMessageIsCappedEvenInTheTail(): void
     {
         $failures = [];

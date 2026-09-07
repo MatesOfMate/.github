@@ -101,11 +101,6 @@ class RunDetailToolTest extends TestCase
         $this->assertLessThan(\strlen((string) $raw), \strlen((string) $stripped));
     }
 
-    /**
-     * A message with no newline (a single long assertStringContainsString
-     * value, say) has no diff or headline for anything else to bound, so
-     * without its own cap it would pass straight through.
-     */
     public function testALongMessageIsCappedWhenNoSingleTestIsRequested(): void
     {
         $groups = (new FailureGrouper())->group([

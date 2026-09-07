@@ -17,16 +17,8 @@ use MatesOfMate\PHPUnitExtension\Parser\TestResult;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Formats test results for compact tool responses.
- *
- * The response leads with grouped failures rather than a list of every failing
- * test. One broken method produces one failure per test that touches it, and
- * seventeen copies of the same assertion diff cost the agent a large response
- * to learn a single fact.
- *
- * The encoder pads every column to its widest cell and rules the table at that
- * width, so the response is roughly five times the largest value in it. Keeping
- * the largest value small therefore matters about five times more than it looks.
+ * Formats test results for compact tool responses, leading with grouped
+ * failures rather than one entry per failing test.
  *
  * @internal
  *
@@ -36,31 +28,10 @@ class ToonFormatter
 {
     private const TESTS_SHOWN = 5;
 
-    /**
-     * How many groups carry a worked example in the default response.
-     *
-     * The first call an agent makes has to be worth making. A response that
-     * says only "17 failures in 3 groups" forces a second round trip to learn
-     * anything actionable, and a round trip costs a whole turn. Three covers the
-     * usual shape, where a suite is red for one or two reasons. Past that the
-     * response grows back towards the wall of text the grouping removed, so the
-     * long tail keeps its one-line summary and is fetched by id when wanted.
-     */
+    /** Past the usual one-or-two-cause suite, a worked example per group regrows the wall of text grouping removed. */
     private const GROUPS_WITH_EXAMPLE = 3;
 
-    /**
-     * A representative message is a worked example, not the whole diff.
-     *
-     * The bound comes from the other end: the caller renders this response as a
-     * table padded to its widest column, so the response costs roughly the
-     * largest value times the number of rows, and past about 30KB an agent
-     * harness stops passing it through and hands over a truncated preview
-     * instead. Three examples of 800 characters put the worst case near 23KB,
-     * which leaves real margin; 1000 measured at 27KB, close enough to the
-     * limit that a slightly wider response would fall off it. The stripper
-     * removes unchanged context first, so a real assertion diff rarely reaches
-     * the bound at all.
-     */
+    /** Keeps the rendered response under the ~30KB an agent harness will still pass through untruncated. */
     private const EXAMPLE_LENGTH = 800;
 
     public function __construct(
@@ -70,11 +41,8 @@ class ToonFormatter
     }
 
     /**
-     * @param array<int, array<string, mixed>>|null $groups Pre-computed groups. The caller that stores the run
-     *                                                      already has them and passes them in so the grouping
-     *                                                      is not repeated; anyone else gets them computed here
-     *                                                      rather than getting a response with the failures
-     *                                                      silently missing.
+     * @param array<int, array<string, mixed>>|null $groups pre-computed groups, so the caller that already grouped
+     *                                                      them for the cache does not repeat the work
      */
     public function format(TestResult $result, string $mode = 'default', ?string $runId = null, ?array $groups = null): string
     {
@@ -106,10 +74,6 @@ class ToonFormatter
                     'id' => $g['id'],
                     'count' => $g['count'],
                     'type' => $g['type'],
-                    // The headline is normally one short assertion sentence, but
-                    // a single-line message (no newline for headline() to cut
-                    // on, e.g. assertStringContainsString against one large
-                    // value) has no other bound, so it is capped here too.
                     'summary' => $this->stripper->truncate($this->firstLine((string) $g['summary']), self::EXAMPLE_LENGTH),
                     'example' => $g['tests'][0] ?? '',
                 ];
@@ -129,8 +93,6 @@ class ToonFormatter
             array_keys($groups)
         );
 
-        // Without a run id there is nothing to look the detail up by, so the
-        // pointer is omitted rather than offered with an empty --id.
         if (null !== $runId) {
             $data['run'] = $runId;
             $data['next'] = \sprintf(
@@ -155,10 +117,6 @@ class ToonFormatter
     }
 
     /**
-     * Detailed adds one worked example per group and the test-to-group map. It
-     * does not repeat the message once per test: that is the cost the grouping
-     * exists to remove.
-     *
      * @param array<int, array<string, mixed>> $groups
      */
     private function formatDetailed(TestResult $result, ?string $runId, array $groups): string
@@ -181,8 +139,7 @@ class ToonFormatter
                     'count' => $g['count'],
                     'type' => $g['type'],
                     'example' => $g['tests'][0] ?? '',
-                    // detailed keeps the full path; default shortens it. That
-                    // distinction predates grouping and is why the mode exists.
+                    // unlike default, which shortens this to a basename
                     'file' => (string) ($rep['file'] ?? ''),
                     'line' => $rep['line'] ?? null,
                     'message' => $this->stripper->truncate(
@@ -229,10 +186,6 @@ class ToonFormatter
     }
 
     /**
-     * A group with two hundred members must not print two hundred test names:
-     * the point of the group is that the members are interchangeable, and the
-     * detail tool can list them in full when that is actually wanted.
-     *
      * @param array<int, string> $tests
      *
      * @return array<int, string>

@@ -24,12 +24,7 @@ use Symfony\AI\Mate\Encoding\ResponseEncoder;
  */
 class RunDetailTool
 {
-    /**
-     * A single named test is returned in full, as documented. Anything wider
-     * (no filter, or a whole group) has no such promise and needs the same
-     * bound every other message surface has, or a large message on just one
-     * member could still balloon the response.
-     */
+    /** Applies to everything except a single named `test`, which is returned in full. */
     private const MAX_MESSAGE_LENGTH = 800;
 
     public function __construct(

@@ -9,7 +9,7 @@ Runs Rector through Mate's CLI with `--output-format=json`. Three tools, meant t
 
 - `rector-inspect` (no parameters): whether Rector is installed (`rector_installed`, `local_binary`), which config was found (`configuration`), which Composer scripts mention it, the `preferred_strategy` it would run with, and `diagnostics` naming what is missing. Runs nothing.
 - `rector-preview` (opt `path`, `configuration`, `debug`, `rulesSummary`, `mode`): the same run with `--dry-run`. Never writes.
-- `rector-run-detail` (req `id`; opt `rule`, `file`, `limit`): the diffs behind a grouped preview or apply, read back from the cached run instead of running Rector again.
+- `rector-run-detail` (req `id`; opt `group`, `file`, `limit`): the diffs behind a grouped preview or apply, read back from the cached run instead of running Rector again.
 - `rector-apply` (same parameters): writes the changes to disk.
 
 These commands accept `--format`: `json` to parse the result, `toon` (when `helgesverre/toon` is installed) for the smallest context footprint.
@@ -29,7 +29,7 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 - `exit_code: 2` is normal for a preview. Rector uses it to say there is code to change, and the tool already reports that as `SUCCESS`. It is not an error.
 - `changed_file_count` and `changed_files` are what would change, or did. A preview with `changed_file_count: 0` is a complete answer, not a failure.
 - `rules` groups the run by the rule that produced the changes: `short` is the rule, `set` the family it comes from, `files_changed` how far it reached. A sweep is usually a handful of rules over many files, so this is the shape of what happened. When a change surprises you, this names the rule responsible.
-- `run` is the id of the cached run and `next` spells out the call that reads it. Fetch the diffs you actually want with `rector-run-detail --id=<run> --rule=g1`, rather than asking for `detailed` and reading past everything else.
+- `run` is the id of the cached run and `next` spells out the call that reads it. Fetch the diffs you actually want with `rector-run-detail --id=<run> --group=g1`, rather than asking for `detailed` and reading past everything else.
 - `errors` and `error_count` are Rector's own per-file errors, usually a file it could not parse. A non-zero `error_count` makes the status `FAILED` even when other files changed cleanly.
 - `mode`: `summary` for counts, `default` for changed files and the rule groups, `detailed` to add the files per rule and the executed command. Use `detailed` on a preview you intend to review, `summary` on an apply you already previewed. Diffs come from `rector-run-detail`, not from a mode.
 

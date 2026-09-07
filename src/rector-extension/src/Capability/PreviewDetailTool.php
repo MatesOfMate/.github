@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\RectorExtension\Capability;
 
-use MatesOfMate\RectorExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
@@ -29,14 +29,14 @@ class PreviewDetailTool
 
     /**
      * @param string      $id    the run id returned by rector-preview or rector-apply
-     * @param string|null $rule  return the files changed by one rule group, for example g1
+     * @param string|null $group return the files changed by one rule group, for example g1, or by a rule's full class name
      * @param string|null $file  return the diff of files whose path contains this string
      * @param int         $limit maximum number of diffs to return
      */
-    #[MateTool(name: 'rector-run-detail', title: 'Rector Run Detail', description: 'Show the diffs behind a grouped rector-preview or rector-apply result, by run id. Narrow with the rule or file argument.')]
+    #[MateTool(name: 'rector-run-detail', title: 'Rector Run Detail', description: 'Show the diffs behind a grouped rector-preview or rector-apply result, by run id. Narrow with the group or file argument.')]
     public function execute(
         string $id,
-        ?string $rule = null,
+        ?string $group = null,
         ?string $file = null,
         int $limit = 20,
     ): string {
@@ -59,11 +59,11 @@ class PreviewDetailTool
         $diffs = $run['diffs'] ?? [];
 
         $wanted = null;
-        if (null !== $rule) {
-            $matched = array_values(array_filter($groups, static fn (array $g): bool => $g['id'] === $rule || $g['rule'] === $rule));
+        if (null !== $group) {
+            $matched = array_values(array_filter($groups, static fn (array $g): bool => $g['id'] === $group || $g['rule'] === $group));
             if ([] === $matched) {
                 return ResponseEncoder::encode([
-                    'error' => "No rule group {$rule} in this run.",
+                    'error' => "No rule group {$group} in this run.",
                     'groups' => array_map(static fn (array $g): string => $g['id'].' '.$g['short'].' ('.$g['count'].')', $groups),
                 ]);
             }
@@ -98,7 +98,7 @@ class PreviewDetailTool
         // complete one.
         if ($truncated) {
             $payload['truncated'] = true;
-            $payload['hint'] = 'More files matched than the limit; raise limit or narrow with rule/file.';
+            $payload['hint'] = 'More files matched than the limit; raise limit or narrow with group/file.';
         }
 
         return ResponseEncoder::encode($payload);

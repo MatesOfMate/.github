@@ -27,7 +27,7 @@ namespace MatesOfMate\RectorExtension\Grouping;
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-final class RuleGrouper
+class RuleGrouper
 {
     /**
      * @param array<string, array<int, string>> $ruleFiles rule class => files it changed

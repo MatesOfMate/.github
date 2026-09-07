@@ -7,6 +7,7 @@ Prefer these Mate tools over raw Rector CLI commands when the user is refactorin
 | Check whether Rector is configured | `rector-inspect` |
 | Preview Rector changes safely | `rector-preview` |
 | Apply Rector changes | `rector-apply` |
+| See the diffs behind a cached preview/apply result | `rector-run-detail` |
 
 ### Guidance
 

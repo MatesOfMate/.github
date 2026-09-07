@@ -234,6 +234,6 @@ class ToonFormatter
         }
 
         $data['run'] = $runId;
-        $data['next'] = \sprintf('rector-run-detail --id=%s [--rule=g1|--file=path] for the diffs', $runId);
+        $data['next'] = \sprintf('rector-run-detail --id=%s [--group=g1|--file=path] for the diffs', $runId);
     }
 }

@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\RectorExtension\Workflow;
 
-use MatesOfMate\RectorExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\RectorExtension\Discovery\ExecutionStrategy;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
@@ -76,7 +76,12 @@ class RectorWorkflow
 
         $parsed = $this->parser->parse($runResult, $preview);
 
-        return $this->formatter->format($parsed, $mode, $this->remember($parsed));
+        // summary mode never reads a run id back (see ToonFormatter::formatSummary),
+        // so grouping and caching for it would only spend a cache slot for nothing
+        // reachable.
+        $runId = 'summary' === $mode ? null : $this->remember($parsed);
+
+        return $this->formatter->format($parsed, $mode, $runId);
     }
 
     /**

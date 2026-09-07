@@ -11,7 +11,8 @@
 
 namespace MatesOfMate\RectorExtension\Tests\Unit\Workflow;
 
-use MatesOfMate\RectorExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
+use MatesOfMate\RectorExtension\Capability\PreviewDetailTool;
 use MatesOfMate\RectorExtension\Discovery\ProjectContext;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
@@ -185,6 +186,118 @@ class RectorWorkflowTest extends TestCase
         );
 
         $workflow->run(true, null, 'rector-ci.php', false, false, 'summary');
+    }
+
+    /**
+     * `remember()` builds the cached payload; `PreviewDetailTool` reads it back.
+     * Every other test here mocks RunCache, so nothing exercises that the two
+     * agree on its shape: a key rename in one would break the other silently.
+     * This runs both against one real cache.
+     */
+    public function testARealRunCanBeReadBackThroughTheDetailTool(): void
+    {
+        $cacheDir = sys_get_temp_dir().'/rector-workflow-e2e-'.bin2hex(random_bytes(4));
+        $cache = new RunCache($cacheDir, 'rector-runs', 20);
+
+        $context = $this->context();
+        $validator = $this->createMock(PathValidator::class);
+        $validator->method('validate')->with('src')->willReturn('src');
+
+        $runner = $this->createMock(RectorRunner::class);
+        $runner->method('preview')->willReturn($this->runResultWithDiffs());
+
+        $workflow = new RectorWorkflow(
+            $this->discoveryReturning($context),
+            $validator,
+            $runner,
+            new RectorOutputParser(),
+            new ToonFormatter(),
+            new RuleGrouper(),
+            $cache,
+        );
+
+        try {
+            $payload = json_decode($workflow->run(true, 'src', null, false, false, 'default'), true, 512, \JSON_THROW_ON_ERROR);
+
+            $this->assertArrayHasKey('run', $payload);
+
+            $detail = json_decode((new PreviewDetailTool($cache))->execute($payload['run']), true, 512, \JSON_THROW_ON_ERROR);
+
+            $this->assertSame(2, $detail['returned']);
+            $this->assertSame(['src/Foo.php', 'src/Bar.php'], array_column($detail['diffs'], 'file'));
+        } finally {
+            foreach (glob($cacheDir.'/*/*') ?: [] as $file) {
+                @unlink($file);
+            }
+            foreach (glob($cacheDir.'/*') ?: [] as $dir) {
+                @rmdir($dir);
+            }
+            @rmdir($cacheDir);
+        }
+    }
+
+    /**
+     * A cache directory that exists but cannot be written to is the failure
+     * RunCache::store() itself has to catch, not a mocked one. This must not
+     * surface a dead run id or crash the workflow.
+     */
+    public function testARealCacheWriteFailureLeavesOutTheRunId(): void
+    {
+        $cacheDir = sys_get_temp_dir().'/rector-workflow-fail-'.bin2hex(random_bytes(4));
+        mkdir($cacheDir.'/rector-runs', 0o700, true);
+        chmod($cacheDir.'/rector-runs', 0o500);
+
+        $context = $this->context();
+        $validator = $this->createMock(PathValidator::class);
+        $validator->method('validate')->with('src')->willReturn('src');
+
+        $runner = $this->createMock(RectorRunner::class);
+        $runner->method('preview')->willReturn($this->runResultWithDiffs());
+
+        $workflow = new RectorWorkflow(
+            $this->discoveryReturning($context),
+            $validator,
+            $runner,
+            new RectorOutputParser(),
+            new ToonFormatter(),
+            new RuleGrouper(),
+            new RunCache($cacheDir, 'rector-runs', 20),
+        );
+
+        try {
+            $payload = json_decode($workflow->run(true, 'src', null, false, false, 'default'), true, 512, \JSON_THROW_ON_ERROR);
+
+            if (\array_key_exists('run', $payload)) {
+                $this->markTestSkipped('the write succeeded despite the permission change, likely running as root.');
+            }
+
+            $this->assertArrayNotHasKey('run', $payload);
+        } finally {
+            chmod($cacheDir.'/rector-runs', 0o700);
+            @rmdir($cacheDir.'/rector-runs');
+            @rmdir($cacheDir);
+        }
+    }
+
+    private function runResultWithDiffs(): RunResult
+    {
+        $output = json_encode([
+            'totals' => ['changed_files' => 2, 'errors' => 0],
+            'file_diffs' => [
+                ['file' => 'src/Foo.php', 'diff' => "--- Original\n+++ New", 'applied_rectors' => ['Rector\\WideRector']],
+                ['file' => 'src/Bar.php', 'diff' => "--- Original\n+++ New", 'applied_rectors' => ['Rector\\WideRector']],
+            ],
+        ], \JSON_THROW_ON_ERROR);
+
+        return new RunResult(
+            command: ['php', '/project/vendor/bin/rector', 'process', '--dry-run'],
+            strategy: 'local-binary',
+            workingDirectory: '/project',
+            exitCode: 2,
+            output: $output,
+            errorOutput: '',
+            timedOut: false,
+        );
     }
 
     private function discoveryReturning(ProjectContext $context): RectorDiscovery

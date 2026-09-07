@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-use MatesOfMate\RectorExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\RectorExtension\Capability\ApplyTool;
 use MatesOfMate\RectorExtension\Capability\InspectTool;
 use MatesOfMate\RectorExtension\Capability\PreviewDetailTool;

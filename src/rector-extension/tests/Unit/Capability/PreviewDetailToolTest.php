@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\RectorExtension\Tests\Unit\Capability;
 
-use MatesOfMate\RectorExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\RectorExtension\Capability\PreviewDetailTool;
 use MatesOfMate\RectorExtension\Grouping\RuleGrouper;
 use PHPUnit\Framework\TestCase;
@@ -71,7 +71,7 @@ class PreviewDetailToolTest extends TestCase
 
     public function testOnlyTheFilesOfOneRuleGroupComeBack(): void
     {
-        $decoded = $this->decode($this->tool->execute($this->storeRun(), rule: 'g2'));
+        $decoded = $this->decode($this->tool->execute($this->storeRun(), group: 'g2'));
 
         $this->assertSame(1, $decoded['returned']);
         $this->assertStringContainsString('Order.php', (string) $decoded['diffs'][0]['file']);
@@ -79,7 +79,7 @@ class PreviewDetailToolTest extends TestCase
 
     public function testTheRuleCanBeGivenByItsClassName(): void
     {
-        $decoded = $this->decode($this->tool->execute($this->storeRun(), rule: 'Rector\\B\\Rector\\Y\\NarrowRector'));
+        $decoded = $this->decode($this->tool->execute($this->storeRun(), group: 'Rector\\B\\Rector\\Y\\NarrowRector'));
 
         $this->assertSame(1, $decoded['returned']);
     }
@@ -93,7 +93,7 @@ class PreviewDetailToolTest extends TestCase
 
     public function testAnUnknownRuleGroupListsTheRealOnes(): void
     {
-        $decoded = $this->decode($this->tool->execute($this->storeRun(), rule: 'g99'));
+        $decoded = $this->decode($this->tool->execute($this->storeRun(), group: 'g99'));
 
         $this->assertStringContainsString('No rule group g99', (string) $decoded['error']);
         $this->assertNotEmpty($decoded['groups']);

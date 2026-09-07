@@ -55,10 +55,6 @@ class RunCacheTest extends TestCase
         $this->assertNull($this->createCache()->load('does-not-exist'));
     }
 
-    /**
-     * The id arrives as a tool argument, so it must not be able to address
-     * anything outside the cache directory.
-     */
     public function testAnIdCannotEscapeTheCacheDirectory(): void
     {
         $cache = $this->createCache();
@@ -68,11 +64,6 @@ class RunCacheTest extends TestCase
         $this->assertNull($cache->load('..'));
     }
 
-    /**
-     * Ids are the sort key for "newest first" and for eviction alike. At second
-     * resolution, runs stored inside the same second sort by their random
-     * suffix, so eviction removes an arbitrary run instead of the oldest.
-     */
     public function testEvictionKeepsTheNewestRunsWhenManyLandInTheSameSecond(): void
     {
         $cache = $this->createCache(keep: 20);
@@ -121,12 +112,6 @@ class RunCacheTest extends TestCase
         $cache->store(['n' => 1]);
     }
 
-    /**
-     * The directory exists but cannot be written to: the mkdir guard never
-     * fires here, so this is the failure the write itself has to catch. A
-     * silent failure at this point would hand the agent a run id that is
-     * already unloadable.
-     */
     #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public function testStoringFailsLoudlyWhenTheDirectoryIsNotWritable(): void
     {

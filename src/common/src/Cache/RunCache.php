@@ -15,11 +15,6 @@ namespace MatesOfMate\Common\Cache;
  * Keeps the last few runs on disk so a grouped response can stay small and the
  * agent can still ask for the parts it needs.
  *
- * Eviction is by count rather than by age: a run is worth keeping because it is
- * one of the last few, not because it happened recently, and a wall-clock rule
- * would throw away the run an agent is still working through if it paused to
- * read some source.
- *
  * @author Johannes Wachter <johannes@sulu.io>
  */
 class RunCache
@@ -41,16 +36,12 @@ class RunCache
     public function store(array $payload): string
     {
         $dir = $this->directory();
-        // Silenced on purpose: the failure is handled right here, and an
-        // unsilenced warning would be printed into the tool's own output.
         if (!is_dir($dir) && !@mkdir($dir, 0o700, true) && !is_dir($dir)) {
             throw new \RuntimeException("Unable to create the run cache directory: {$dir}");
         }
 
-        // Microseconds, not just seconds: ids are the sort key for both
-        // "newest first" and eviction, and two runs inside the same second
-        // would otherwise be ordered by the random suffix — which would evict
-        // an arbitrary run rather than the oldest one.
+        // Microseconds avoid two runs in the same second sorting by their
+        // random suffix and evicting an arbitrary one instead of the oldest.
         $now = microtime(true);
         $id = \sprintf(
             '%s-%06d-%s',
@@ -59,9 +50,6 @@ class RunCache
             bin2hex(random_bytes(3))
         );
 
-        // Write then rename, so a reader never sees a half-written run. Both
-        // steps are checked: a silent failure here would hand the agent a run
-        // id that store() itself just made unloadable.
         $tmp = $dir.'/.'.$id.'.tmp';
         if (false === @file_put_contents($tmp, json_encode($payload, \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES))) {
             throw new \RuntimeException("Unable to write the run cache file: {$tmp}");
@@ -83,8 +71,7 @@ class RunCache
      */
     public function load(string $id): ?array
     {
-        // The id reaches this class from a tool argument, so it must not be
-        // able to walk out of the cache directory.
+        // Reaches this class as a tool argument, so it must not escape the cache directory.
         if (1 !== preg_match('/^[A-Za-z0-9-]+$/', $id)) {
             return null;
         }
@@ -121,7 +108,6 @@ class RunCache
             return;
         }
 
-        // Ids start with a sortable timestamp, so string order is age order.
         sort($files, \SORT_STRING);
         foreach (\array_slice($files, 0, \count($files) - $this->keep) as $old) {
             @unlink($old);

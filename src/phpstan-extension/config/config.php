@@ -9,8 +9,8 @@
  * file that was distributed with this source code.
  */
 
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\Common\Process\ProcessExecutor;
-use MatesOfMate\PhpStanExtension\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Capability\AnalysisDetailTool;
 use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;

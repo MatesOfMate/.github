@@ -29,7 +29,7 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 - `groups` collapse errors that come from the same PHPStan rule. `identifier` is the rule, for example `return.type`; `count` is how many places it fired and `files` is where. One rule failing thirty times is one thing to learn, not thirty.
 - `keyed_by` says how a group was formed: `identifier` when PHPStan named the rule, `fingerprint` when it did not and the message text had to stand in.
 - `run` is the id of the cached analysis and `next` spells out the call that reads it. Use `phpstan-analysis-detail --id=<run> --group=g1` rather than re-running: the errors are already stored.
-- An individual error is `{file, line, message, identifier}`.
+- An individual error is `{file, line, message, identifier, ignorable}`.
 - `ignorable: false` is a different kind of finding. Those cannot be silenced through `ignoreErrors`; they are parse errors, internal errors, or the analysis giving up on a file. Treat one as a broken file to fix first, not as an item on the error list.
 - Messages are no longer truncated.
 - `mode` decides the detail. `summary`: counts only. `default`: the groups with the base file names. `detailed`: the full paths, which is what tells two `Invoice.php` apart.

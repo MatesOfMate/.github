@@ -104,7 +104,36 @@ class ToonFormatterTest extends TestCase
         $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
 
         $this->assertSame('Property has no type', $decoded['groups'][0]['example']);
-        $this->assertSame(['Test.php' => 1], $decoded['groups'][0]['files']);
+        $this->assertSame(['/full/path/to/Test.php' => 1], $decoded['groups'][0]['files']);
+    }
+
+    /**
+     * `default` mode may collapse two same-named files, that is what `detailed`
+     * exists to still tell apart. If detailed also reported base names, two
+     * unrelated Invoice.php files would be indistinguishable from one another.
+     */
+    public function testFormatDetailedModeKeepsFullPathsApartForSameNamedFiles(): void
+    {
+        $errors = [
+            ['file' => '/app/src/Billing/Invoice.php', 'line' => 10, 'message' => 'Property has no type', 'ignorable' => true],
+            ['file' => '/app/src/Legacy/Invoice.php', 'line' => 20, 'message' => 'Property has no type', 'ignorable' => true],
+        ];
+
+        $result = new AnalysisResult(
+            errorCount: 2,
+            fileErrorCount: 2,
+            errors: $errors,
+            level: 6,
+            executionTime: 1.5,
+            memoryUsage: '64MB',
+        );
+
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
+
+        $this->assertSame([
+            '/app/src/Billing/Invoice.php' => 1,
+            '/app/src/Legacy/Invoice.php' => 1,
+        ], $decoded['groups'][0]['files']);
     }
 
     public function testFormatThrowsExceptionForInvalidMode(): void

@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStanExtension\Capability;
 
-use MatesOfMate\PhpStanExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use Symfony\AI\Mate\Attribute\MateTool;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
@@ -78,6 +78,7 @@ class AnalysisDetailTool
                     'file' => $member['file'] ?? null,
                     'line' => $member['line'] ?? null,
                     'message' => $member['message'] ?? '',
+                    'ignorable' => $member['ignorable'] ?? true,
                 ];
             }
         }

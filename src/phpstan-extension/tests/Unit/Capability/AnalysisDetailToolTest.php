@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PhpStanExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Capability\AnalysisDetailTool;
 use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
 use PHPUnit\Framework\TestCase;
@@ -95,6 +95,23 @@ class AnalysisDetailToolTest extends TestCase
         $this->assertSame(2, $decoded['returned']);
         $this->assertTrue($decoded['truncated']);
         $this->assertStringContainsString('raise limit', (string) $decoded['hint']);
+    }
+
+    /**
+     * `ignorable: false` marks a parse error or internal error rather than a
+     * normal, ignoreErrors-suppressible finding, so it must survive the trip
+     * through the cache and back out, not just the initial grouping.
+     */
+    public function testIgnorableSurvivesTheCacheRoundTrip(): void
+    {
+        $groups = (new ErrorGrouper())->group([
+            ['file' => '/app/src/Broken.php', 'line' => 1, 'message' => 'e', 'identifier' => null, 'ignorable' => false],
+        ]);
+        $id = $this->cache->store(['groups' => $groups]);
+
+        $decoded = $this->decode($this->tool->execute($id));
+
+        $this->assertFalse($decoded['entries'][0]['ignorable']);
     }
 
     private function storeRun(): string

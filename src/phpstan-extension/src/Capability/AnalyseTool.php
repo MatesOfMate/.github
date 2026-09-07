@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStanExtension\Capability;
 
-use MatesOfMate\PhpStanExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
 use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
@@ -59,6 +59,12 @@ class AnalyseTool
 
         $runResult = $this->runner->run('analyse', $args);
         $analysisResult = $this->parser->parse($runResult);
+
+        // Neither a parse failure nor summary mode ever reads a run id back, so
+        // grouping and caching would only spend a cache slot for nothing reachable.
+        if ($analysisResult->parseFailed || 'summary' === $mode) {
+            return $this->formatter->format($analysisResult, $mode);
+        }
 
         $groups = $this->grouper->group($analysisResult->errors);
         $runId = $this->remember($groups);

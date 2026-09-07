@@ -73,6 +73,24 @@ class ErrorGrouperTest extends TestCase
         $this->assertNull($groups[0]['identifier']);
     }
 
+    /**
+     * A leading "/" is not itself a word boundary, so a naive \b anchor would
+     * only start matching after the first path segment, leaving it behind as
+     * a differentiator ("/app/src/Foo.php" and "/web/src/Foo.php" would
+     * fingerprint as "/app<path>" and "/web<path>" instead of both "<path>").
+     */
+    public function testFingerprintNormalizesAnEmbeddedPathFromItsLeadingSlash(): void
+    {
+        $groups = $this->grouper->group([
+            $this->error('/a.php', 'Class not found: /app/src/Foo.php'),
+            $this->error('/b.php', 'Class not found: /web/src/Foo.php'),
+        ]);
+
+        $this->assertCount(1, $groups);
+        $this->assertSame('fingerprint', $groups[0]['keyedBy']);
+        $this->assertSame(2, $groups[0]['count']);
+    }
+
     public function testAnEmptyIdentifierCountsAsAbsent(): void
     {
         $groups = $this->grouper->group([

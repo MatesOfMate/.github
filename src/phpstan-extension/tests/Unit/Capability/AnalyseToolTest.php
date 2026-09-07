@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PhpStanExtension\Cache\RunCache;
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;

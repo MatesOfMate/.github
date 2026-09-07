@@ -24,7 +24,7 @@ namespace MatesOfMate\PhpStanExtension\Grouping;
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-final class ErrorGrouper
+class ErrorGrouper
 {
     /**
      * @param array<int, array<string, mixed>> $errors
@@ -81,7 +81,13 @@ final class ErrorGrouper
         // B::y() are one problem reported twice.
         $s = preg_replace('/[A-Za-z_][A-Za-z0-9_\\\\]*::[A-Za-z_][A-Za-z0-9_]*\(\)/', '<method>', $s) ?? $s;
         $s = preg_replace('/\$[A-Za-z_][A-Za-z0-9_]*/', '<var>', $s) ?? $s;
-        $s = preg_replace('#\b(?:/|[A-Za-z]:\\\\)[^\s:,)]+(?::\d+)?#', '<path>', $s) ?? $s;
+        // \b never sits directly before a leading "/" (both sides are non-word
+        // characters, so there is no boundary there), but it does match after
+        // a word character earlier in the same path, e.g. between "app" and
+        // the "/" in "/app/src/Foo.php" — normalizing that to "/app<path>"
+        // instead of the whole thing. Anchor on start-of-string or whitespace
+        // before the path instead.
+        $s = preg_replace('#(?:^|(?<=\s))(?:/|[A-Za-z]:\\\\)[^\s:,)]+(?::\d+)?#', '<path>', $s) ?? $s;
         $s = preg_replace('/\b\d+(?:\.\d+)?\b/', '<num>', $s) ?? $s;
         $s = preg_replace('/\s+/', ' ', $s) ?? $s;
 

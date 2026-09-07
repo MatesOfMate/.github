@@ -127,14 +127,24 @@ class ToonFormatter
             $data['status'] = 'OK';
         } else {
             $data['groups'] = array_map(
-                static fn (array $g): array => [
-                    'id' => $g['id'],
-                    'count' => $g['count'],
-                    'identifier' => $g['identifier'] ?? '(none)',
-                    'keyed_by' => $g['keyedBy'],
-                    'example' => $g['summary'],
-                    'files' => $g['files'],
-                ],
+                static function (array $g): array {
+                    $files = [];
+                    foreach ($g['members'] as $member) {
+                        $file = (string) ($member['file'] ?? '');
+                        $files[$file] = ($files[$file] ?? 0) + 1;
+                    }
+
+                    return [
+                        'id' => $g['id'],
+                        'count' => $g['count'],
+                        'identifier' => $g['identifier'] ?? '(none)',
+                        'keyed_by' => $g['keyedBy'],
+                        'example' => $g['summary'],
+                        // Full paths, unlike default's base names: this is what
+                        // tells two same-named files in different directories apart.
+                        'files' => $files,
+                    ];
+                },
                 $groups
             );
 

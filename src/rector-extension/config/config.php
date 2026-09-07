@@ -23,6 +23,8 @@ use MatesOfMate\RectorExtension\Validation\PathValidator;
 use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
+
 return static function (ContainerConfigurator $container): void {
     $services = $container->services()
         ->defaults()
@@ -43,13 +45,15 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(RectorOutputParser::class);
     $services->set(RuleGrouper::class);
-    $services->set(RunCache::class)
+    $services->set('matesofmate_rector.run_cache', RunCache::class)
         ->arg('$cacheDir', '%mate.cache_dir%')
         ->arg('$namespace', 'rector-runs')
         ->arg('$keep', 20);
-    $services->set(PreviewDetailTool::class);
+    $services->set(PreviewDetailTool::class)
+        ->arg('$cache', service('matesofmate_rector.run_cache'));
     $services->set(ToonFormatter::class);
-    $services->set(RectorWorkflow::class);
+    $services->set(RectorWorkflow::class)
+        ->arg('$cache', service('matesofmate_rector.run_cache'));
 
     // Tools - automatically discovered by #[MateTool] attribute
     $services->set(InspectTool::class);

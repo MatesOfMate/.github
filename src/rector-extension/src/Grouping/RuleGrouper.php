@@ -58,9 +58,6 @@ class RuleGrouper
         return $groups;
     }
 
-    /**
-     * The class name without its namespace: `LongArrayToShortArrayRector`.
-     */
     public function shortName(string $rule): string
     {
         $parts = explode('\\', $rule);

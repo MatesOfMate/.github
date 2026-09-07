@@ -118,11 +118,9 @@ class ToonFormatter
         $data['diagnostics'] = $result->diagnostics;
         $data['rejected_input'] = $result->rejectedInput;
 
-        // raw_output used to be included here in full. It is Rector's own JSON,
-        // which is where changed_files, rules and diffs were parsed from, so it
-        // repeated the whole response inside it. Being multi-line, it also cost
-        // several times its own size once rendered. The diffs it carried are
-        // reachable through rector-run-detail instead.
+        // Only shown on a parse failure now: it's Rector's own JSON, the source
+        // changed_files/rules/diffs were parsed from, repeating the response
+        // inside itself otherwise. Diffs are reachable via rector-run-detail.
         if ([] !== $result->diagnostics && '' !== $result->rawOutput) {
             $data['raw_output'] = $result->rawOutput;
         }

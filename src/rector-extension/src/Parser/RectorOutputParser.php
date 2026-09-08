@@ -64,6 +64,7 @@ class RectorOutputParser
 
         $changedFiles = [];
         $rules = [];
+        $ruleFiles = [];
         $diffs = [];
 
         foreach ($data['file_diffs'] ?? [] as $fileDiff) {
@@ -84,11 +85,23 @@ class RectorOutputParser
             }
 
             foreach ($fileDiff['applied_rectors'] ?? $fileDiff['applied_rectors_with_changelog'] ?? [] as $rule) {
+                $class = null;
                 if (\is_string($rule)) {
-                    $rules[] = $rule;
+                    $class = $rule;
                 } elseif (\is_array($rule) && isset($rule['class'])) {
-                    $rules[] = (string) $rule['class'];
+                    $class = (string) $rule['class'];
                 }
+
+                if (null === $class) {
+                    continue;
+                }
+
+                $rules[] = $class;
+                // Rector says which rules changed which file. Keeping only the
+                // flat list of rule names throws that away, and it is the one
+                // thing that turns a wall of diffs into "this rule touched
+                // twelve files".
+                $ruleFiles[$class][] = $file;
             }
         }
 
@@ -110,6 +123,7 @@ class RectorOutputParser
             errorOutput: $runResult->errorOutput,
             diagnostics: [],
             runResult: $runResult,
+            ruleFiles: array_map(static fn (array $files): array => array_values(array_unique($files)), $ruleFiles),
         );
     }
 

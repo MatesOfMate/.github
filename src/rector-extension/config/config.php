@@ -9,16 +9,21 @@
  * file that was distributed with this source code.
  */
 
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\RectorExtension\Capability\ApplyTool;
 use MatesOfMate\RectorExtension\Capability\InspectTool;
+use MatesOfMate\RectorExtension\Capability\PreviewDetailTool;
 use MatesOfMate\RectorExtension\Capability\PreviewTool;
 use MatesOfMate\RectorExtension\Discovery\RectorDiscovery;
 use MatesOfMate\RectorExtension\Formatter\ToonFormatter;
+use MatesOfMate\RectorExtension\Grouping\RuleGrouper;
 use MatesOfMate\RectorExtension\Parser\RectorOutputParser;
 use MatesOfMate\RectorExtension\Runner\RectorRunner;
 use MatesOfMate\RectorExtension\Validation\PathValidator;
 use MatesOfMate\RectorExtension\Workflow\RectorWorkflow;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 return static function (ContainerConfigurator $container): void {
     $services = $container->services()
@@ -39,8 +44,16 @@ return static function (ContainerConfigurator $container): void {
         ->arg('$projectRoot', '%mate.root_dir%');
 
     $services->set(RectorOutputParser::class);
+    $services->set(RuleGrouper::class);
+    $services->set('matesofmate_rector.run_cache', RunCache::class)
+        ->arg('$cacheDir', '%mate.cache_dir%')
+        ->arg('$namespace', 'rector-runs')
+        ->arg('$keep', 20);
+    $services->set(PreviewDetailTool::class)
+        ->arg('$cache', service('matesofmate_rector.run_cache'));
     $services->set(ToonFormatter::class);
-    $services->set(RectorWorkflow::class);
+    $services->set(RectorWorkflow::class)
+        ->arg('$cache', service('matesofmate_rector.run_cache'));
 
     // Tools - automatically discovered by #[MateTool] attribute
     $services->set(InspectTool::class);

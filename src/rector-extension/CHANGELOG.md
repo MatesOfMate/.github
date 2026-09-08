@@ -4,10 +4,7 @@ CHANGELOG
 0.7.0
 -----
 
- * Group reported changes by the Rector rule that produced them
- * Add `rector-run-detail` to read the diffs of a run by its id
- * Keep the last 20 runs under Mate's cache directory
- * Stop repeating Rector's raw JSON output inside the detailed response
+ * Group reported changes by the Rector rule that produced them, with the diffs reachable through a new `rector-run-detail` tool by run id
  * Add a `rector-refactoring` skill covering the inspect, preview, apply order and result interpretation
  * Support symfony/ai-mate 0.13
  * Replace the `#[McpTool]` attribute with Mate's native `#[MateTool]`

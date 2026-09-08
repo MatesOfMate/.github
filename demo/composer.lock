@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e28864e72f111edd4744b2badfc91185",
+    "content-hash": "c9a9c7c2373b643d6b6a91bf71a3c3df",
     "packages": [
         {
             "name": "psr/cache",
@@ -2559,10 +2559,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/composer-extension",
-                "reference": "5fc3e2e0f0166919a9b0c8fc6d4b5fe987838734"
+                "reference": "e57c83f5c787fcca4f267eb6ddf1b0d5e2a3f75c"
             },
             "require": {
-                "matesofmate/common": "^0.6 || ^0.7@dev",
+                "matesofmate/common": "^0.7",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.13 || dev-main",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2651,10 +2651,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpstan-extension",
-                "reference": "d1a30d9c30145ceb961a6c5f7c0c3ab9d8a23871"
+                "reference": "7abd57a90f0ca6140514dee92b4e98d164c46ea8"
             },
             "require": {
-                "matesofmate/common": "^0.6 || ^0.7@dev",
+                "matesofmate/common": "^0.7",
                 "php": ">=8.2",
                 "phpstan/phpstan": "^2.0",
                 "symfony/ai-mate": "^0.13 || dev-main",
@@ -2742,10 +2742,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/phpunit-extension",
-                "reference": "b9af736a901e78267a5e754f814902066fff1865"
+                "reference": "c629dade948f587bb8ea1a989d6180eae67c37c0"
             },
             "require": {
-                "matesofmate/common": "^0.6 || ^0.7@dev",
+                "matesofmate/common": "^0.7",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.13 || dev-main",
                 "symfony/finder": "^5.4|^6.4|^7.3|^8.0",
@@ -2835,10 +2835,10 @@
             "dist": {
                 "type": "path",
                 "url": "../src/rector-extension",
-                "reference": "c3ccb734c3556fc9fe13770e85f6a49e8112d85f"
+                "reference": "db735f1303aaec1045b7553766eb067f3141a0bf"
             },
             "require": {
-                "matesofmate/common": "^0.6 || ^0.7@dev",
+                "matesofmate/common": "^0.7",
                 "php": ">=8.2",
                 "symfony/ai-mate": "^0.13 || dev-main",
                 "symfony/process": "^6.4|^7.0|^8.0"
@@ -5321,11 +5321,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "matesofmate/common": 20,
-        "matesofmate/composer-extension": 20,
-        "matesofmate/phpstan-extension": 20,
-        "matesofmate/phpunit-extension": 20,
-        "matesofmate/rector-extension": 20,
         "symfony/ai-monolog-mate-extension": 20,
         "symfony/ai-symfony-mate-extension": 20
     },

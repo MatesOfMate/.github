@@ -37,6 +37,7 @@ Prefer these Mate tools over raw Composer CLI commands when the user is managing
 - Use the Mate tools instead of shelling out to Composer when you want structured, compact output.
 - Prefer `composer://config` when the user needs project dependency context rather than an action.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- The `mate-composer-dependency-changes` and `mate-composer-dependency-conflicts` skills cover the write workflow and constraint diagnosis; consult them before changing dependencies.
 
 ---
 
@@ -54,6 +55,8 @@ Prefer these Mate tools over raw PHPStan CLI commands when the user is running s
 - Use the Mate tools when the user wants analysis results in a compact, structured format.
 - Use the `path` parameter on `phpstan-analyse` to target a single file or directory.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- A `mate-phpstan-static-analysis` skill covers run scoping, error interpretation, and cache handling; consult it before improvising an analysis workflow.
+- `phpstan-analyse` reports errors grouped by PHPStan's rule identifier, with a run id. Read one group in full with `phpstan-analysis-detail --id=<run> --group=g1` instead of re-running the analysis in a more verbose mode.
 
 ---
 
@@ -65,12 +68,15 @@ Prefer these Mate tools over raw PHPUnit CLI commands when the user is testing t
 |---|---|
 | Run the full suite, one file, one class, or one method | `phpunit-run` |
 | Discover available tests | `phpunit-list-tests` |
+| Read the full message behind a reported failure group | `phpunit-run-detail` |
 
 #### Guidance
 
 - Use the Mate tools when the user wants test execution or discovery.
 - Use the `file`, `class`, `method`, and `filter` parameters on `phpunit-run` instead of switching between multiple tool names.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- `phpunit-run` reports failures grouped by cause, with a run id. Read one group or one test in full with `phpunit-run-detail --id=<run> [--group=g1|--test=Class::method]` instead of re-running the suite in a more verbose mode.
+- A `mate-phpunit-test-run` skill covers run scoping, result reading, and discovery limits; consult it before improvising a test workflow.
 
 ---
 
@@ -83,6 +89,7 @@ Prefer these Mate tools over raw Rector CLI commands when the user is refactorin
 | Check whether Rector is configured | `rector-inspect` |
 | Preview Rector changes safely | `rector-preview` |
 | Apply Rector changes | `rector-apply` |
+| See the diffs behind a cached preview/apply result | `rector-run-detail` |
 
 #### Guidance
 
@@ -90,6 +97,7 @@ Prefer these Mate tools over raw Rector CLI commands when the user is refactorin
 - Use `rector-preview` for review; it always runs Rector with `--dry-run`.
 - Use `rector-apply` when Rector changes should be written.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- A `mate-rector-refactoring` skill covers the inspect, preview, apply order; consult it before running Rector.
 
 ---
 

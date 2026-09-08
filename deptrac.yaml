@@ -1,6 +1,17 @@
 deptrac:
   paths:
-    - ./src
+    - ./src/common/src
+    - ./src/common/tests
+    - ./src/phpunit-extension/src
+    - ./src/phpunit-extension/tests
+    - ./src/phpstan-extension/src
+    - ./src/phpstan-extension/tests
+    - ./src/rector-extension/src
+    - ./src/rector-extension/tests
+    - ./src/composer-extension/src
+    - ./src/composer-extension/tests
+    - ./src/extension-template/src
+    - ./src/extension-template/tests
 
   exclude_files:
     - .*Test\.php
@@ -28,6 +39,11 @@ deptrac:
         - type: directory
           value: src/rector-extension/.*
 
+    - name: Composer Extension
+      collectors:
+        - type: directory
+          value: src/composer-extension/.*
+
     - name: Extension Template
       collectors:
         - type: directory
@@ -46,6 +62,9 @@ deptrac:
       - Common
 
     Rector Extension:
+      - Common
+
+    Composer Extension:
       - Common
 
     Extension Template:

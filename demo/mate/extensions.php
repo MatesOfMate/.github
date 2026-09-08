@@ -42,8 +42,8 @@ return [
                 'mode' => 'managed',
                 'state' => 'managed',
                 'source' => 'vendor/matesofmate/phpstan-extension/skills/phpstan-static-analysis',
-                'source_hash' => 'sha256:d0e4ca34edcd363c67b8b8e36bbc0f171c08c96a9669febdb06dcda44763d04e',
-                'hash' => 'sha256:aecc4c0a5345cc0171ff856e413046dcc071cfe6173729836c58b5237f1134e8',
+                'source_hash' => 'sha256:74b0a0aa44f5a2d742ac3afa6404135243735c60101b3e90d9b4d5c136539d0d',
+                'hash' => 'sha256:f4cd7855bf57839ac489698c8d44e2636ad5ecb3296c3b5ecd2d3b3637b27b4e',
                 'targets' => [
                     '.agents/skills/mate-phpstan-static-analysis',
                     '.claude/skills/mate-phpstan-static-analysis',
@@ -59,8 +59,8 @@ return [
                 'mode' => 'managed',
                 'state' => 'managed',
                 'source' => 'vendor/matesofmate/phpunit-extension/skills/phpunit-test-run',
-                'source_hash' => 'sha256:05ebe56eaed94f4d06e6877d9ee85a8f299f0a2981cb0146125a2c724b28037f',
-                'hash' => 'sha256:7d1e2f079406261f5ac46d318b1af068db13d50ed7e4f54c7e7d8a6a71f854fd',
+                'source_hash' => 'sha256:2d9660b78bbe1bba10ed5440652db7358a5c5d2bfeecabea64e96cedb51d3855',
+                'hash' => 'sha256:02784906ebc956d1f650d59275b8ee60ebe59f37d0265fa3aeda850d143e1171',
                 'targets' => [
                     '.agents/skills/mate-phpunit-test-run',
                     '.claude/skills/mate-phpunit-test-run',
@@ -76,8 +76,8 @@ return [
                 'mode' => 'managed',
                 'state' => 'managed',
                 'source' => 'vendor/matesofmate/rector-extension/skills/rector-refactoring',
-                'source_hash' => 'sha256:e86618bb1bb08e493a9c64486508cacccaf1c928b8f08a187a4eb968e63fbfe3',
-                'hash' => 'sha256:878a593593d840b153d0b2d32fc1efbb3185838bf80e0d80b1a0769c4ab18076',
+                'source_hash' => 'sha256:bab5873472d28c2db9cf21a4859fcdeccf64a976e78de87727ee969811349859',
+                'hash' => 'sha256:adf79054c1b988179714277697ad2a51d422e64969eb4a5e4cd98bdb15eda0eb',
                 'targets' => [
                     '.agents/skills/mate-rector-refactoring',
                     '.claude/skills/mate-rector-refactoring',

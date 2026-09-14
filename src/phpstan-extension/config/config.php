@@ -15,6 +15,7 @@ use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Capability\AnalysisDetailTool;
 use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
 use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
+use MatesOfMate\PhpStanExtension\Capability\GenerateBaselineTool;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
 use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
@@ -58,6 +59,7 @@ return static function (ContainerConfigurator $container): void {
     $services->set(AnalysisDetailTool::class)
         ->arg('$cache', service('matesofmate_phpstan.run_cache'));
     $services->set(ClearCacheTool::class);
+    $services->set(GenerateBaselineTool::class);
 
     // Resources - automatically discovered by #[MateResource] attribute
     $services->set(ConfigResource::class);

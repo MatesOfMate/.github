@@ -202,6 +202,7 @@ Agents that can run `vendor/bin/mate` in your project:
 - [Giving AI Assistants Eyes: Reflecting on My Symfony Mate Talk at SymfonyLive Berlin](https://sulu.io/blog/giving-ai-assistants-eyes-reflecting-on-my-symfony-mate-talk-at-symfonylive-berlin) - Post-conference reflection on the SymfonyLive Berlin 2026 Symfony Mate talk with key takeaways
 - [Symfony Mate: Give Your AI Assistant Eyes Into Your Application](https://github.com/wachterjohannes/symfony-mate-berlin) - SymfonyLive Berlin 2026 talk with slides and an N+1 profiler demo
 - [Giving AI Assistants Eyes: Highlights from the Symfony Mate Talk](https://www.linkedin.com/pulse/giving-ai-assistants-eyes-highlights-from-symfony-mate-wachter-yfuwe/) - LinkedIn article recapping the SymfonyLive Berlin Symfony Mate talk and key takeaways
+- [killerwolf/mcp-profiler-bundle](https://github.com/killerwolf/mcp-profiler-bundle) - Hamdi Laadhari's MCP bundle for Symfony profiler access, built independently in March 2025 and deprecated in favor of Mate
 
 *Know a great article? [Submit a PR](https://github.com/matesofmate/awesome-mate/pulls)!*
 

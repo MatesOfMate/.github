@@ -17,8 +17,8 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 ## Workflow
 
 1. Analyse what you touched, not the project: `vendor/bin/mate tools:call phpstan-analyse --path=src/Service --mode=detailed`. A whole-project run on every iteration is slow and buries your errors among pre-existing ones.
-2. Fix the causes, then re-run the same scope so the before and after counts are comparable.
-3. Once, before handing work back, run without `path` so the configured project paths are analysed.
+2. Fix the causes, then re-run the same scope once so the before and after counts are comparable. A run is authoritative for the files it analysed: run again only after another edit.
+3. Before handing work back, the configured project paths must have been analysed after your last edit. If the scope you re-ran in step 2 already contains every configured path (the `paths` in the PHPStan configuration), that run counts, and a run without `path` would only analyse the same files again. Otherwise run once without `path`.
 
 `level` overrides the configured level. Leave it alone unless you are deliberately probing: raising it invents errors the project never agreed to fix, lowering it hides real ones. To learn what the project enforces, read `vendor/bin/mate resources:read phpstan://config`.
 
